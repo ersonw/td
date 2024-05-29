@@ -210,7 +210,7 @@ add_subdirectory(tddb)
 #add_subdirectory(test)
 
 if (NOT CMAKE_CROSSCOMPILING)
-  add_subdirectory(benchmark)
+  #add_subdirectory(benchmark)
 endif()
 
 
