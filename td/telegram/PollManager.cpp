@@ -147,7 +147,7 @@ class SendVoteQuery final : public Td::ResultHandler {
   explicit SendVoteQuery(Promise<tl_object_ptr<telegram_api::Updates>> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(MessageFullId message_full_id, vector<BufferSlice> &&options, PollId poll_id, uint64 generation,
+  void send(MessageFullId message_full_id, std::vector<BufferSlice> &&options, PollId poll_id, uint64 generation,
             NetQueryRef *query_ref) {
     dialog_id_ = message_full_id.get_dialog_id();
     auto input_peer = td_->dialog_manager_->get_input_peer(dialog_id_, AccessRights::Read);
@@ -208,11 +208,11 @@ class StopPollQuery final : public Td::ResultHandler {
         poll_id.get(), telegram_api::poll::CLOSED_MASK, false /*ignored*/, false /*ignored*/, false /*ignored*/,
         false /*ignored*/, telegram_api::make_object<telegram_api::textWithEntities>(string(), Auto()), Auto(), 0, 0);
     auto input_media = telegram_api::make_object<telegram_api::inputMediaPoll>(0, std::move(poll),
-                                                                               vector<BufferSlice>(), string(), Auto());
+                                                                               std::vector<BufferSlice>(), string(), Auto());
     send_query(G()->net_query_creator().create(
         telegram_api::messages_editMessage(flags, false /*ignored*/, false /*ignored*/, std::move(input_peer),
                                            message_id, string(), std::move(input_media), std::move(input_reply_markup),
-                                           vector<tl_object_ptr<telegram_api::MessageEntity>>(), 0, 0),
+                                           std::vector<tl_object_ptr<telegram_api::MessageEntity>>(), 0, 0),
         {{poll_id}, {dialog_id_}}));
   }
 
@@ -439,7 +439,7 @@ td_api::object_ptr<td_api::pollOption> PollManager::get_poll_option_object(const
                                                  poll_option.voter_count_, 0, poll_option.is_chosen_, false);
 }
 
-vector<int32> PollManager::get_vote_percentage(const vector<int32> &voter_counts, int32 total_voter_count) {
+vector<int32> PollManager::get_vote_percentage(const std::vector<int32> &voter_counts, int32 total_voter_count) {
   int32 sum = 0;
   for (auto voter_count : voter_counts) {
     CHECK(0 <= voter_count);
@@ -454,7 +454,7 @@ vector<int32> PollManager::get_vote_percentage(const vector<int32> &voter_counts
     total_voter_count = sum;
   }
 
-  vector<int32> result(voter_counts.size(), 0);
+  std::vector<int32> result(voter_counts.size(), 0);
   if (total_voter_count == 0) {
     return result;
   }
@@ -469,7 +469,7 @@ vector<int32> PollManager::get_vote_percentage(const vector<int32> &voter_counts
 
   // make sure that options with equal votes have equal percent and total sum is less than 100%
   int32 percent_sum = 0;
-  vector<int32> gap(voter_counts.size(), 0);
+  std::vector<int32> gap(voter_counts.size(), 0);
   for (size_t i = 0; i < result.size(); i++) {
     auto multiplied_voter_count = static_cast<int64>(voter_counts[i]) * 100;
     result[i] = static_cast<int32>(multiplied_voter_count / total_voter_count);
@@ -497,7 +497,7 @@ vector<int32> PollManager::get_vote_percentage(const vector<int32> &voter_counts
     }
     option.count++;
   }
-  vector<Option> sorted_options;
+  std::vector<Option> sorted_options;
   for (const auto &it : options) {
     const auto &option = it.second;
     auto pos = option.pos;
@@ -550,7 +550,7 @@ td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id) co
 }
 
 td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, const Poll *poll) const {
-  vector<td_api::object_ptr<td_api::pollOption>> poll_options;
+  std::vector<td_api::object_ptr<td_api::pollOption>> poll_options;
   auto it = pending_answers_.find(poll_id);
   int32 voter_count_diff = 0;
   if (it == pending_answers_.end() || (it->second.is_finished_ && poll->was_saved_)) {
@@ -631,7 +631,7 @@ td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, co
     close_date = 0;
   }
 
-  vector<td_api::object_ptr<td_api::MessageSender>> recent_voters;
+  std::vector<td_api::object_ptr<td_api::MessageSender>> recent_voters;
   for (auto dialog_id : poll->recent_voter_dialog_ids_) {
     auto recent_voter = get_min_message_sender_object(td_, dialog_id, "get_poll_object");
     if (recent_voter != nullptr) {
@@ -650,7 +650,7 @@ telegram_api::object_ptr<telegram_api::pollAnswer> PollManager::get_input_poll_o
       BufferSlice(poll_option.data_));
 }
 
-PollId PollManager::create_poll(FormattedText &&question, vector<FormattedText> &&options, bool is_anonymous,
+PollId PollManager::create_poll(FormattedText &&question, std::vector<FormattedText> &&options, bool is_anonymous,
                                 bool allow_multiple_answers, bool is_quiz, int32 correct_option_id,
                                 FormattedText &&explanation, int32 open_period, int32 close_date, bool is_closed) {
   remove_unallowed_entities(question);
@@ -813,7 +813,7 @@ string PollManager::get_poll_search_text(PollId poll_id) const {
   return result;
 }
 
-void PollManager::set_poll_answer(PollId poll_id, MessageFullId message_full_id, vector<int32> &&option_ids,
+void PollManager::set_poll_answer(PollId poll_id, MessageFullId message_full_id, std::vector<int32> &&option_ids,
                                   Promise<Unit> &&promise) {
   td::unique(option_ids);
 
@@ -837,7 +837,7 @@ void PollManager::set_poll_answer(PollId poll_id, MessageFullId message_full_id,
   }
 
   FlatHashMap<uint64, int> affected_option_ids;
-  vector<string> options;
+  std::vector<string> options;
   for (auto &option_id : option_ids) {
     auto index = static_cast<size_t>(option_id);
     if (index >= poll->options_.size()) {
@@ -868,7 +868,7 @@ class PollManager::SetPollAnswerLogEvent {
  public:
   PollId poll_id_;
   MessageFullId message_full_id_;
-  vector<string> options_;
+  std::vector<string> options_;
 
   template <class StorerT>
   void store(StorerT &storer) const {
@@ -885,7 +885,7 @@ class PollManager::SetPollAnswerLogEvent {
   }
 };
 
-void PollManager::do_set_poll_answer(PollId poll_id, MessageFullId message_full_id, vector<string> &&options,
+void PollManager::do_set_poll_answer(PollId poll_id, MessageFullId message_full_id, std::vector<string> &&options,
                                      uint64 log_event_id, Promise<Unit> &&promise) {
   LOG(INFO) << "Set answer in " << poll_id << " from " << message_full_id;
   if (!poll_id.is_valid() || !message_full_id.get_dialog_id().is_valid() ||
@@ -942,7 +942,7 @@ void PollManager::do_set_poll_answer(PollId poll_id, MessageFullId message_full_
     }
   }
 
-  vector<BufferSlice> sent_options;
+  std::vector<BufferSlice> sent_options;
   for (auto &option : options) {
     sent_options.emplace_back(option);
   }
@@ -1088,7 +1088,7 @@ PollManager::PollOptionVoters &PollManager::get_poll_option_voters(const Poll *p
 }
 
 td_api::object_ptr<td_api::messageSenders> PollManager::get_poll_voters_object(
-    int32 total_count, const vector<DialogId> &voter_dialog_ids) const {
+    int32 total_count, const std::vector<DialogId> &voter_dialog_ids) const {
   auto result = td_api::make_object<td_api::messageSenders>();
   result->total_count_ = total_count;
   for (auto dialog_id : voter_dialog_ids) {
@@ -1137,7 +1137,7 @@ void PollManager::get_poll_voters(PollId poll_id, MessageFullId message_full_id,
     return promise.set_error(Status::Error(400, "Too big offset specified; voters can be received only consequently"));
   }
   if (offset < cur_offset) {
-    vector<DialogId> result;
+    std::vector<DialogId> result;
     for (int32 i = offset; i != cur_offset && i - offset < limit; i++) {
       result.push_back(voters.voter_dialog_ids_[i]);
     }
@@ -1146,7 +1146,7 @@ void PollManager::get_poll_voters(PollId poll_id, MessageFullId message_full_id,
   }
 
   if (poll->options_[option_id].voter_count_ == 0 || (voters.next_offset_.empty() && cur_offset > 0)) {
-    return promise.set_value(get_poll_voters_object(0, vector<DialogId>()));
+    return promise.set_value(get_poll_voters_object(0, std::vector<DialogId>()));
   }
 
   voters.pending_queries_.push_back(std::move(promise));
@@ -1209,7 +1209,7 @@ void PollManager::on_get_poll_voters(PollId poll_id, int32 option_id, string off
     update_poll_timeout_.set_timeout_in(poll_id.get(), 0.0);
   }
 
-  vector<DialogId> dialog_ids;
+  std::vector<DialogId> dialog_ids;
   for (auto &peer_vote : vote_list->votes_) {
     DialogId dialog_id;
     switch (peer_vote->get_id()) {
@@ -1256,7 +1256,7 @@ void PollManager::on_get_poll_voters(PollId poll_id, int32 option_id, string off
   }
 
   for (auto &promise : promises) {
-    promise.set_value(get_poll_voters_object(max(vote_list->count_, known_voter_count), vector<DialogId>(dialog_ids)));
+    promise.set_value(get_poll_voters_object(max(vote_list->count_, known_voter_count), std::vector<DialogId>(dialog_ids)));
   }
 }
 
@@ -1552,7 +1552,7 @@ tl_object_ptr<telegram_api::InputMedia> PollManager::get_input_media(PollId poll
   }
 
   int32 flags = 0;
-  vector<BufferSlice> correct_answers;
+  std::vector<BufferSlice> correct_answers;
   if (poll->is_quiz_) {
     flags |= telegram_api::inputMediaPoll::CORRECT_ANSWERS_MASK;
     CHECK(poll->correct_option_id_ >= 0);
@@ -1574,7 +1574,7 @@ tl_object_ptr<telegram_api::InputMedia> PollManager::get_input_media(PollId poll
 }
 
 vector<PollManager::PollOption> PollManager::get_poll_options(
-    vector<telegram_api::object_ptr<telegram_api::pollAnswer>> &&poll_options) {
+    std::vector<telegram_api::object_ptr<telegram_api::pollAnswer>> &&poll_options) {
   return transform(std::move(poll_options), [](telegram_api::object_ptr<telegram_api::pollAnswer> &&poll_option) {
     PollOption option;
     option.text_ = get_formatted_text(nullptr, std::move(poll_option->text_), true, true, "get_poll_options");
@@ -1863,7 +1863,7 @@ PollId PollManager::on_get_poll(PollId poll_id, tl_object_ptr<telegram_api::poll
     }
   }
 
-  vector<DialogId> recent_voter_dialog_ids;
+  std::vector<DialogId> recent_voter_dialog_ids;
   if (!is_bot) {
     for (auto &peer_id : poll_results->recent_voters_) {
       DialogId dialog_id(peer_id);
@@ -1904,7 +1904,7 @@ PollId PollManager::on_get_poll(PollId poll_id, tl_object_ptr<telegram_api::poll
   return poll_id;
 }
 
-void PollManager::on_get_poll_vote(PollId poll_id, DialogId dialog_id, vector<BufferSlice> &&options) {
+void PollManager::on_get_poll_vote(PollId poll_id, DialogId dialog_id, std::vector<BufferSlice> &&options) {
   if (!poll_id.is_valid()) {
     LOG(ERROR) << "Receive updateMessagePollVote about invalid " << poll_id;
     return;
@@ -1915,7 +1915,7 @@ void PollManager::on_get_poll_vote(PollId poll_id, DialogId dialog_id, vector<Bu
   }
   CHECK(td_->auth_manager_->is_bot());
 
-  vector<int32> option_ids;
+  std::vector<int32> option_ids;
   for (auto &option : options) {
     auto slice = option.as_slice();
     if (slice.size() != 1 || slice[0] < '0' || slice[0] > '9') {

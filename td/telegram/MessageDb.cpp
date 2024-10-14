@@ -568,12 +568,12 @@ class MessageDbImpl final : public MessageDbSyncInterface {
     return Status::Error("Not found");
   }
 
-  vector<MessageDbMessage> get_expiring_messages(int32 expires_till, int32 limit) final {
+  std::vector<MessageDbMessage> get_expiring_messages(int32 expires_till, int32 limit) final {
     SCOPE_EXIT {
       get_expiring_messages_stmt_.reset();
     };
 
-    vector<MessageDbMessage> messages;
+    std::vector<MessageDbMessage> messages;
     get_expiring_messages_stmt_.bind_int32(1, expires_till).ensure();
     get_expiring_messages_stmt_.bind_int32(2, limit).ensure();
     get_expiring_messages_stmt_.step().ensure();
@@ -599,8 +599,8 @@ class MessageDbImpl final : public MessageDbSyncInterface {
     stmt.bind_int64(2, query.from_message_id.get()).ensure();
     stmt.bind_int32(3, limit).ensure();
 
-    vector<MessageDbDialogMessage> messages;
-    vector<int32> total_counts;
+    std::vector<MessageDbDialogMessage> messages;
+    std::vector<int32> total_counts;
     stmt.step().ensure();
     int32 current_day = std::numeric_limits<int32>::max();
     while (stmt.has_row()) {
@@ -630,7 +630,7 @@ class MessageDbImpl final : public MessageDbSyncInterface {
     stmt.bind_int64(1, query.dialog_id.get()).ensure();
     stmt.bind_int64(2, query.from_message_id.get()).ensure();
 
-    vector<MessageId> message_ids;
+    std::vector<MessageId> message_ids;
     stmt.step().ensure();
     while (stmt.has_row()) {
       message_ids.push_back(MessageId(stmt.view_int64(0)));
@@ -654,18 +654,18 @@ class MessageDbImpl final : public MessageDbSyncInterface {
     return positions;
   }
 
-  vector<MessageDbDialogMessage> get_messages(MessageDbMessagesQuery query) final {
+  std::vector<MessageDbDialogMessage> get_messages(MessageDbMessagesQuery query) final {
     if (query.filter != MessageSearchFilter::Empty) {
       return get_messages_from_index(query.dialog_id, query.from_message_id, query.filter, query.offset, query.limit);
     }
     return get_messages_impl(get_messages_stmt_, query.dialog_id, query.from_message_id, query.offset, query.limit);
   }
 
-  vector<MessageDbDialogMessage> get_scheduled_messages(DialogId dialog_id, int32 limit) final {
+  std::vector<MessageDbDialogMessage> get_scheduled_messages(DialogId dialog_id, int32 limit) final {
     return get_messages_inner(get_scheduled_messages_stmt_, dialog_id, std::numeric_limits<int64>::max(), limit);
   }
 
-  vector<MessageDbDialogMessage> get_messages_from_notification_id(DialogId dialog_id,
+  std::vector<MessageDbDialogMessage> get_messages_from_notification_id(DialogId dialog_id,
                                                                    NotificationId from_notification_id,
                                                                    int32 limit) final {
     auto &stmt = get_messages_from_notification_id_stmt_;
@@ -676,7 +676,7 @@ class MessageDbImpl final : public MessageDbSyncInterface {
     stmt.bind_int32(2, from_notification_id.get()).ensure();
     stmt.bind_int32(3, limit).ensure();
 
-    vector<MessageDbDialogMessage> result;
+    std::vector<MessageDbDialogMessage> result;
     stmt.step().ensure();
     while (stmt.has_row()) {
       auto data_slice = stmt.view_blob(0);
@@ -780,7 +780,7 @@ class MessageDbImpl final : public MessageDbSyncInterface {
     return result;
   }
 
-  vector<MessageDbDialogMessage> get_messages_from_index(DialogId dialog_id, MessageId from_message_id,
+  std::vector<MessageDbDialogMessage> get_messages_from_index(DialogId dialog_id, MessageId from_message_id,
                                                          MessageSearchFilter filter, int32 offset, int32 limit) {
     auto &stmt = get_messages_from_index_stmts_[message_search_filter_index(filter)];
     return get_messages_impl(stmt, dialog_id, from_message_id, offset, limit);
@@ -857,7 +857,7 @@ class MessageDbImpl final : public MessageDbSyncInterface {
   SqliteStatement delete_scheduled_message_stmt_;
   SqliteStatement delete_scheduled_server_message_stmt_;
 
-  static vector<MessageDbDialogMessage> get_messages_impl(GetMessagesStmt &stmt, DialogId dialog_id,
+  static std::vector<MessageDbDialogMessage> get_messages_impl(GetMessagesStmt &stmt, DialogId dialog_id,
                                                           MessageId from_message_id, int32 offset, int32 limit) {
     LOG_CHECK(dialog_id.is_valid()) << dialog_id;
     CHECK(from_message_id.is_valid());
@@ -877,8 +877,8 @@ class MessageDbImpl final : public MessageDbSyncInterface {
     auto right_message_id = message_id - 1;
     auto right_cnt = -offset;
 
-    vector<MessageDbDialogMessage> left;
-    vector<MessageDbDialogMessage> right;
+    std::vector<MessageDbDialogMessage> left;
+    std::vector<MessageDbDialogMessage> right;
 
     if (left_cnt != 0) {
       if (right_cnt == 1 && false) {
@@ -909,7 +909,7 @@ class MessageDbImpl final : public MessageDbSyncInterface {
     return right;
   }
 
-  static vector<MessageDbDialogMessage> get_messages_inner(SqliteStatement &stmt, DialogId dialog_id,
+  static std::vector<MessageDbDialogMessage> get_messages_inner(SqliteStatement &stmt, DialogId dialog_id,
                                                            int64 from_message_id, int32 limit) {
     SCOPE_EXIT {
       stmt.reset();
@@ -920,7 +920,7 @@ class MessageDbImpl final : public MessageDbSyncInterface {
 
     LOG(INFO) << "Begin to load " << limit << " messages in " << dialog_id << " from " << MessageId(from_message_id)
               << " from database";
-    vector<MessageDbDialogMessage> result;
+    std::vector<MessageDbDialogMessage> result;
     stmt.step().ensure();
     while (stmt.has_row()) {
       auto data_slice = stmt.view_blob(0);
@@ -1188,8 +1188,8 @@ class MessageDbAsync final : public MessageDbAsyncInterface {
     static constexpr double MAX_PENDING_QUERIES_DELAY{0.01};
 
     //NB: order is important, destructor of pending_writes_ will change finished_writes_
-    vector<Promise<Unit>> finished_writes_;
-    vector<Promise<Unit>> pending_writes_;  // TODO use Action
+    std::vector<Promise<Unit>> finished_writes_;
+    std::vector<Promise<Unit>> pending_writes_;  // TODO use Action
     double wakeup_at_ = 0;
 
     template <class F>

@@ -89,7 +89,7 @@ bool operator!=(const PremiumGiftOption &lhs, const PremiumGiftOption &rhs) {
 }
 
 vector<PremiumGiftOption> get_premium_gift_options(
-    vector<telegram_api::object_ptr<telegram_api::premiumGiftOption>> &&options) {
+    std::vector<telegram_api::object_ptr<telegram_api::premiumGiftOption>> &&options) {
   auto premium_gift_options = transform(
       std::move(options), [](auto &&premium_gift_option) { return PremiumGiftOption(std::move(premium_gift_option)); });
   td::remove_if(premium_gift_options, [](const auto &premium_gift_option) { return !premium_gift_option.is_valid(); });
@@ -97,7 +97,7 @@ vector<PremiumGiftOption> get_premium_gift_options(
 }
 
 vector<PremiumGiftOption> get_premium_gift_options(
-    vector<telegram_api::object_ptr<telegram_api::premiumSubscriptionOption>> &&options) {
+    std::vector<telegram_api::object_ptr<telegram_api::premiumSubscriptionOption>> &&options) {
   auto premium_gift_options = transform(
       std::move(options), [](auto &&premium_gift_option) { return PremiumGiftOption(std::move(premium_gift_option)); });
   td::remove_if(premium_gift_options, [](const auto &premium_gift_option) { return !premium_gift_option.is_valid(); });
@@ -105,7 +105,7 @@ vector<PremiumGiftOption> get_premium_gift_options(
 }
 
 vector<td_api::object_ptr<td_api::premiumPaymentOption>> get_premium_payment_options_object(
-    const vector<PremiumGiftOption> &options) {
+    const std::vector<PremiumGiftOption> &options) {
   if (options.empty()) {
     return {};
   }
@@ -116,7 +116,7 @@ vector<td_api::object_ptr<td_api::premiumPaymentOption>> get_premium_payment_opt
 }
 
 vector<td_api::object_ptr<td_api::premiumStatePaymentOption>> get_premium_state_payment_options_object(
-    const vector<PremiumGiftOption> &options) {
+    const std::vector<PremiumGiftOption> &options) {
   if (options.empty()) {
     return {};
   }

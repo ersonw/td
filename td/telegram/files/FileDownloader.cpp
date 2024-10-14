@@ -332,7 +332,7 @@ Status FileDownloader::check_loop(int64 checked_prefix_size, int64 ready_prefix_
     try_release_fd();
   };
   bool is_changed = false;
-  vector<NetQueryPtr> queries;
+  std::vector<NetQueryPtr> queries;
   while (checked_prefix_size < ready_prefix_size) {
     //LOG(ERROR) << "NEED TO CHECK: " << checked_prefix_size << "->" << ready_prefix_size - checked_prefix_size;
     HashInfo search_info;

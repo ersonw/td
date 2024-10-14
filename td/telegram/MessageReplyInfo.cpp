@@ -204,7 +204,7 @@ td_api::object_ptr<td_api::messageReplyInfo> MessageReplyInfo::get_message_reply
     return nullptr;
   }
 
-  vector<td_api::object_ptr<td_api::MessageSender>> recent_repliers;
+  std::vector<td_api::object_ptr<td_api::MessageSender>> recent_repliers;
   for (auto dialog_id : recent_replier_dialog_ids_) {
     auto recent_replier = get_min_message_sender_object(td, dialog_id, "get_message_reply_info_object");
     if (recent_replier != nullptr) {

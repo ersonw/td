@@ -176,7 +176,7 @@ StringBuilder &operator<<(StringBuilder &string_builder, const NotificationManag
   }
   string_builder << "update[\n";
   for (auto &group : update.update->groups_) {
-    vector<int32> added_notification_ids;
+    std::vector<int32> added_notification_ids;
     for (auto &notification : group->notifications_) {
       added_notification_ids.push_back(notification->id_);
     }
@@ -314,7 +314,7 @@ void NotificationManager::init() {
 
 void NotificationManager::save_announcement_ids() {
   auto min_date = G()->unix_time() - ANNOUNCEMENT_ID_CACHE_TIME;
-  vector<int32> stored_ids;
+  std::vector<int32> stored_ids;
   for (auto &it : announcement_id_date_) {
     auto announcement_id = it.first;
     auto date = it.second;
@@ -337,14 +337,14 @@ void NotificationManager::save_announcement_ids() {
 
 td_api::object_ptr<td_api::updateActiveNotifications> NotificationManager::get_update_active_notifications() const {
   auto needed_groups = max_notification_group_count_;
-  vector<td_api::object_ptr<td_api::notificationGroup>> groups;
+  std::vector<td_api::object_ptr<td_api::notificationGroup>> groups;
   for (auto &group : groups_) {
     if (needed_groups == 0 || group.first.last_notification_date == 0) {
       break;
     }
     needed_groups--;
 
-    vector<td_api::object_ptr<td_api::notification>> notifications;
+    std::vector<td_api::object_ptr<td_api::notification>> notifications;
     for (auto &notification : reversed(group.second.notifications)) {
       auto notification_object = get_notification_object(td_, group.first.dialog_id, notification);
       if (notification_object->type_ != nullptr) {
@@ -454,7 +454,7 @@ NotificationManager::NotificationGroups::iterator NotificationManager::get_group
     auto last_group_key = get_last_updated_group_key();
     if (group_key < last_group_key) {
       if (last_group_key.last_notification_date != 0) {
-        send_remove_group_update(last_group_key, groups_[last_group_key], vector<int32>());
+        send_remove_group_update(last_group_key, groups_[last_group_key], std::vector<int32>());
       }
       send_add_group_update(group_key, group, "get_group_force");
     }
@@ -476,7 +476,7 @@ int32 NotificationManager::load_message_notification_groups_from_database(int32 
   }
 
   VLOG(notifications) << "Trying to load up to " << limit << " notification groups from database";
-  vector<NotificationGroupKey> group_keys = td_->messages_manager_->get_message_notification_group_keys_from_database(
+  std::vector<NotificationGroupKey> group_keys = td_->messages_manager_->get_message_notification_group_keys_from_database(
       last_loaded_notification_group_key_, limit);
   last_loaded_notification_group_key_ =
       group_keys.size() == static_cast<size_t>(limit) ? group_keys.back() : NotificationGroupKey();
@@ -643,7 +643,7 @@ void NotificationManager::on_get_notifications_from_database(NotificationGroupId
 }
 
 void NotificationManager::add_notifications_to_group_begin(NotificationGroups::iterator group_it,
-                                                           vector<Notification> notifications) {
+                                                           std::vector<Notification> notifications) {
   CHECK(group_it != groups_.end());
 
   td::remove_if(notifications, [td = td_, dialog_id = group_it->first.dialog_id](const Notification &notification) {
@@ -694,13 +694,13 @@ void NotificationManager::add_notifications_to_group_begin(NotificationGroups::i
     if (!was_updated) {
       if (last_group_key.last_notification_date != 0) {
         // need to remove last notification group to not exceed max_notification_group_count_
-        send_remove_group_update(last_group_key, groups_[last_group_key], vector<int32>());
+        send_remove_group_update(last_group_key, groups_[last_group_key], std::vector<int32>());
       }
       send_add_group_update(group_key, group, "add_notifications_to_group_begin");
     }
 
-    vector<Notification> new_notifications;
-    vector<td_api::object_ptr<td_api::notification>> added_notifications;
+    std::vector<Notification> new_notifications;
+    std::vector<td_api::object_ptr<td_api::notification>> added_notifications;
     new_notifications.reserve(notifications.size());
     added_notifications.reserve(notifications.size());
     for (auto &notification : notifications) {
@@ -735,7 +735,7 @@ void NotificationManager::add_notifications_to_group_begin(NotificationGroups::i
       add_update_notification_group(td_api::make_object<td_api::updateNotificationGroup>(
           group_key.group_id.get(), get_notification_group_type_object(group.type),
           td_->dialog_manager_->get_chat_id_object(group_key.dialog_id, "updateNotificationGroup"), 0, 0,
-          group.total_count, std::move(added_notifications), vector<int32>()));
+          group.total_count, std::move(added_notifications), std::vector<int32>()));
     }
   }
 
@@ -962,7 +962,7 @@ StringBuilder &operator<<(StringBuilder &string_builder, const NotificationManag
     }
     case td_api::updateNotificationGroup::ID: {
       auto p = static_cast<const td_api::updateNotificationGroup *>(update.update);
-      vector<int32> added_notification_ids;
+      std::vector<int32> added_notification_ids;
       for (auto &notification : p->added_notifications_) {
         added_notification_ids.push_back(notification->id_);
       }
@@ -1123,7 +1123,7 @@ void NotificationManager::flush_pending_updates(int32 group_id, const char *sour
     FlatHashMap<int32, size_t> first_add_notification_pos;
     FlatHashMap<int32, size_t> first_edit_notification_pos;
     FlatHashSet<int32> can_be_deleted_notification_ids;
-    vector<int32> moved_deleted_notification_ids;
+    std::vector<int32> moved_deleted_notification_ids;
     size_t first_notification_group_pos = 0;
 
     for (auto &update : updates) {
@@ -1316,8 +1316,8 @@ void NotificationManager::flush_pending_updates(int32 group_id, const char *sour
       break;
     }
 
-    auto has_common_notifications = [](const vector<td_api::object_ptr<td_api::notification>> &notifications,
-                                       const vector<int32> &notification_ids) {
+    auto has_common_notifications = [](const std::vector<td_api::object_ptr<td_api::notification>> &notifications,
+                                       const std::vector<int32> &notification_ids) {
       for (auto &notification : notifications) {
         if (td::contains(notification_ids, notification->id_)) {
           return true;
@@ -1395,7 +1395,7 @@ void NotificationManager::flush_all_pending_updates(bool include_delayed_chats, 
     return;
   }
 
-  vector<NotificationGroupKey> ready_group_keys;
+  std::vector<NotificationGroupKey> ready_group_keys;
   for (const auto &it : pending_updates_) {
     if (include_delayed_chats || running_get_chat_difference_.count(it.first) == 0) {
       auto group_it = get_group(NotificationGroupId(it.first));
@@ -1416,7 +1416,7 @@ void NotificationManager::flush_all_pending_updates(bool include_delayed_chats, 
 }
 
 bool NotificationManager::do_flush_pending_notifications(NotificationGroupKey &group_key, NotificationGroup &group,
-                                                         vector<PendingNotification> &pending_notifications) {
+                                                         std::vector<PendingNotification> &pending_notifications) {
   // no check for G()->close_flag() to flush pending notifications even while closing
   if (pending_notifications.empty()) {
     return false;
@@ -1430,7 +1430,7 @@ bool NotificationManager::do_flush_pending_notifications(NotificationGroupKey &g
   size_t shown_notification_count = min(old_notification_count, max_notification_group_size_);
 
   bool force_update = false;
-  vector<td_api::object_ptr<td_api::notification>> added_notifications;
+  std::vector<td_api::object_ptr<td_api::notification>> added_notifications;
   added_notifications.reserve(pending_notifications.size());
   for (auto &pending_notification : pending_notifications) {
     Notification notification(pending_notification.notification_id, pending_notification.date,
@@ -1448,7 +1448,7 @@ bool NotificationManager::do_flush_pending_notifications(NotificationGroupKey &g
     added_notifications.erase(added_notifications.begin(), added_notifications.end() - max_notification_group_size_);
   }
 
-  vector<int32> removed_notification_ids;
+  std::vector<int32> removed_notification_ids;
   if (shown_notification_count + added_notifications.size() > max_notification_group_size_) {
     auto removed_notification_count =
         shown_notification_count + added_notifications.size() - max_notification_group_size_;
@@ -1476,7 +1476,7 @@ bool NotificationManager::do_flush_pending_notifications(NotificationGroupKey &g
 
 td_api::object_ptr<td_api::updateNotificationGroup> NotificationManager::get_remove_group_update(
     const NotificationGroupKey &group_key, const NotificationGroup &group,
-    vector<int32> &&removed_notification_ids) const {
+    std::vector<int32> &&removed_notification_ids) const {
   auto total_size = group.notifications.size();
   CHECK(removed_notification_ids.size() <= max_notification_group_size_);
   auto removed_size = min(total_size, max_notification_group_size_ - removed_notification_ids.size());
@@ -1492,12 +1492,12 @@ td_api::object_ptr<td_api::updateNotificationGroup> NotificationManager::get_rem
       group_key.group_id.get(), get_notification_group_type_object(group.type),
       td_->dialog_manager_->get_chat_id_object(group_key.dialog_id, "updateNotificationGroup 4"),
       td_->dialog_manager_->get_chat_id_object(group_key.dialog_id, "updateNotificationGroup 10"), 0, group.total_count,
-      vector<td_api::object_ptr<td_api::notification>>(), std::move(removed_notification_ids));
+      std::vector<td_api::object_ptr<td_api::notification>>(), std::move(removed_notification_ids));
 }
 
 void NotificationManager::send_remove_group_update(const NotificationGroupKey &group_key,
                                                    const NotificationGroup &group,
-                                                   vector<int32> &&removed_notification_ids) {
+                                                   std::vector<int32> &&removed_notification_ids) {
   VLOG(notifications) << "Remove " << group_key.group_id;
   auto update = get_remove_group_update(group_key, group, std::move(removed_notification_ids));
   if (update != nullptr) {
@@ -1510,7 +1510,7 @@ void NotificationManager::send_add_group_update(const NotificationGroupKey &grou
   VLOG(notifications) << "Add " << group_key.group_id << " from " << source;
   auto total_size = group.notifications.size();
   auto added_size = min(total_size, max_notification_group_size_);
-  vector<td_api::object_ptr<td_api::notification>> added_notifications;
+  std::vector<td_api::object_ptr<td_api::notification>> added_notifications;
   added_notifications.reserve(added_size);
   for (size_t i = total_size - added_size; i < total_size; i++) {
     added_notifications.push_back(get_notification_object(td_, group_key.dialog_id, group.notifications[i]));
@@ -1523,7 +1523,7 @@ void NotificationManager::send_add_group_update(const NotificationGroupKey &grou
     add_update_notification_group(td_api::make_object<td_api::updateNotificationGroup>(
         group_key.group_id.get(), get_notification_group_type_object(group.type),
         td_->dialog_manager_->get_chat_id_object(group_key.dialog_id, "updateNotificationGroup 5"), 0, 0,
-        group.total_count, std::move(added_notifications), vector<int32>()));
+        group.total_count, std::move(added_notifications), std::vector<int32>()));
   }
 }
 
@@ -1578,7 +1578,7 @@ void NotificationManager::flush_pending_notifications(NotificationGroupId group_
       if (last_group_key.last_notification_date != 0) {
         // need to remove last notification group to not exceed max_notification_group_count_
         removed_group_id = last_group_key.group_id;
-        send_remove_group_update(last_group_key, groups_[last_group_key], vector<int32>());
+        send_remove_group_update(last_group_key, groups_[last_group_key], std::vector<int32>());
       }
       send_add_group_update(group_key, group, "flush_pending_notifications");
     }
@@ -1587,7 +1587,7 @@ void NotificationManager::flush_pending_notifications(NotificationGroupId group_
     int64 ringtone_id = -1;
 
     // split notifications by groups with common settings
-    vector<PendingNotification> grouped_notifications;
+    std::vector<PendingNotification> grouped_notifications;
     for (auto &pending_notification : group.pending_notifications) {
       if (notification_settings_dialog_id != pending_notification.settings_dialog_id ||
           ringtone_id != pending_notification.ringtone_id) {
@@ -1740,8 +1740,8 @@ void NotificationManager::on_notification_removed(NotificationId notification_id
 }
 
 void NotificationManager::on_notifications_removed(
-    NotificationGroups::iterator &&group_it, vector<td_api::object_ptr<td_api::notification>> &&added_notifications,
-    vector<int32> &&removed_notification_ids, bool force_update) {
+    NotificationGroups::iterator &&group_it, std::vector<td_api::object_ptr<td_api::notification>> &&added_notifications,
+    std::vector<int32> &&removed_notification_ids, bool force_update) {
   VLOG(notifications) << "In on_notifications_removed for " << group_it->first.group_id << " with "
                       << added_notifications.size() << " added notifications and " << removed_notification_ids.size()
                       << " removed notifications, new total_count = " << group_it->second.total_count;
@@ -1779,7 +1779,7 @@ void NotificationManager::on_notifications_removed(
       add_update_notification_group(td_api::make_object<td_api::updateNotificationGroup>(
           group_key.group_id.get(), get_notification_group_type_object(group.type),
           td_->dialog_manager_->get_chat_id_object(group_key.dialog_id, "updateNotificationGroup 6"), 0, 0, 0,
-          vector<td_api::object_ptr<td_api::notification>>(), vector<int32>()));
+          std::vector<td_api::object_ptr<td_api::notification>>(), std::vector<int32>()));
     } else {
       VLOG(notifications) << "There is no need to send updateNotificationGroup about " << group_key.group_id;
     }
@@ -1943,8 +1943,8 @@ void NotificationManager::remove_notification(NotificationGroupId group_id, Noti
     group_it->second.notifications.erase(group_it->second.notifications.begin() + notification_pos);
   }
 
-  vector<td_api::object_ptr<td_api::notification>> added_notifications;
-  vector<int32> removed_notification_ids;
+  std::vector<td_api::object_ptr<td_api::notification>> added_notifications;
+  std::vector<int32> removed_notification_ids;
   CHECK(max_notification_group_size_ > 0);
   if (is_found && notification_pos + max_notification_group_size_ >= old_group_size) {
     removed_notification_ids.push_back(notification_id.get());
@@ -2095,7 +2095,7 @@ void NotificationManager::remove_notification_group(NotificationGroupId group_id
 
   bool is_found = notification_delete_end != 0;
 
-  vector<int32> removed_notification_ids;
+  std::vector<int32> removed_notification_ids;
   if (is_found && notification_delete_end + max_notification_group_size_ > old_group_size) {
     for (size_t i = old_group_size >= max_notification_group_size_ ? old_group_size - max_notification_group_size_ : 0;
          i < notification_delete_end; i++) {
@@ -2120,7 +2120,7 @@ void NotificationManager::remove_notification_group(NotificationGroupId group_id
   }
 
   if (new_total_count != -1 || !removed_notification_ids.empty()) {
-    on_notifications_removed(std::move(group_it), vector<td_api::object_ptr<td_api::notification>>(),
+    on_notifications_removed(std::move(group_it), std::vector<td_api::object_ptr<td_api::notification>>(),
                              std::move(removed_notification_ids), force_update);
   } else {
     VLOG(notifications) << "Have new_total_count = " << new_total_count << ", " << removed_notification_ids.size()
@@ -2207,7 +2207,7 @@ void NotificationManager::remove_temporary_notifications(NotificationGroupId gro
     group.total_count -= removed_notification_count;
   }
 
-  vector<int32> removed_notification_ids;
+  std::vector<int32> removed_notification_ids;
   for (auto i = notification_pos; i < old_group_size; i++) {
     LOG_CHECK(group.notifications[i].type->is_temporary())
         << notification_pos << ' ' << i << ' ' << old_group_size << ' ' << removed_notification_count << ' '
@@ -2222,7 +2222,7 @@ void NotificationManager::remove_temporary_notifications(NotificationGroupId gro
   group.notifications.erase(group.notifications.begin() + notification_pos, group.notifications.end());
   CHECK(!removed_notification_ids.empty());
 
-  vector<td_api::object_ptr<td_api::notification>> added_notifications;
+  std::vector<td_api::object_ptr<td_api::notification>> added_notifications;
   if (old_group_size >= max_notification_group_size_) {
     size_t added_notification_count = 0;
     for (size_t i = min(old_group_size - max_notification_group_size_, notification_pos);
@@ -2307,7 +2307,7 @@ void NotificationManager::set_notification_total_count(NotificationGroupId group
   VLOG(notifications) << "Set total_count in " << group_id << " to " << new_total_count;
   group_it->second.total_count = new_total_count;
 
-  on_notifications_removed(std::move(group_it), vector<td_api::object_ptr<td_api::notification>>(), vector<int32>(),
+  on_notifications_removed(std::move(group_it), std::vector<td_api::object_ptr<td_api::notification>>(), std::vector<int32>(),
                            false);
 }
 
@@ -2327,7 +2327,7 @@ vector<MessageId> NotificationManager::get_notification_group_message_ids(Notifi
     return {};
   }
 
-  vector<MessageId> message_ids;
+  std::vector<MessageId> message_ids;
   for (auto &notification : group_it->second.notifications) {
     auto object_id = notification.type->get_object_id();
     if (object_id.is_valid()) {
@@ -2510,7 +2510,7 @@ void NotificationManager::on_notification_group_count_max_changed(bool send_upda
       if (is_increased) {
         send_add_group_update(group_key, group, "on_notification_group_count_max_changed");
       } else {
-        send_remove_group_update(group_key, group, vector<int32>());
+        send_remove_group_update(group_key, group, std::vector<int32>());
       }
     }
 
@@ -2568,8 +2568,8 @@ void NotificationManager::on_notification_group_size_max_changed() {
         break;
       }
 
-      vector<td_api::object_ptr<td_api::notification>> added_notifications;
-      vector<int32> removed_notification_ids;
+      std::vector<td_api::object_ptr<td_api::notification>> added_notifications;
+      std::vector<int32> removed_notification_ids;
       auto notification_count = group.notifications.size();
       if (new_max_notification_group_size_size_t < max_notification_group_size_) {
         if (notification_count <= new_max_notification_group_size_size_t) {
@@ -3089,7 +3089,7 @@ void NotificationManager::add_push_notification_user(
       false /*ignored*/, 0, false /*ignored*/, false /*ignored*/, false /*ignored*/, false /*ignored*/,
       false /*ignored*/, false /*ignored*/, false /*ignored*/, sender_user_id.get(), sender_access_hash, user_name,
       string(), string(), string(), std::move(sender_photo), nullptr, 0, Auto(), string(), string(), nullptr,
-      vector<telegram_api::object_ptr<telegram_api::username>>(), 0, nullptr, nullptr, 0);
+      std::vector<telegram_api::object_ptr<telegram_api::username>>(), 0, nullptr, nullptr, 0);
   td_->user_manager_->on_get_user(std::move(user), "add_push_notification_user");
 }
 
@@ -3224,7 +3224,7 @@ Status NotificationManager::process_push_notification_payload(string payload, bo
     return Status::Error("Receive empty loc_key");
   }
 
-  vector<string> loc_args;
+  std::vector<string> loc_args;
   TRY_RESULT(loc_args_array, data.extract_optional_field("loc_args", JsonValue::Type::Array));
   if (loc_args_array.type() == JsonValue::Type::Array) {
     loc_args.reserve(loc_args_array.get_array().size());
@@ -3273,7 +3273,7 @@ Status NotificationManager::process_push_notification_payload(string payload, bo
 
     auto update = telegram_api::make_object<telegram_api::updateServiceNotification>(
         telegram_api::updateServiceNotification::INBOX_DATE_MASK, false, false, G()->unix_time(), string(),
-        announcement_message_text, nullptr, vector<telegram_api::object_ptr<telegram_api::MessageEntity>>());
+        announcement_message_text, nullptr, std::vector<telegram_api::object_ptr<telegram_api::MessageEntity>>());
     send_closure(G()->messages_manager(), &MessagesManager::on_update_service_notification, std::move(update), false,
                  std::move(promise));
     save_announcement_ids();
@@ -3384,7 +3384,7 @@ Status NotificationManager::process_push_notification_payload(string payload, bo
     }
     TRY_RESULT(server_message_ids_str, custom.get_required_string_field("messages"));
     auto server_message_ids = full_split(server_message_ids_str, ',');
-    vector<MessageId> message_ids;
+    std::vector<MessageId> message_ids;
     for (const auto &server_message_id_str : server_message_ids) {
       TRY_RESULT(server_message_id_int, to_integer_safe<int32>(server_message_id_str));
       ServerMessageId server_message_id(server_message_id_int);
@@ -3424,7 +3424,7 @@ Status NotificationManager::process_push_notification_payload(string payload, bo
     }
     TRY_RESULT(server_story_ids_str, custom.get_required_string_field("story_id"));
     auto server_story_ids = full_split(server_story_ids_str, ',');
-    vector<StoryId> story_ids;
+    std::vector<StoryId> story_ids;
     for (const auto &server_story_id_str : server_story_ids) {
       TRY_RESULT(story_id_int, to_integer_safe<int32>(server_story_id_str));
       StoryId story_id(story_id_int);
@@ -4159,7 +4159,7 @@ void NotificationManager::after_get_difference_impl() {
 
   VLOG(notifications) << "After get difference";
 
-  vector<NotificationGroupId> to_remove_temporary_notifications_group_ids;
+  std::vector<NotificationGroupId> to_remove_temporary_notifications_group_ids;
   for (auto &group_it : groups_) {
     const auto &group_key = group_it.first;
     const auto &group = group_it.second;
@@ -4246,7 +4246,7 @@ void NotificationManager::destroy_all_notifications() {
     }
 
     VLOG(notifications) << "Destroy " << group_key.group_id;
-    send_remove_group_update(group_key, group, vector<int32>());
+    send_remove_group_update(group_key, group, std::vector<int32>());
   }
 
   flush_all_pending_updates(true, "destroy_all_notifications");

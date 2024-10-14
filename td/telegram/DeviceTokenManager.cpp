@@ -87,7 +87,7 @@ void DeviceTokenManager::TokenInfo::parse(ParserT &parser) {
   }
   parse(token, parser);
   if (has_other_user_ids_legacy) {
-    vector<int32> other_user_ids_legacy;
+    std::vector<int32> other_user_ids_legacy;
     parse(other_user_ids_legacy, parser);
     other_user_ids = transform(other_user_ids_legacy, [](int32 user_id) { return static_cast<int64>(user_id); });
   }
@@ -131,7 +131,7 @@ StringBuilder &operator<<(StringBuilder &string_builder, const DeviceTokenManage
 }
 
 void DeviceTokenManager::register_device(tl_object_ptr<td_api::DeviceToken> device_token_ptr,
-                                         const vector<UserId> &other_user_ids,
+                                         const std::vector<UserId> &other_user_ids,
                                          Promise<td_api::object_ptr<td_api::pushReceiverId>> promise) {
   if (device_token_ptr == nullptr) {
     return promise.set_error(Status::Error(400, "Device token must be non-empty"));
@@ -309,7 +309,7 @@ void DeviceTokenManager::reregister_device() {
 }
 
 vector<std::pair<int64, Slice>> DeviceTokenManager::get_encryption_keys() const {
-  vector<std::pair<int64, Slice>> result;
+  std::vector<std::pair<int64, Slice>> result;
   for (int32 token_type = 1; token_type < TokenType::Size; token_type++) {
     auto &info = tokens_[token_type];
     if (!info.token.empty() && info.state != TokenInfo::State::Unregister) {
@@ -398,12 +398,12 @@ void DeviceTokenManager::loop() {
     NetQueryPtr net_query;
     if (info.state == TokenInfo::State::Unregister) {
       net_query = G()->net_query_creator().create(
-          telegram_api::account_unregisterDevice(token_type, info.token, vector<int64>(info.other_user_ids)));
+          telegram_api::account_unregisterDevice(token_type, info.token, std::vector<int64>(info.other_user_ids)));
     } else {
       int32 flags = telegram_api::account_registerDevice::NO_MUTED_MASK;
       net_query = G()->net_query_creator().create(
           telegram_api::account_registerDevice(flags, false /*ignored*/, token_type, info.token, info.is_app_sandbox,
-                                               BufferSlice(info.encryption_key), vector<int64>(info.other_user_ids)));
+                                               BufferSlice(info.encryption_key), std::vector<int64>(info.other_user_ids)));
     }
     info.net_query_id = net_query->id();
     G()->net_query_dispatcher().dispatch_with_callback(std::move(net_query), actor_shared(this, token_type));

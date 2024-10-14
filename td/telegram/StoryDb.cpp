@@ -181,7 +181,7 @@ class StoryDbImpl final : public StoryDbSyncInterface {
     return BufferSlice(get_story_stmt_.view_blob(0));
   }
 
-  vector<StoryDbStory> get_expiring_stories(int32 expires_till, int32 limit) final {
+  std::vector<StoryDbStory> get_expiring_stories(int32 expires_till, int32 limit) final {
     auto &stmt = get_expiring_stories_stmt_;
     SCOPE_EXIT {
       stmt.reset();
@@ -191,7 +191,7 @@ class StoryDbImpl final : public StoryDbSyncInterface {
     stmt.bind_int32(2, limit).ensure();
     stmt.step().ensure();
 
-    vector<StoryDbStory> stories;
+    std::vector<StoryDbStory> stories;
     while (stmt.has_row()) {
       DialogId dialog_id(stmt.view_int64(0));
       StoryId story_id(stmt.view_int32(1));
@@ -203,7 +203,7 @@ class StoryDbImpl final : public StoryDbSyncInterface {
     return stories;
   }
 
-  vector<StoryDbStory> get_stories_from_notification_id(DialogId dialog_id, NotificationId from_notification_id,
+  std::vector<StoryDbStory> get_stories_from_notification_id(DialogId dialog_id, NotificationId from_notification_id,
                                                         int32 limit) final {
     auto &stmt = get_stories_from_notification_id_stmt_;
     SCOPE_EXIT {
@@ -214,7 +214,7 @@ class StoryDbImpl final : public StoryDbSyncInterface {
     stmt.bind_int32(3, limit).ensure();
     stmt.step().ensure();
 
-    vector<StoryDbStory> stories;
+    std::vector<StoryDbStory> stories;
     while (stmt.has_row()) {
       StoryId story_id(stmt.view_int32(0));
       BufferSlice data(stmt.view_blob(1));
@@ -520,8 +520,8 @@ class StoryDbAsync final : public StoryDbAsyncInterface {
     static constexpr double MAX_PENDING_QUERIES_DELAY{0.01};
 
     //NB: order is important, destructor of pending_writes_ will change finished_writes_
-    vector<Promise<Unit>> finished_writes_;
-    vector<Promise<Unit>> pending_writes_;  // TODO use Action
+    std::vector<Promise<Unit>> finished_writes_;
+    std::vector<Promise<Unit>> pending_writes_;  // TODO use Action
     double wakeup_at_ = 0;
 
     template <class F>

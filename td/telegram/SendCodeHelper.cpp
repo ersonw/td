@@ -63,7 +63,7 @@ Result<telegram_api::auth_resendCode> SendCodeHelper::resend_code(
 
 telegram_api::object_ptr<telegram_api::codeSettings> SendCodeHelper::get_input_code_settings(const Settings &settings) {
   int32 flags = 0;
-  vector<BufferSlice> logout_tokens;
+  std::vector<BufferSlice> logout_tokens;
   string device_token;
   bool is_app_sandbox = false;
   if (settings != nullptr) {

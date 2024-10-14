@@ -32,7 +32,7 @@ class SetBotCommandsQuery final : public Td::ResultHandler {
   explicit SetBotCommandsQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(BotCommandScope scope, const string &language_code, vector<BotCommand> &&commands) {
+  void send(BotCommandScope scope, const string &language_code, std::vector<BotCommand> &&commands) {
     send_query(G()->net_query_creator().create(telegram_api::bots_setBotCommands(
         scope.get_input_bot_command_scope(td_), language_code,
         transform(commands, [](const BotCommand &command) { return command.get_input_bot_command(); }))));
@@ -127,7 +127,7 @@ bool operator==(const BotCommand &lhs, const BotCommand &rhs) {
   return lhs.command_ == rhs.command_ && lhs.description_ == rhs.description_;
 }
 
-BotCommands::BotCommands(UserId bot_user_id, vector<telegram_api::object_ptr<telegram_api::botCommand>> &&bot_commands)
+BotCommands::BotCommands(UserId bot_user_id, std::vector<telegram_api::object_ptr<telegram_api::botCommand>> &&bot_commands)
     : bot_user_id_(bot_user_id) {
   commands_ = transform(std::move(bot_commands), [](telegram_api::object_ptr<telegram_api::botCommand> &&bot_command) {
     return BotCommand(std::move(bot_command));
@@ -165,11 +165,11 @@ bool operator==(const BotCommands &lhs, const BotCommands &rhs) {
 }
 
 void set_commands(Td *td, td_api::object_ptr<td_api::BotCommandScope> &&scope_ptr, string &&language_code,
-                  vector<td_api::object_ptr<td_api::botCommand>> &&commands, Promise<Unit> &&promise) {
+                  std::vector<td_api::object_ptr<td_api::botCommand>> &&commands, Promise<Unit> &&promise) {
   TRY_RESULT_PROMISE(promise, scope, BotCommandScope::get_bot_command_scope(td, std::move(scope_ptr)));
   TRY_STATUS_PROMISE(promise, validate_bot_language_code(language_code));
 
-  vector<BotCommand> new_commands;
+  std::vector<BotCommand> new_commands;
   for (auto &command : commands) {
     if (command == nullptr) {
       return promise.set_error(Status::Error(400, "Command must be non-empty"));

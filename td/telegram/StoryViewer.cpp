@@ -169,7 +169,7 @@ StringBuilder &operator<<(StringBuilder &string_builder, const StoryViewer &view
 }
 
 StoryViewers::StoryViewers(Td *td, int32 total_count, int32 total_forward_count, int32 total_reaction_count,
-                           vector<telegram_api::object_ptr<telegram_api::StoryView>> &&story_views,
+                           std::vector<telegram_api::object_ptr<telegram_api::StoryView>> &&story_views,
                            string &&next_offset)
     : total_count_(total_count)
     , total_forward_count_(total_forward_count)
@@ -186,7 +186,7 @@ StoryViewers::StoryViewers(Td *td, int32 total_count, int32 total_forward_count,
 }
 
 StoryViewers::StoryViewers(Td *td, int32 total_count,
-                           vector<telegram_api::object_ptr<telegram_api::StoryReaction>> &&story_reactions,
+                           std::vector<telegram_api::object_ptr<telegram_api::StoryReaction>> &&story_reactions,
                            string &&next_offset)
     : total_count_(total_count), next_offset_(std::move(next_offset)) {
   for (auto &story_reaction : story_reactions) {
@@ -200,7 +200,7 @@ StoryViewers::StoryViewers(Td *td, int32 total_count,
 }
 
 vector<UserId> StoryViewers::get_viewer_user_ids() const {
-  vector<UserId> result;
+  std::vector<UserId> result;
   for (const auto &story_viewer : story_viewers_) {
     auto user_id = story_viewer.get_viewer_user_id();
     if (user_id.is_valid()) {

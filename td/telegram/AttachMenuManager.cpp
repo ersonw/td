@@ -60,7 +60,7 @@ class GetPopularAppBotsQuery final : public Td::ResultHandler {
     auto ptr = result_ptr.move_as_ok();
     LOG(INFO) << "Receive result for GetPopularAppBotsQuery: " << to_string(ptr);
 
-    vector<int64> user_ids;
+    std::vector<int64> user_ids;
     for (auto &user : ptr->users_) {
       auto user_id = td_->user_manager_->get_user_id(user);
       td_->user_manager_->on_get_user(std::move(user), "GetPopularAppBotsQuery");
@@ -688,11 +688,11 @@ void AttachMenuManager::AttachMenuBot::parse(ParserT &parser) {
 class AttachMenuManager::AttachMenuBotsLogEvent {
  public:
   int64 hash_ = 0;
-  vector<AttachMenuBot> attach_menu_bots_;
+  std::vector<AttachMenuBot> attach_menu_bots_;
 
   AttachMenuBotsLogEvent() = default;
 
-  AttachMenuBotsLogEvent(int64 hash, vector<AttachMenuBot> attach_menu_bots)
+  AttachMenuBotsLogEvent(int64 hash, std::vector<AttachMenuBot> attach_menu_bots)
       : hash_(hash), attach_menu_bots_(std::move(attach_menu_bots)) {
   }
 
@@ -1200,7 +1200,7 @@ void AttachMenuManager::on_reload_attach_menu_bots(
   td_->user_manager_->on_get_users(std::move(attach_menu_bots->users_), "on_reload_attach_menu_bots");
 
   auto new_hash = attach_menu_bots->hash_;
-  vector<AttachMenuBot> new_attach_menu_bots;
+  std::vector<AttachMenuBot> new_attach_menu_bots;
 
   for (auto &bot : attach_menu_bots->bots_) {
     auto r_attach_menu_bot = get_attach_menu_bot(std::move(bot));

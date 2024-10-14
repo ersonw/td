@@ -27,7 +27,7 @@ void FileUploadManager::start_up() {
 
 void FileUploadManager::upload(QueryId query_id, const LocalFileLocation &local_location,
                                const RemoteFileLocation &remote_location, int64 expected_size,
-                               const FileEncryptionKey &encryption_key, int8 priority, vector<int> bad_parts) {
+                               const FileEncryptionKey &encryption_key, int8 priority, std::vector<int> bad_parts) {
   if (stop_flag_) {
     return;
   }

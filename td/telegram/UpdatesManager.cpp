@@ -513,7 +513,7 @@ void UpdatesManager::before_get_difference(bool is_initial) {
 
   td_->messages_manager_->before_get_difference();
 
-  vector<Promise<Unit>> promises;
+  std::vector<Promise<Unit>> promises;
   if (can_postpone_updates()) {
     for (auto &update : pending_pts_updates_) {
       postponed_pts_updates_.emplace(std::move(update.update), update.pts, update.pts_count, update.receive_time,
@@ -734,7 +734,7 @@ bool UpdatesManager::is_acceptable_peer(const tl_object_ptr<telegram_api::Peer> 
 }
 
 bool UpdatesManager::is_acceptable_message_entities(
-    const vector<tl_object_ptr<telegram_api::MessageEntity>> &message_entities) const {
+    const std::vector<tl_object_ptr<telegram_api::MessageEntity>> &message_entities) const {
   for (auto &entity : message_entities) {
     if (entity->get_id() == telegram_api::messageEntityMentionName::ID) {
       auto entity_mention_name = static_cast<const telegram_api::messageEntityMentionName *>(entity.get());
@@ -858,7 +858,7 @@ bool UpdatesManager::is_acceptable_message_media(
       if (message_media_web_page->webpage_->get_id() == telegram_api::webPage::ID) {
         auto web_page = static_cast<const telegram_api::webPage *>(message_media_web_page->webpage_.get());
         if (web_page->cached_page_ != nullptr) {
-          const vector<tl_object_ptr<telegram_api::PageBlock>> *page_blocks = nullptr;
+          const std::vector<tl_object_ptr<telegram_api::PageBlock>> *page_blocks = nullptr;
           downcast_call(*web_page->cached_page_, [&page_blocks](auto &page) { page_blocks = &page.blocks_; });
           CHECK(page_blocks != nullptr);
           for (auto &page_block : *page_blocks) {
@@ -1336,7 +1336,7 @@ void UpdatesManager::on_get_updates_state(tl_object_ptr<telegram_api::updates_st
   }
 }
 
-const vector<tl_object_ptr<telegram_api::Update>> *UpdatesManager::get_updates(
+const std::vector<tl_object_ptr<telegram_api::Update>> *UpdatesManager::get_updates(
     const telegram_api::Updates *updates_ptr) {
   switch (updates_ptr->get_id()) {
     case telegram_api::updatesTooLong::ID:
@@ -1464,7 +1464,7 @@ bool UpdatesManager::is_additional_service_message(const telegram_api::Message *
 
 vector<std::pair<const telegram_api::Message *, bool>> UpdatesManager::get_new_messages(
     const telegram_api::Updates *updates_ptr) {
-  vector<std::pair<const telegram_api::Message *, bool>> messages;
+  std::vector<std::pair<const telegram_api::Message *, bool>> messages;
   auto updates = get_updates(updates_ptr);
   if (updates != nullptr) {
     for (auto &update : *updates) {
@@ -1489,7 +1489,7 @@ vector<std::pair<const telegram_api::Message *, bool>> UpdatesManager::get_new_m
 }
 
 vector<InputGroupCallId> UpdatesManager::get_update_new_group_call_ids(const telegram_api::Updates *updates_ptr) {
-  vector<InputGroupCallId> input_group_call_ids;
+  std::vector<InputGroupCallId> input_group_call_ids;
   auto updates = get_updates(updates_ptr);
   if (updates != nullptr) {
     for (auto &update : *updates) {
@@ -1525,7 +1525,7 @@ string UpdatesManager::extract_join_group_call_presentation_params(telegram_api:
 }
 
 vector<DialogId> UpdatesManager::get_update_notify_settings_dialog_ids(const telegram_api::Updates *updates_ptr) {
-  vector<DialogId> dialog_ids;
+  std::vector<DialogId> dialog_ids;
   auto updates = get_updates(updates_ptr);
   if (updates != nullptr) {
     dialog_ids.reserve(updates->size());
@@ -1549,7 +1549,7 @@ vector<DialogId> UpdatesManager::get_update_notify_settings_dialog_ids(const tel
 }
 
 vector<int32> UpdatesManager::get_update_ids(const telegram_api::Updates *updates_ptr) {
-  const vector<tl_object_ptr<telegram_api::Update>> *updates = nullptr;
+  const std::vector<tl_object_ptr<telegram_api::Update>> *updates = nullptr;
   auto updates_type = updates_ptr->get_id();
   switch (updates_type) {
     case telegram_api::updatesTooLong::ID:
@@ -1574,7 +1574,7 @@ vector<int32> UpdatesManager::get_update_ids(const telegram_api::Updates *update
       UNREACHABLE();
   }
 
-  vector<int32> result;
+  std::vector<int32> result;
   result.reserve(updates->size());
   for (auto &update : *updates) {
     if (update != nullptr) {
@@ -1585,7 +1585,7 @@ vector<int32> UpdatesManager::get_update_ids(const telegram_api::Updates *update
 }
 
 vector<DialogId> UpdatesManager::get_chat_dialog_ids(const telegram_api::Updates *updates_ptr) {
-  const vector<tl_object_ptr<telegram_api::Chat>> *chats = nullptr;
+  const std::vector<tl_object_ptr<telegram_api::Chat>> *chats = nullptr;
   switch (updates_ptr->get_id()) {
     case telegram_api::updatesTooLong::ID:
     case telegram_api::updateShortMessage::ID:
@@ -1608,7 +1608,7 @@ vector<DialogId> UpdatesManager::get_chat_dialog_ids(const telegram_api::Updates
     return {};
   }
 
-  vector<DialogId> dialog_ids;
+  std::vector<DialogId> dialog_ids;
   dialog_ids.reserve(chats->size());
   for (const auto &chat : *chats) {
     auto dialog_id = ChatManager::get_dialog_id(chat);
@@ -1790,9 +1790,9 @@ void UpdatesManager::notify_speed_limited(bool is_upload) {
 }
 
 void UpdatesManager::process_get_difference_updates(
-    vector<tl_object_ptr<telegram_api::Message>> &&new_messages,
-    vector<tl_object_ptr<telegram_api::EncryptedMessage>> &&new_encrypted_messages,
-    vector<tl_object_ptr<telegram_api::Update>> &&other_updates) {
+    std::vector<tl_object_ptr<telegram_api::Message>> &&new_messages,
+    std::vector<tl_object_ptr<telegram_api::EncryptedMessage>> &&new_encrypted_messages,
+    std::vector<tl_object_ptr<telegram_api::Update>> &&other_updates) {
   VLOG(get_difference) << "In get difference receive " << new_messages.size() << " messages, "
                        << new_encrypted_messages.size() << " encrypted messages and " << other_updates.size()
                        << " other updates";
@@ -2935,7 +2935,7 @@ void UpdatesManager::postpone_pts_update(tl_object_ptr<telegram_api::Update> &&u
 }
 
 void UpdatesManager::process_seq_updates(int32 seq_end, int32 date,
-                                         vector<tl_object_ptr<telegram_api::Update>> &&updates,
+                                         std::vector<tl_object_ptr<telegram_api::Update>> &&updates,
                                          Promise<Unit> &&promise) {
   string serialized_updates;
   if (date && seq_end) {
@@ -3053,7 +3053,7 @@ void UpdatesManager::process_qts_update(tl_object_ptr<telegram_api::Update> &&up
           LOG(ERROR) << "Receive invalid " << to_string(update->reactions_);
           return;
         }
-        vector<td_api::object_ptr<td_api::messageReaction>> message_reactions;
+        std::vector<td_api::object_ptr<td_api::messageReaction>> message_reactions;
         for (const auto &reaction_count : update->reactions_) {
           auto reaction_type = ReactionType(reaction_count->reaction_);
           if (reaction_type.is_empty() || reaction_count->count_ <= 0) {
@@ -3429,7 +3429,7 @@ void UpdatesManager::set_qts_gap_timeout(double timeout) {
 
 void UpdatesManager::on_pending_update(tl_object_ptr<telegram_api::Update> update, int32 seq, Promise<Unit> &&promise,
                                        const char *source) {
-  vector<tl_object_ptr<telegram_api::Update>> updates;
+  std::vector<tl_object_ptr<telegram_api::Update>> updates;
   updates.push_back(std::move(update));
   on_pending_updates(std::move(updates), seq, seq, 0, Time::now(), std::move(promise), source);
 }
@@ -3624,7 +3624,7 @@ void UpdatesManager::on_update(tl_object_ptr<telegram_api::updateChannelPinnedTo
 }
 
 void UpdatesManager::on_update(tl_object_ptr<telegram_api::updateChannelPinnedTopics> update, Promise<Unit> &&promise) {
-  vector<MessageId> top_thread_message_ids;
+  std::vector<MessageId> top_thread_message_ids;
   for (auto &server_message_id : update->order_) {
     auto message_id = MessageId(ServerMessageId(server_message_id));
     if (!message_id.is_valid()) {
@@ -3774,7 +3774,7 @@ int32 UpdatesManager::get_short_update_date() const {
   return now;
 }
 
-bool UpdatesManager::have_update_pts_changed(const vector<tl_object_ptr<telegram_api::Update>> &updates) {
+bool UpdatesManager::have_update_pts_changed(const std::vector<tl_object_ptr<telegram_api::Update>> &updates) {
   for (auto &update : updates) {
     CHECK(update != nullptr);
     if (update->get_id() == telegram_api::updatePtsChanged::ID) {
@@ -4379,7 +4379,7 @@ void UpdatesManager::on_update(tl_object_ptr<telegram_api::updateNewScheduledMes
 
 void UpdatesManager::on_update(tl_object_ptr<telegram_api::updateDeleteScheduledMessages> update,
                                Promise<Unit> &&promise) {
-  vector<ScheduledServerMessageId> message_ids = transform(update->messages_, [](int32 scheduled_server_message_id) {
+  std::vector<ScheduledServerMessageId> message_ids = transform(update->messages_, [](int32 scheduled_server_message_id) {
     return ScheduledServerMessageId(scheduled_server_message_id);
   });
 
@@ -4524,7 +4524,7 @@ void UpdatesManager::on_update(tl_object_ptr<telegram_api::updateQuickReplyMessa
 
 void UpdatesManager::on_update(tl_object_ptr<telegram_api::updateDeleteQuickReplyMessages> update,
                                Promise<Unit> &&promise) {
-  vector<MessageId> message_ids;
+  std::vector<MessageId> message_ids;
   for (auto message : update->messages_) {
     message_ids.push_back(MessageId(ServerMessageId(message)));
   }

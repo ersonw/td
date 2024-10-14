@@ -167,7 +167,7 @@ void FileStatsWorker::get_stats(bool need_all_files, bool split_by_owner_dialog_
   } else {
     auto start = Time::now();
 
-    vector<FullFileInfo> full_infos;
+    std::vector<FullFileInfo> full_infos;
     scan_fs(token_, [&](FsFileInfo &fs_info) {
       FullFileInfo info;
       info.file_type = fs_info.file_type;

@@ -49,7 +49,7 @@ tl_object_ptr<td_api::audio> AudiosManager::get_audio_object(FileId file_id) con
   auto audio = get_audio(file_id);
   CHECK(audio != nullptr);
 
-  vector<td_api::object_ptr<td_api::thumbnail>> album_covers;
+  std::vector<td_api::object_ptr<td_api::thumbnail>> album_covers;
   if (!td_->auth_manager_->is_bot()) {
     auto add_album_cover = [&](bool is_small, int32 width, int32 height) {
       auto r_file_id =
@@ -184,7 +184,7 @@ FileId AudiosManager::get_audio_thumbnail_file_id(FileId file_id) const {
   return audio->thumbnail.file_id;
 }
 
-void AudiosManager::append_audio_album_cover_file_ids(FileId file_id, vector<FileId> &file_ids) const {
+void AudiosManager::append_audio_album_cover_file_ids(FileId file_id, std::vector<FileId> &file_ids) const {
   if (td_->auth_manager_->is_bot()) {
     return;
   }
@@ -246,7 +246,7 @@ SecretInputMedia AudiosManager::get_secret_input_media(FileId audio_file_id,
   if (audio->thumbnail.file_id.is_valid() && thumbnail.empty()) {
     return SecretInputMedia{};
   }
-  vector<tl_object_ptr<secret_api::DocumentAttribute>> attributes;
+  std::vector<tl_object_ptr<secret_api::DocumentAttribute>> attributes;
   if (!audio->file_name.empty()) {
     attributes.push_back(make_tl_object<secret_api::documentAttributeFilename>(audio->file_name));
   }
@@ -283,7 +283,7 @@ tl_object_ptr<telegram_api::InputMedia> AudiosManager::get_input_media(
     const Audio *audio = get_audio(file_id);
     CHECK(audio != nullptr);
 
-    vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
+    std::vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
     attributes.push_back(make_tl_object<telegram_api::documentAttributeAudio>(
         telegram_api::documentAttributeAudio::TITLE_MASK | telegram_api::documentAttributeAudio::PERFORMER_MASK,
         false /*ignored*/, audio->duration, audio->title, audio->performer, BufferSlice()));
@@ -301,7 +301,7 @@ tl_object_ptr<telegram_api::InputMedia> AudiosManager::get_input_media(
     return make_tl_object<telegram_api::inputMediaUploadedDocument>(
         flags, false /*ignored*/, false /*ignored*/, false /*ignored*/, std::move(input_file),
         std::move(input_thumbnail), mime_type, std::move(attributes),
-        vector<tl_object_ptr<telegram_api::InputDocument>>(), 0);
+        std::vector<tl_object_ptr<telegram_api::InputDocument>>(), 0);
   } else {
     CHECK(!file_view.has_remote_location());
   }

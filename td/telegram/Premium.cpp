@@ -214,7 +214,7 @@ static Result<tl_object_ptr<telegram_api::InputStorePaymentPurpose>> get_input_s
     }
     case td_api::storePaymentPurposePremiumGiftCodes::ID: {
       auto p = static_cast<td_api::storePaymentPurposePremiumGiftCodes *>(purpose.get());
-      vector<telegram_api::object_ptr<telegram_api::InputUser>> input_users;
+      std::vector<telegram_api::object_ptr<telegram_api::InputUser>> input_users;
       for (auto user_id : p->user_ids_) {
         TRY_RESULT(input_user, td->user_manager_->get_input_user(UserId(user_id)));
         input_users.push_back(std::move(input_user));
@@ -306,8 +306,8 @@ class GetPremiumPromoQuery final : public Td::ResultHandler {
       return on_error(Status::Error(500, "Receive wrong number of videos"));
     }
 
-    vector<td_api::object_ptr<td_api::premiumFeaturePromotionAnimation>> animations;
-    vector<td_api::object_ptr<td_api::businessFeaturePromotionAnimation>> business_animations;
+    std::vector<td_api::object_ptr<td_api::premiumFeaturePromotionAnimation>> animations;
+    std::vector<td_api::object_ptr<td_api::businessFeaturePromotionAnimation>> business_animations;
     FlatHashSet<string> video_sections;
     for (size_t i = 0; i < promo->video_sections_.size(); i++) {
       if (promo->video_sections_[i].empty() || !video_sections.insert(promo->video_sections_[i]).second) {
@@ -389,7 +389,7 @@ class GetPremiumGiftCodeOptionsQuery final : public Td::ResultHandler {
     }
 
     auto results = result_ptr.move_as_ok();
-    vector<td_api::object_ptr<td_api::premiumGiftCodePaymentOption>> options;
+    std::vector<td_api::object_ptr<td_api::premiumGiftCodePaymentOption>> options;
     for (auto &result : results) {
       if (result->store_product_.empty()) {
         result->store_quantity_ = 0;
@@ -732,8 +732,8 @@ class AssignPlayMarketTransactionQuery final : public Td::ResultHandler {
   }
 };
 
-const vector<Slice> &get_premium_limit_keys() {
-  static const vector<Slice> limit_keys{"channels",
+const std::vector<Slice> &get_premium_limit_keys() {
+  static const std::vector<Slice> limit_keys{"channels",
                                         "saved_gifs",
                                         "stickers_faved",
                                         "dialog_filters",
@@ -1054,7 +1054,7 @@ void get_premium_features(Td *td, const td_api::object_ptr<td_api::PremiumSource
                      "emoji,emoji_status,saved_tags,peer_colors,wallpapers,profile_badge,message_privacy,advanced_chat_"
                      "management,no_ads,app_icons,infinite_reactions,animated_userpics,premium_stickers,effects"),
                  ',');
-  vector<td_api::object_ptr<td_api::PremiumFeature>> features;
+  std::vector<td_api::object_ptr<td_api::PremiumFeature>> features;
   for (const auto &premium_feature : premium_features) {
     auto feature = get_premium_feature_object(premium_feature);
     if (feature != nullptr) {
@@ -1067,8 +1067,8 @@ void get_premium_features(Td *td, const td_api::object_ptr<td_api::PremiumSource
 
   auto source_str = get_premium_source(source);
   if (!source_str.empty()) {
-    vector<tl_object_ptr<telegram_api::jsonObjectValue>> data;
-    vector<tl_object_ptr<telegram_api::JSONValue>> promo_order;
+    std::vector<tl_object_ptr<telegram_api::jsonObjectValue>> data;
+    std::vector<tl_object_ptr<telegram_api::JSONValue>> promo_order;
     for (const auto &premium_feature : premium_features) {
       promo_order.push_back(make_tl_object<telegram_api::jsonString>(premium_feature));
     }
@@ -1102,7 +1102,7 @@ void get_business_features(Td *td, const td_api::object_ptr<td_api::BusinessFeat
                                         "business_location,business_hours,quick_replies,greeting_message,away_message,"
                                         "business_links,business_intro,business_bots,emoji_status,folder_tags,stories"),
                  ',');
-  vector<td_api::object_ptr<td_api::BusinessFeature>> features;
+  std::vector<td_api::object_ptr<td_api::BusinessFeature>> features;
   for (const auto &business_feature : business_features) {
     auto feature = get_business_feature_object(business_feature);
     if (feature != nullptr) {
@@ -1112,8 +1112,8 @@ void get_business_features(Td *td, const td_api::object_ptr<td_api::BusinessFeat
 
   auto source_str = get_premium_source(source.get());
   if (!source_str.empty()) {
-    vector<telegram_api::object_ptr<telegram_api::jsonObjectValue>> data;
-    vector<telegram_api::object_ptr<telegram_api::JSONValue>> promo_order;
+    std::vector<telegram_api::object_ptr<telegram_api::jsonObjectValue>> data;
+    std::vector<telegram_api::object_ptr<telegram_api::JSONValue>> promo_order;
     for (const auto &business_feature : business_features) {
       promo_order.push_back(telegram_api::make_object<telegram_api::jsonString>(business_feature));
     }
@@ -1134,7 +1134,7 @@ void view_premium_feature(Td *td, const td_api::object_ptr<td_api::PremiumFeatur
     return promise.set_error(Status::Error(400, "Feature must be non-empty"));
   }
 
-  vector<tl_object_ptr<telegram_api::jsonObjectValue>> data;
+  std::vector<tl_object_ptr<telegram_api::jsonObjectValue>> data;
   data.push_back(
       make_tl_object<telegram_api::jsonObjectValue>("item", make_tl_object<telegram_api::jsonString>(source)));
   save_app_log(td, "premium.promo_screen_tap", DialogId(), make_tl_object<telegram_api::jsonObject>(std::move(data)),
@@ -1142,7 +1142,7 @@ void view_premium_feature(Td *td, const td_api::object_ptr<td_api::PremiumFeatur
 }
 
 void click_premium_subscription_button(Td *td, Promise<Unit> &&promise) {
-  vector<tl_object_ptr<telegram_api::jsonObjectValue>> data;
+  std::vector<tl_object_ptr<telegram_api::jsonObjectValue>> data;
   save_app_log(td, "premium.promo_screen_accept", DialogId(), make_tl_object<telegram_api::jsonObject>(std::move(data)),
                std::move(promise));
 }

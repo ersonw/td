@@ -116,7 +116,7 @@ string utf8_to_lower(Slice str) {
 vector<string> utf8_get_search_words(Slice str) {
   bool in_word = false;
   string word;
-  vector<string> words;
+  std::vector<string> words;
   auto pos = str.ubegin();
   auto end = str.uend();
   while (pos != end) {

@@ -399,7 +399,7 @@ class GetBroadcastRevenueTransactionsQuery final : public Td::ResultHandler {
       LOG(ERROR) << "Receive total_count = " << total_count << " and " << ptr->transactions_.size() << " transactions";
       total_count = static_cast<int32>(ptr->transactions_.size());
     }
-    vector<td_api::object_ptr<td_api::chatRevenueTransaction>> transactions;
+    std::vector<td_api::object_ptr<td_api::chatRevenueTransaction>> transactions;
     for (auto &transaction_ptr : ptr->transactions_) {
       int64 amount = 0;
       auto type = [&]() -> td_api::object_ptr<td_api::ChatRevenueTransactionType> {
@@ -927,7 +927,7 @@ void StatisticsManager::on_get_public_forwards(
   auto total_count = public_forwards->count_;
   LOG(INFO) << "Receive " << public_forwards->forwards_.size() << " forwarded stories out of "
             << public_forwards->count_;
-  vector<td_api::object_ptr<td_api::PublicForward>> result;
+  std::vector<td_api::object_ptr<td_api::PublicForward>> result;
   for (auto &forward_ptr : public_forwards->forwards_) {
     switch (forward_ptr->get_id()) {
       case telegram_api::publicForwardMessage::ID: {
@@ -977,7 +977,7 @@ void StatisticsManager::get_channel_differences_if_needed(
   td_->user_manager_->on_get_users(std::move(public_forwards->users_), "stats_publicForwards");
   td_->chat_manager_->on_get_chats(std::move(public_forwards->chats_), "stats_publicForwards");
 
-  vector<const telegram_api::object_ptr<telegram_api::Message> *> messages;
+  std::vector<const telegram_api::object_ptr<telegram_api::Message> *> messages;
   for (const auto &forward : public_forwards->forwards_) {
     CHECK(forward != nullptr);
     if (forward->get_id() != telegram_api::publicForwardMessage::ID) {

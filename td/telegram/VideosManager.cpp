@@ -191,7 +191,7 @@ void VideosManager::merge_videos(FileId new_id, FileId old_id) {
 }
 
 void VideosManager::create_video(FileId file_id, string minithumbnail, PhotoSize thumbnail,
-                                 AnimationSize animated_thumbnail, bool has_stickers, vector<FileId> &&sticker_file_ids,
+                                 AnimationSize animated_thumbnail, bool has_stickers, std::vector<FileId> &&sticker_file_ids,
                                  string file_name, string mime_type, int32 duration, double precise_duration,
                                  Dimensions dimensions, bool supports_streaming, bool is_animation,
                                  int32 preload_prefix_size, double start_ts, bool replace) {
@@ -235,7 +235,7 @@ SecretInputMedia VideosManager::get_secret_input_media(FileId video_file_id,
   if (video->thumbnail.file_id.is_valid() && thumbnail.empty()) {
     return {};
   }
-  vector<tl_object_ptr<secret_api::DocumentAttribute>> attributes;
+  std::vector<tl_object_ptr<secret_api::DocumentAttribute>> attributes;
   attributes.emplace_back(make_tl_object<secret_api::documentAttributeVideo>(
       0, false, video->duration, video->dimensions.width, video->dimensions.height));
 
@@ -286,7 +286,7 @@ tl_object_ptr<telegram_api::InputMedia> VideosManager::get_input_media(
     const Video *video = get_video(file_id);
     CHECK(video != nullptr);
 
-    vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
+    std::vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
     {
       int32 attribute_flags = 0;
       if (video->supports_streaming) {
@@ -306,7 +306,7 @@ tl_object_ptr<telegram_api::InputMedia> VideosManager::get_input_media(
       attributes.push_back(make_tl_object<telegram_api::documentAttributeFilename>(video->file_name));
     }
     int32 flags = telegram_api::inputMediaUploadedDocument::NOSOUND_VIDEO_MASK;
-    vector<tl_object_ptr<telegram_api::InputDocument>> added_stickers;
+    std::vector<tl_object_ptr<telegram_api::InputDocument>> added_stickers;
     if (video->has_stickers) {
       flags |= telegram_api::inputMediaUploadedDocument::STICKERS_MASK;
       added_stickers = td_->file_manager_->get_input_documents(video->sticker_file_ids);
@@ -344,7 +344,7 @@ telegram_api::object_ptr<telegram_api::InputMedia> VideosManager::get_story_docu
   const Video *video = get_video(file_id);
   CHECK(video != nullptr);
 
-  vector<telegram_api::object_ptr<telegram_api::DocumentAttribute>> attributes;
+  std::vector<telegram_api::object_ptr<telegram_api::DocumentAttribute>> attributes;
   {
     int32 attribute_flags = 0;
     if (video->supports_streaming) {
@@ -364,7 +364,7 @@ telegram_api::object_ptr<telegram_api::InputMedia> VideosManager::get_story_docu
     attributes.push_back(make_tl_object<telegram_api::documentAttributeFilename>(video->file_name));
   }
   int32 flags = telegram_api::inputMediaUploadedDocument::NOSOUND_VIDEO_MASK;
-  vector<telegram_api::object_ptr<telegram_api::InputDocument>> added_stickers;
+  std::vector<telegram_api::object_ptr<telegram_api::InputDocument>> added_stickers;
   if (video->has_stickers) {
     flags |= telegram_api::inputMediaUploadedDocument::STICKERS_MASK;
     added_stickers = td_->file_manager_->get_input_documents(video->sticker_file_ids);

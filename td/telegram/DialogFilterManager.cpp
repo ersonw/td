@@ -105,7 +105,7 @@ class UpdateDialogFiltersOrderQuery final : public Td::ResultHandler {
   explicit UpdateDialogFiltersOrderQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(const vector<DialogFilterId> &dialog_filter_ids, int32 main_dialog_list_position) {
+  void send(const std::vector<DialogFilterId> &dialog_filter_ids, int32 main_dialog_list_position) {
     auto filter_ids = transform(dialog_filter_ids, [](auto dialog_filter_id) { return dialog_filter_id.get(); });
     CHECK(0 <= main_dialog_list_position);
     CHECK(main_dialog_list_position <= static_cast<int32>(filter_ids.size()));
@@ -163,7 +163,7 @@ class ExportChatlistInviteQuery final : public Td::ResultHandler {
   }
 
   void send(DialogFilterId dialog_filter_id, const string &title,
-            vector<tl_object_ptr<telegram_api::InputPeer>> &&input_peers) {
+            std::vector<tl_object_ptr<telegram_api::InputPeer>> &&input_peers) {
     send_query(G()->net_query_creator().create(telegram_api::chatlists_exportChatlistInvite(
         dialog_filter_id.get_input_chatlist(), title, std::move(input_peers))));
   }
@@ -234,7 +234,7 @@ class EditExportedChatlistInviteQuery final : public Td::ResultHandler {
   }
 
   void send(DialogFilterId dialog_filter_id, const string &slug, const string &title,
-            vector<tl_object_ptr<telegram_api::InputPeer>> &&input_peers) {
+            std::vector<tl_object_ptr<telegram_api::InputPeer>> &&input_peers) {
     int32 flags =
         telegram_api::chatlists_editExportedInvite::TITLE_MASK | telegram_api::chatlists_editExportedInvite::PEERS_MASK;
     send_query(G()->net_query_creator().create(telegram_api::chatlists_editExportedInvite(
@@ -294,7 +294,7 @@ class LeaveChatlistQuery final : public Td::ResultHandler {
 
   void send(DialogFilterId dialog_filter_id) {
     send_query(G()->net_query_creator().create(telegram_api::chatlists_leaveChatlist(
-        dialog_filter_id.get_input_chatlist(), vector<telegram_api::object_ptr<telegram_api::InputPeer>>())));
+        dialog_filter_id.get_input_chatlist(), std::vector<telegram_api::object_ptr<telegram_api::InputPeer>>())));
   }
 
   void on_result(BufferSlice packet) final {
@@ -382,7 +382,7 @@ class JoinChatlistInviteQuery final : public Td::ResultHandler {
   explicit JoinChatlistInviteQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(const string &invite_link, vector<DialogId> dialog_ids) {
+  void send(const string &invite_link, std::vector<DialogId> dialog_ids) {
     send_query(G()->net_query_creator().create(telegram_api::chatlists_joinChatlistInvite(
         LinkManager::get_dialog_filter_invite_link_slug(invite_link),
         td_->dialog_manager_->get_input_peers(dialog_ids, AccessRights::Know))));
@@ -443,7 +443,7 @@ class JoinChatlistUpdatesQuery final : public Td::ResultHandler {
   explicit JoinChatlistUpdatesQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(DialogFilterId dialog_filter_id, vector<DialogId> dialog_ids) {
+  void send(DialogFilterId dialog_filter_id, std::vector<DialogId> dialog_ids) {
     send_query(G()->net_query_creator().create(telegram_api::chatlists_joinChatlistUpdates(
         dialog_filter_id.get_input_chatlist(), td_->dialog_manager_->get_input_peers(dialog_ids, AccessRights::Know))));
   }
@@ -578,10 +578,10 @@ class DialogFilterManager::DialogFiltersLogEvent {
   int32 server_main_dialog_list_position = 0;
   int32 main_dialog_list_position = 0;
   int32 updated_date = 0;
-  const vector<unique_ptr<DialogFilter>> *server_dialog_filters_in;
-  const vector<unique_ptr<DialogFilter>> *dialog_filters_in;
-  vector<unique_ptr<DialogFilter>> server_dialog_filters_out;
-  vector<unique_ptr<DialogFilter>> dialog_filters_out;
+  const std::vector<unique_ptr<DialogFilter>> *server_dialog_filters_in;
+  const std::vector<unique_ptr<DialogFilter>> *dialog_filters_in;
+  std::vector<unique_ptr<DialogFilter>> server_dialog_filters_out;
+  std::vector<unique_ptr<DialogFilter>> dialog_filters_out;
   bool server_are_tags_enabled = false;
   bool are_tags_enabled = false;
 
@@ -748,7 +748,7 @@ vector<FolderId> DialogFilterManager::get_dialog_filter_folder_ids(DialogFilterI
 }
 
 vector<DialogFilterId> DialogFilterManager::get_dialog_filters_to_add_dialog(DialogId dialog_id) const {
-  vector<DialogFilterId> result;
+  std::vector<DialogFilterId> result;
   for (const auto &dialog_filter : dialog_filters_) {
     if (dialog_filter->can_include_dialog(dialog_id)) {
       result.push_back(dialog_filter->get_dialog_filter_id());
@@ -769,7 +769,7 @@ bool DialogFilterManager::is_dialog_pinned(DialogFilterId dialog_filter_id, Dial
   return dialog_filter != nullptr && dialog_filter->is_dialog_pinned(dialog_id);
 }
 
-const vector<InputDialogId> &DialogFilterManager::get_pinned_input_dialog_ids(DialogFilterId dialog_filter_id) const {
+const std::vector<InputDialogId> &DialogFilterManager::get_pinned_input_dialog_ids(DialogFilterId dialog_filter_id) const {
   auto *dialog_filter = get_dialog_filter(dialog_filter_id);
   CHECK(dialog_filter != nullptr);
   return dialog_filter->get_pinned_input_dialog_ids();
@@ -800,7 +800,7 @@ Status DialogFilterManager::set_dialog_is_pinned(DialogFilterId dialog_filter_id
 }
 
 Status DialogFilterManager::set_pinned_dialog_ids(DialogFilterId dialog_filter_id,
-                                                  vector<InputDialogId> input_dialog_ids, bool need_synchronize) {
+                                                  std::vector<InputDialogId> input_dialog_ids, bool need_synchronize) {
   CHECK(is_update_chat_folders_sent_);
   auto old_dialog_filter = get_dialog_filter(dialog_filter_id);
   CHECK(old_dialog_filter != nullptr);
@@ -853,8 +853,8 @@ td_api::object_ptr<td_api::chatFolder> DialogFilterManager::get_chat_folder_obje
 td_api::object_ptr<td_api::chatFolder> DialogFilterManager::get_chat_folder_object(const DialogFilter *dialog_filter) {
   DialogFilterId dialog_filter_id = dialog_filter->get_dialog_filter_id();
 
-  vector<DialogId> left_dialog_ids;
-  vector<DialogId> unknown_dialog_ids;
+  std::vector<DialogId> left_dialog_ids;
+  std::vector<DialogId> unknown_dialog_ids;
   dialog_filter->for_each_dialog([&](const InputDialogId &input_dialog_id) {
     auto dialog_id = input_dialog_id.get_dialog_id();
     if (td_->messages_manager_->is_dialog_in_dialog_list(dialog_id)) {
@@ -904,7 +904,7 @@ void DialogFilterManager::on_get_recommended_dialog_filters(
   mpas.add_promise(Promise<Unit>());
   auto lock = mpas.get_promise();
 
-  vector<RecommendedDialogFilter> filters;
+  std::vector<RecommendedDialogFilter> filters;
   for (auto &suggested_filter : suggested_filters) {
     RecommendedDialogFilter recommended_dialog_filter;
     recommended_dialog_filter.dialog_filter =
@@ -927,7 +927,7 @@ void DialogFilterManager::on_get_recommended_dialog_filters(
 }
 
 void DialogFilterManager::on_load_recommended_dialog_filters(
-    Result<Unit> &&result, vector<RecommendedDialogFilter> &&filters,
+    Result<Unit> &&result, std::vector<RecommendedDialogFilter> &&filters,
     Promise<td_api::object_ptr<td_api::recommendedChatFolders>> &&promise) {
   TRY_STATUS_PROMISE(promise, G()->close_status());
   if (result.is_error()) {
@@ -973,14 +973,14 @@ void DialogFilterManager::on_load_dialog_filter(DialogFilterId dialog_filter_id,
 
 void DialogFilterManager::load_dialog_filter(const DialogFilter *dialog_filter, Promise<Unit> &&promise) {
   CHECK(!td_->auth_manager_->is_bot());
-  vector<InputDialogId> needed_dialog_ids;
+  std::vector<InputDialogId> needed_dialog_ids;
   dialog_filter->for_each_dialog([&](const InputDialogId &input_dialog_id) {
     if (!td_->messages_manager_->have_dialog(input_dialog_id.get_dialog_id())) {
       needed_dialog_ids.push_back(input_dialog_id);
     }
   });
 
-  vector<InputDialogId> input_dialog_ids;
+  std::vector<InputDialogId> input_dialog_ids;
   for (const auto &input_dialog_id : needed_dialog_ids) {
     auto dialog_id = input_dialog_id.get_dialog_id();
     // TODO load dialogs asynchronously
@@ -1004,7 +1004,7 @@ void DialogFilterManager::load_dialog_filter(const DialogFilter *dialog_filter, 
 }
 
 void DialogFilterManager::load_dialog_filter_dialogs(DialogFilterId dialog_filter_id,
-                                                     vector<InputDialogId> &&input_dialog_ids,
+                                                     std::vector<InputDialogId> &&input_dialog_ids,
                                                      Promise<Unit> &&promise) {
   const size_t MAX_SLICE_SIZE = 100;  // server side limit
   MultiPromiseActorSafe mpas{"GetFilterDialogsOnServerMultiPromiseActor"};
@@ -1014,7 +1014,7 @@ void DialogFilterManager::load_dialog_filter_dialogs(DialogFilterId dialog_filte
   for (size_t i = 0; i < input_dialog_ids.size(); i += MAX_SLICE_SIZE) {
     auto end_i = i + MAX_SLICE_SIZE;
     auto end = end_i < input_dialog_ids.size() ? input_dialog_ids.begin() + end_i : input_dialog_ids.end();
-    vector<InputDialogId> slice_input_dialog_ids = {input_dialog_ids.begin() + i, end};
+    std::vector<InputDialogId> slice_input_dialog_ids = {input_dialog_ids.begin() + i, end};
     auto query_promise = PromiseCreator::lambda([actor_id = actor_id(this), dialog_filter_id,
                                                  dialog_ids = InputDialogId::get_dialog_ids(slice_input_dialog_ids),
                                                  promise = mpas.get_promise()](Result<Unit> &&result) mutable {
@@ -1030,7 +1030,7 @@ void DialogFilterManager::load_dialog_filter_dialogs(DialogFilterId dialog_filte
   lock.set_value(Unit());
 }
 
-void DialogFilterManager::on_load_dialog_filter_dialogs(DialogFilterId dialog_filter_id, vector<DialogId> &&dialog_ids,
+void DialogFilterManager::on_load_dialog_filter_dialogs(DialogFilterId dialog_filter_id, std::vector<DialogId> &&dialog_ids,
                                                         Promise<Unit> &&promise) {
   TRY_STATUS_PROMISE(promise, G()->close_status());
 
@@ -1059,7 +1059,7 @@ void DialogFilterManager::load_input_dialog(const InputDialogId &input_dialog_id
   td_->create_handler<GetDialogsQuery>(std::move(promise))->send({input_dialog_id});
 }
 
-void DialogFilterManager::delete_dialogs_from_filter(const DialogFilter *dialog_filter, vector<DialogId> &&dialog_ids,
+void DialogFilterManager::delete_dialogs_from_filter(const DialogFilter *dialog_filter, std::vector<DialogId> &&dialog_ids,
                                                      const char *source) {
   if (dialog_ids.empty()) {
     return;
@@ -1071,7 +1071,7 @@ void DialogFilterManager::delete_dialogs_from_filter(const DialogFilter *dialog_
     new_dialog_filter->remove_dialog_id(dialog_id);
   }
   if (new_dialog_filter->is_empty(false)) {
-    delete_dialog_filter(dialog_filter->get_dialog_filter_id(), vector<DialogId>(), Promise<Unit>());
+    delete_dialog_filter(dialog_filter->get_dialog_filter_id(), std::vector<DialogId>(), Promise<Unit>());
     return;
   }
   CHECK(!was_valid || new_dialog_filter->check_limits().is_ok());
@@ -1249,7 +1249,7 @@ void DialogFilterManager::on_get_dialog_filters(
 
   auto dialog_filters = r_filters.move_as_ok();
   auto filters = std::move(dialog_filters->filters_);
-  vector<unique_ptr<DialogFilter>> new_server_dialog_filters;
+  std::vector<unique_ptr<DialogFilter>> new_server_dialog_filters;
   LOG(INFO) << "Receive chat folders from server: " << to_string(filters);
   std::unordered_set<DialogFilterId, DialogFilterIdHash> new_dialog_filter_ids;
   bool server_are_tags_enabled = dialog_filters->tags_enabled_;
@@ -1338,7 +1338,7 @@ void DialogFilterManager::on_get_dialog_filters(
         }
       }
     }
-    vector<DialogFilterId> left_old_server_dialog_filter_ids;
+    std::vector<DialogFilterId> left_old_server_dialog_filter_ids;
     for (const auto &dialog_filter : server_dialog_filters_) {
       if (old_server_dialog_filters.count(dialog_filter->get_dialog_filter_id()) == 0) {
         left_old_server_dialog_filter_ids.push_back(dialog_filter->get_dialog_filter_id());
@@ -1359,14 +1359,14 @@ void DialogFilterManager::on_get_dialog_filters(
       }
     }
     bool is_order_changed = [&] {
-      vector<DialogFilterId> new_server_dialog_filter_ids =
+      std::vector<DialogFilterId> new_server_dialog_filter_ids =
           DialogFilter::get_dialog_filter_ids(new_server_dialog_filters, -1);
       CHECK(new_server_dialog_filter_ids.size() >= left_old_server_dialog_filter_ids.size());
       new_server_dialog_filter_ids.resize(left_old_server_dialog_filter_ids.size());
       return new_server_dialog_filter_ids != left_old_server_dialog_filter_ids;
     }();
     if (is_order_changed) {  // if order is changed from this and other clients, prefer order from another client
-      vector<DialogFilterId> new_dialog_filter_order;
+      std::vector<DialogFilterId> new_dialog_filter_order;
       for (const auto &new_server_filter : new_server_dialog_filters) {
         auto dialog_filter_id = new_server_filter->get_dialog_filter_id();
         if (get_dialog_filter(dialog_filter_id) != nullptr) {
@@ -1434,7 +1434,7 @@ void DialogFilterManager::on_get_dialog_filters(
 bool DialogFilterManager::need_synchronize_dialog_filters() const {
   CHECK(!td_->auth_manager_->is_bot());
   size_t server_dialog_filter_count = 0;
-  vector<DialogFilterId> dialog_filter_ids;
+  std::vector<DialogFilterId> dialog_filter_ids;
   for (const auto &dialog_filter : dialog_filters_) {
     if (dialog_filter->is_empty(true)) {
       continue;
@@ -1493,7 +1493,7 @@ void DialogFilterManager::synchronize_dialog_filters() {
     }
   }
 
-  vector<DialogFilterId> dialog_filter_ids;
+  std::vector<DialogFilterId> dialog_filter_ids;
   for (const auto &dialog_filter : dialog_filters_) {
     if (dialog_filter->is_empty(true)) {
       continue;
@@ -1665,7 +1665,7 @@ void DialogFilterManager::on_update_dialog_filter(unique_ptr<DialogFilter> dialo
   synchronize_dialog_filters();
 }
 
-void DialogFilterManager::delete_dialog_filter(DialogFilterId dialog_filter_id, vector<DialogId> leave_dialog_ids,
+void DialogFilterManager::delete_dialog_filter(DialogFilterId dialog_filter_id, std::vector<DialogId> leave_dialog_ids,
                                                Promise<Unit> &&promise) {
   TRY_STATUS_PROMISE(promise, G()->close_status());
   CHECK(!td_->auth_manager_->is_bot());
@@ -1685,7 +1685,7 @@ void DialogFilterManager::delete_dialog_filter(DialogFilterId dialog_filter_id, 
           if (result.is_error()) {
             return promise.set_error(result.move_as_error());
           }
-          send_closure(actor_id, &DialogFilterManager::delete_dialog_filter, dialog_filter_id, vector<DialogId>(),
+          send_closure(actor_id, &DialogFilterManager::delete_dialog_filter, dialog_filter_id, std::vector<DialogId>(),
                        std::move(promise));
         }));
     auto lock = mpas.get_promise();
@@ -1763,7 +1763,7 @@ void DialogFilterManager::get_leave_dialog_filter_suggestions(DialogFilterId dia
 }
 
 void DialogFilterManager::on_get_leave_dialog_filter_suggestions(
-    DialogFilterId dialog_filter_id, vector<telegram_api::object_ptr<telegram_api::Peer>> peers,
+    DialogFilterId dialog_filter_id, std::vector<telegram_api::object_ptr<telegram_api::Peer>> peers,
     Promise<td_api::object_ptr<td_api::chats>> &&promise) {
   TRY_STATUS_PROMISE(promise, G()->close_status());
 
@@ -2001,13 +2001,13 @@ void DialogFilterManager::do_get_dialogs_for_dialog_filter_invite_link(
 }
 
 void DialogFilterManager::create_dialog_filter_invite_link(
-    DialogFilterId dialog_filter_id, string invite_link_name, vector<DialogId> dialog_ids,
+    DialogFilterId dialog_filter_id, string invite_link_name, std::vector<DialogId> dialog_ids,
     Promise<td_api::object_ptr<td_api::chatFolderInviteLink>> promise) {
   auto dialog_filter = get_dialog_filter(dialog_filter_id);
   if (dialog_filter == nullptr) {
     return promise.set_error(Status::Error(400, "Chat folder not found"));
   }
-  vector<tl_object_ptr<telegram_api::InputPeer>> input_peers;
+  std::vector<tl_object_ptr<telegram_api::InputPeer>> input_peers;
   input_peers.reserve(dialog_ids.size());
   for (auto &dialog_id : dialog_ids) {
     if (!td_->dialog_manager_->have_dialog_force(dialog_id, "create_dialog_filter_invite_link")) {
@@ -2039,13 +2039,13 @@ void DialogFilterManager::get_dialog_filter_invite_links(
 }
 
 void DialogFilterManager::edit_dialog_filter_invite_link(
-    DialogFilterId dialog_filter_id, string invite_link, string invite_link_name, vector<DialogId> dialog_ids,
+    DialogFilterId dialog_filter_id, string invite_link, string invite_link_name, std::vector<DialogId> dialog_ids,
     Promise<td_api::object_ptr<td_api::chatFolderInviteLink>> promise) {
   auto dialog_filter = get_dialog_filter(dialog_filter_id);
   if (dialog_filter == nullptr) {
     return promise.set_error(Status::Error(400, "Chat folder not found"));
   }
-  vector<tl_object_ptr<telegram_api::InputPeer>> input_peers;
+  std::vector<tl_object_ptr<telegram_api::InputPeer>> input_peers;
   input_peers.reserve(dialog_ids.size());
   for (auto &dialog_id : dialog_ids) {
     if (!td_->dialog_manager_->have_dialog_force(dialog_id, "edit_dialog_filter_invite_link")) {
@@ -2090,10 +2090,10 @@ void DialogFilterManager::on_get_chatlist_invite(
   LOG(INFO) << "Receive information about chat folder invite link " << invite_link << ": " << to_string(invite_ptr);
 
   td_api::object_ptr<td_api::chatFolderInfo> info;
-  vector<telegram_api::object_ptr<telegram_api::Peer>> missing_peers;
-  vector<telegram_api::object_ptr<telegram_api::Peer>> already_peers;
-  vector<telegram_api::object_ptr<telegram_api::Chat>> chats;
-  vector<telegram_api::object_ptr<telegram_api::User>> users;
+  std::vector<telegram_api::object_ptr<telegram_api::Peer>> missing_peers;
+  std::vector<telegram_api::object_ptr<telegram_api::Peer>> already_peers;
+  std::vector<telegram_api::object_ptr<telegram_api::Chat>> chats;
+  std::vector<telegram_api::object_ptr<telegram_api::User>> users;
   switch (invite_ptr->get_id()) {
     case telegram_api::chatlists_chatlistInviteAlready::ID: {
       auto invite = move_tl_object_as<telegram_api::chatlists_chatlistInviteAlready>(invite_ptr);
@@ -2141,7 +2141,7 @@ void DialogFilterManager::on_get_chatlist_invite(
       td_->dialog_manager_->get_chat_ids_object(already_dialog_ids, "chatFolderInviteLinkInfo 1")));
 }
 
-void DialogFilterManager::add_dialog_filter_by_invite_link(const string &invite_link, vector<DialogId> dialog_ids,
+void DialogFilterManager::add_dialog_filter_by_invite_link(const string &invite_link, std::vector<DialogId> dialog_ids,
                                                            Promise<Unit> &&promise) {
   if (!DialogFilterInviteLink::is_valid_invite_link(invite_link)) {
     return promise.set_error(Status::Error(400, "Wrong invite link"));
@@ -2167,7 +2167,7 @@ void DialogFilterManager::get_dialog_filter_new_chats(DialogFilterId dialog_filt
   td_->create_handler<GetChatlistUpdatesQuery>(std::move(promise))->send(dialog_filter_id);
 }
 
-void DialogFilterManager::add_dialog_filter_new_chats(DialogFilterId dialog_filter_id, vector<DialogId> dialog_ids,
+void DialogFilterManager::add_dialog_filter_new_chats(DialogFilterId dialog_filter_id, std::vector<DialogId> dialog_ids,
                                                       Promise<Unit> &&promise) {
   auto dialog_filter = get_dialog_filter(dialog_filter_id);
   if (dialog_filter == nullptr) {

@@ -57,7 +57,7 @@ class SaveAppLogQuery final : public Td::ResultHandler {
   }
 
   void send(telegram_api::object_ptr<telegram_api::inputAppEvent> &&input_app_event) {
-    vector<telegram_api::object_ptr<telegram_api::inputAppEvent>> input_app_events;
+    std::vector<telegram_api::object_ptr<telegram_api::inputAppEvent>> input_app_events;
     input_app_events.push_back(std::move(input_app_event));
     send_query(G()->net_query_creator().create_unauth(telegram_api::help_saveAppLog(std::move(input_app_events))));
   }

@@ -132,8 +132,8 @@ class GetChatJoinRequestsQuery final : public Td::ResultHandler {
       LOG(ERROR) << "Receive wrong total count of join requests " << total_count << " in " << dialog_id_;
       total_count = static_cast<int32>(result->importers_.size());
     }
-    vector<td_api::object_ptr<td_api::chatJoinRequest>> join_requests;
-    vector<int64> recent_requesters;
+    std::vector<td_api::object_ptr<td_api::chatJoinRequest>> join_requests;
+    std::vector<int64> recent_requesters;
     for (auto &request : result->importers_) {
       UserId user_id(request->user_id_);
       UserId approver_user_id(request->approved_by_);
@@ -279,7 +279,7 @@ class GetChannelAdministratorsQuery final : public Td::ResultHandler {
         td_->chat_manager_->on_get_chats(std::move(participants->chats_), "GetChannelAdministratorsQuery");
 
         auto channel_type = td_->chat_manager_->get_channel_type(channel_id_);
-        vector<DialogAdministrator> administrators;
+        std::vector<DialogAdministrator> administrators;
         administrators.reserve(participants->participants_.size());
         for (auto &participant : participants->participants_) {
           DialogParticipant dialog_participant(std::move(participant), channel_type);
@@ -561,15 +561,15 @@ class JoinChannelQuery final : public Td::ResultHandler {
 class InviteToChannelQuery final : public Td::ResultHandler {
   Promise<td_api::object_ptr<td_api::failedToAddMembers>> promise_;
   ChannelId channel_id_;
-  vector<UserId> user_ids_;
+  std::vector<UserId> user_ids_;
 
  public:
   explicit InviteToChannelQuery(Promise<td_api::object_ptr<td_api::failedToAddMembers>> &&promise)
       : promise_(std::move(promise)) {
   }
 
-  void send(ChannelId channel_id, vector<UserId> user_ids,
-            vector<tl_object_ptr<telegram_api::InputUser>> &&input_users) {
+  void send(ChannelId channel_id, std::vector<UserId> user_ids,
+            std::vector<tl_object_ptr<telegram_api::InputUser>> &&input_users) {
     channel_id_ = channel_id;
     user_ids_ = std::move(user_ids);
     auto input_channel = td_->chat_manager_->get_input_channel(channel_id);
@@ -979,7 +979,7 @@ void DialogParticipantManager::update_user_online_member_count(UserId user_id) {
   auto &online_member_dialogs = user_it->second->online_member_dialogs_;
 
   auto now = G()->unix_time();
-  vector<DialogId> expired_dialog_ids;
+  std::vector<DialogId> expired_dialog_ids;
   for (const auto &it : online_member_dialogs) {
     auto dialog_id = it.first;
     auto time = it.second;
@@ -1027,7 +1027,7 @@ void DialogParticipantManager::update_channel_online_member_count(ChannelId chan
   update_dialog_online_member_count(it->second, DialogId(channel_id), is_from_server);
 }
 
-void DialogParticipantManager::update_dialog_online_member_count(const vector<DialogParticipant> &participants,
+void DialogParticipantManager::update_dialog_online_member_count(const std::vector<DialogParticipant> &participants,
                                                                  DialogId dialog_id, bool is_from_server) {
   if (td_->auth_manager_->is_bot()) {
     return;
@@ -1162,7 +1162,7 @@ void DialogParticipantManager::speculative_update_dialog_administrators(DialogId
 }
 
 td_api::object_ptr<td_api::chatAdministrators> DialogParticipantManager::get_chat_administrators_object(
-    const vector<DialogAdministrator> &dialog_administrators) {
+    const std::vector<DialogAdministrator> &dialog_administrators) {
   auto administrator_objects = transform(dialog_administrators, [this](const DialogAdministrator &administrator) {
     return administrator.get_chat_administrator_object(td_->user_manager_.get());
   });
@@ -1221,7 +1221,7 @@ void DialogParticipantManager::on_load_dialog_administrators_from_database(
     return reload_dialog_administrators(dialog_id, {}, std::move(promise));
   }
 
-  vector<DialogAdministrator> administrators;
+  std::vector<DialogAdministrator> administrators;
   if (log_event_parse(administrators, value).is_error()) {
     return reload_dialog_administrators(dialog_id, {}, std::move(promise));
   }
@@ -1247,7 +1247,7 @@ void DialogParticipantManager::on_load_dialog_administrators_from_database(
 }
 
 void DialogParticipantManager::on_load_administrator_users_finished(
-    DialogId dialog_id, vector<DialogAdministrator> administrators, Result<> result,
+    DialogId dialog_id, std::vector<DialogAdministrator> administrators, Result<> result,
     Promise<td_api::object_ptr<td_api::chatAdministrators>> &&promise) {
   TRY_STATUS_PROMISE(promise, G()->close_status());
 
@@ -1261,7 +1261,7 @@ void DialogParticipantManager::on_load_administrator_users_finished(
 }
 
 void DialogParticipantManager::on_update_dialog_administrators(DialogId dialog_id,
-                                                               vector<DialogAdministrator> &&administrators,
+                                                               std::vector<DialogAdministrator> &&administrators,
                                                                bool have_access, bool from_database) {
   LOG(INFO) << "Update administrators in " << dialog_id << " to " << administrators;
   if (have_access) {
@@ -1295,7 +1295,7 @@ void DialogParticipantManager::on_update_dialog_administrators(DialogId dialog_i
 }
 
 void DialogParticipantManager::reload_dialog_administrators(
-    DialogId dialog_id, const vector<DialogAdministrator> &dialog_administrators,
+    DialogId dialog_id, const std::vector<DialogAdministrator> &dialog_administrators,
     Promise<td_api::object_ptr<td_api::chatAdministrators>> &&promise) {
   auto dialog_type = dialog_id.get_type();
   if (dialog_type == DialogType::Chat &&
@@ -1658,7 +1658,7 @@ void DialogParticipantManager::finish_get_channel_participant(ChannelId channel_
   promise.set_value(std::move(dialog_participant));
 }
 
-std::pair<int32, vector<DialogId>> DialogParticipantManager::search_among_dialogs(const vector<DialogId> &dialog_ids,
+std::pair<int32, std::vector<DialogId>> DialogParticipantManager::search_among_dialogs(const std::vector<DialogId> &dialog_ids,
                                                                                   const string &query,
                                                                                   int32 limit) const {
   Hints hints;
@@ -1686,7 +1686,7 @@ DialogParticipants DialogParticipantManager::search_private_chat_participants(Us
                                                                               int32 limit,
                                                                               DialogParticipantFilter filter) const {
   auto my_user_id = td_->user_manager_->get_my_id();
-  vector<DialogId> dialog_ids;
+  std::vector<DialogId> dialog_ids;
   if (filter.is_dialog_participant_suitable(td_, DialogParticipant::private_member(my_user_id, peer_user_id))) {
     dialog_ids.push_back(DialogId(my_user_id));
   }
@@ -1731,7 +1731,7 @@ void DialogParticipantManager::do_search_chat_participants(ChatId chat_id, const
     return promise.set_error(Status::Error(500, "Can't find basic group full info"));
   }
 
-  vector<DialogId> dialog_ids;
+  std::vector<DialogId> dialog_ids;
   for (const auto &participant : *participants) {
     if (filter.is_dialog_participant_suitable(td_, participant)) {
       dialog_ids.push_back(participant.dialog_id_);
@@ -1741,7 +1741,7 @@ void DialogParticipantManager::do_search_chat_participants(ChatId chat_id, const
   int32 total_count;
   std::tie(total_count, dialog_ids) = search_among_dialogs(dialog_ids, query, limit);
   td_->story_manager_->on_view_dialog_active_stories(dialog_ids);
-  vector<DialogParticipant> dialog_participants;
+  std::vector<DialogParticipant> dialog_participants;
   for (auto dialog_id : dialog_ids) {
     for (const auto &participant : *participants) {
       if (participant.dialog_id_ == dialog_id) {
@@ -1808,7 +1808,7 @@ void DialogParticipantManager::on_get_channel_participants(
   bool is_full_recent = is_full && filter.is_recent() && !has_hidden_participants;
 
   auto channel_type = td_->chat_manager_->get_channel_type(channel_id);
-  vector<DialogParticipant> result;
+  std::vector<DialogParticipant> result;
   for (auto &participant_ptr : participants) {
     auto debug_participant = to_string(participant_ptr);
     result.emplace_back(std::move(participant_ptr), channel_type);
@@ -1855,8 +1855,8 @@ void DialogParticipantManager::on_get_channel_participants(
   int32 administrator_count =
       filter.is_administrators() || (filter.is_recent() && has_hidden_participants) ? total_count : -1;
   if (is_full && (filter.is_administrators() || filter.is_bots() || filter.is_recent())) {
-    vector<DialogAdministrator> administrators;
-    vector<UserId> bot_user_ids;
+    std::vector<DialogAdministrator> administrators;
+    std::vector<UserId> bot_user_ids;
     {
       if (filter.is_recent()) {
         for (const auto &participant : result) {
@@ -1913,7 +1913,7 @@ void DialogParticipantManager::on_get_channel_participants(
 
   if (!additional_query.empty()) {
     auto dialog_ids = transform(result, [](const DialogParticipant &participant) { return participant.dialog_id_; });
-    std::pair<int32, vector<DialogId>> result_dialog_ids =
+    std::pair<int32, std::vector<DialogId>> result_dialog_ids =
         search_among_dialogs(dialog_ids, additional_query, additional_limit);
 
     total_count = result_dialog_ids.first;
@@ -1932,7 +1932,7 @@ void DialogParticipantManager::on_get_channel_participants(
     }
   }
 
-  vector<DialogId> participant_dialog_ids;
+  std::vector<DialogId> participant_dialog_ids;
   for (const auto &participant : result) {
     participant_dialog_ids.push_back(participant.dialog_id_);
   }
@@ -2003,7 +2003,7 @@ void DialogParticipantManager::add_dialog_participant(
 }
 
 void DialogParticipantManager::add_dialog_participants(
-    DialogId dialog_id, const vector<UserId> &user_ids,
+    DialogId dialog_id, const std::vector<UserId> &user_ids,
     Promise<td_api::object_ptr<td_api::failedToAddMembers>> &&promise) {
   if (!td_->dialog_manager_->have_dialog_force(dialog_id, "add_dialog_participants")) {
     return promise.set_error(Status::Error(400, "Chat not found"));
@@ -2342,7 +2342,7 @@ void DialogParticipantManager::add_channel_participant(
   }
 
   speculative_add_channel_user(channel_id, user_id, DialogParticipantStatus::Member(0), old_status);
-  vector<tl_object_ptr<telegram_api::InputUser>> input_users;
+  std::vector<tl_object_ptr<telegram_api::InputUser>> input_users;
   input_users.push_back(std::move(input_user));
   td_->create_handler<InviteToChannelQuery>(std::move(promise))->send(channel_id, {user_id}, std::move(input_users));
 }
@@ -2371,7 +2371,7 @@ void DialogParticipantManager::on_join_channel(ChannelId channel_id, bool was_sp
 }
 
 void DialogParticipantManager::add_channel_participants(
-    ChannelId channel_id, const vector<UserId> &user_ids,
+    ChannelId channel_id, const std::vector<UserId> &user_ids,
     Promise<td_api::object_ptr<td_api::failedToAddMembers>> &&promise) {
   if (td_->auth_manager_->is_bot()) {
     return promise.set_error(Status::Error(400, "Bots can't add new chat members"));
@@ -2385,7 +2385,7 @@ void DialogParticipantManager::add_channel_participants(
     return promise.set_error(Status::Error(400, "Not enough rights to invite members to the supergroup chat"));
   }
 
-  vector<tl_object_ptr<telegram_api::InputUser>> input_users;
+  std::vector<tl_object_ptr<telegram_api::InputUser>> input_users;
   for (auto user_id : user_ids) {
     TRY_RESULT_PROMISE(promise, input_user, td_->user_manager_->get_input_user(user_id));
 
@@ -2806,7 +2806,7 @@ const DialogParticipant *DialogParticipantManager::get_channel_participant_from_
 }
 
 void DialogParticipantManager::set_cached_channel_participants(ChannelId channel_id,
-                                                               vector<DialogParticipant> participants) {
+                                                               std::vector<DialogParticipant> participants) {
   cached_channel_participants_[channel_id] = std::move(participants);
 }
 
@@ -2815,7 +2815,7 @@ void DialogParticipantManager::drop_cached_channel_participants(ChannelId channe
 }
 
 void DialogParticipantManager::add_cached_channel_participants(ChannelId channel_id,
-                                                               const vector<UserId> &added_user_ids,
+                                                               const std::vector<UserId> &added_user_ids,
                                                                UserId inviter_user_id, int32 date) {
   auto it = cached_channel_participants_.find(channel_id);
   if (it == cached_channel_participants_.end()) {

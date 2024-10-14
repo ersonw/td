@@ -307,10 +307,10 @@ class MessageVenue final : public MessageContent {
 class MessageChatCreate final : public MessageContent {
  public:
   string title;
-  vector<UserId> participant_user_ids;
+  std::vector<UserId> participant_user_ids;
 
   MessageChatCreate() = default;
-  MessageChatCreate(string &&title, vector<UserId> &&participant_user_ids)
+  MessageChatCreate(string &&title, std::vector<UserId> &&participant_user_ids)
       : title(std::move(title)), participant_user_ids(std::move(participant_user_ids)) {
   }
 
@@ -361,7 +361,7 @@ class MessageChatDeleteHistory final : public MessageContent {
 
 class MessageChatAddUsers final : public MessageContent {
  public:
-  vector<UserId> user_ids;
+  std::vector<UserId> user_ids;
 
   MessageChatAddUsers() = default;
   explicit MessageChatAddUsers(vector<UserId> &&user_ids) : user_ids(std::move(user_ids)) {
@@ -677,7 +677,7 @@ class MessageWebsiteConnected final : public MessageContent {
 
 class MessagePassportDataSent final : public MessageContent {
  public:
-  vector<SecureValueType> types;
+  std::vector<SecureValueType> types;
 
   MessagePassportDataSent() = default;
   explicit MessagePassportDataSent(vector<SecureValueType> &&types) : types(std::move(types)) {
@@ -690,7 +690,7 @@ class MessagePassportDataSent final : public MessageContent {
 
 class MessagePassportDataReceived final : public MessageContent {
  public:
-  vector<EncryptedSecureValue> values;
+  std::vector<EncryptedSecureValue> values;
   EncryptedSecureCredentials credentials;
 
   MessagePassportDataReceived() = default;
@@ -780,10 +780,10 @@ class MessageGroupCall final : public MessageContent {
 class MessageInviteToGroupCall final : public MessageContent {
  public:
   InputGroupCallId input_group_call_id;
-  vector<UserId> user_ids;
+  std::vector<UserId> user_ids;
 
   MessageInviteToGroupCall() = default;
-  MessageInviteToGroupCall(InputGroupCallId input_group_call_id, vector<UserId> &&user_ids)
+  MessageInviteToGroupCall(InputGroupCallId input_group_call_id, std::vector<UserId> &&user_ids)
       : input_group_call_id(input_group_call_id), user_ids(std::move(user_ids)) {
   }
 
@@ -904,7 +904,7 @@ class MessageWriteAccessAllowed final : public MessageContent {
 
 class MessageRequestedDialog final : public MessageContent {
  public:
-  vector<DialogId> shared_dialog_ids;
+  std::vector<DialogId> shared_dialog_ids;
   int32 button_id = 0;
 
   MessageRequestedDialog() = default;
@@ -1051,13 +1051,13 @@ class MessageGiveawayWinners final : public MessageContent {
   bool was_refunded = false;
   int32 winner_count = 0;
   int32 unclaimed_count = 0;
-  vector<UserId> winner_user_ids;
+  std::vector<UserId> winner_user_ids;
 
   MessageGiveawayWinners() = default;
   MessageGiveawayWinners(MessageId giveaway_message_id, ChannelId boosted_channel_id, int32 additional_dialog_count,
                          int32 month_count, string &&prize_description, int32 winners_selection_date,
                          bool only_new_subscribers, bool was_refunded, int32 winner_count, int32 unclaimed_count,
-                         vector<UserId> &&winner_user_ids)
+                         std::vector<UserId> &&winner_user_ids)
       : giveaway_message_id(giveaway_message_id)
       , boosted_channel_id(boosted_channel_id)
       , additional_dialog_count(additional_dialog_count)
@@ -1109,7 +1109,7 @@ class MessageBoostApply final : public MessageContent {
 
 class MessageDialogShared final : public MessageContent {
  public:
-  vector<SharedDialog> shared_dialogs;
+  std::vector<SharedDialog> shared_dialogs;
   int32 button_id = 0;
 
   MessageDialogShared() = default;
@@ -1124,7 +1124,7 @@ class MessageDialogShared final : public MessageContent {
 
 class MessagePaidMedia final : public MessageContent {
  public:
-  vector<MessageExtendedMedia> media;
+  std::vector<MessageExtendedMedia> media;
   FormattedText caption;
   int64 star_count = 0;
 
@@ -2751,7 +2751,7 @@ InlineMessageContent create_inline_message_content(Td *td, FileId file_id,
   return result;
 }
 
-unique_ptr<MessageContent> create_text_message_content(string text, vector<MessageEntity> entities,
+unique_ptr<MessageContent> create_text_message_content(string text, std::vector<MessageEntity> entities,
                                                        WebPageId web_page_id, bool force_small_media,
                                                        bool force_large_media, bool skip_confirmation,
                                                        string &&web_page_url) {
@@ -2840,7 +2840,7 @@ bool extract_input_invert_media(const td_api::object_ptr<td_api::InputMessageCon
 
 static Result<InputMessageContent> create_input_message_content(
     DialogId dialog_id, tl_object_ptr<td_api::InputMessageContent> &&input_message_content, Td *td,
-    FormattedText caption, FileId file_id, PhotoSize thumbnail, vector<FileId> sticker_file_ids, bool is_premium) {
+    FormattedText caption, FileId file_id, PhotoSize thumbnail, std::vector<FileId> sticker_file_ids, bool is_premium) {
   CHECK(input_message_content != nullptr);
   LOG(INFO) << "Create InputMessageContent with file " << file_id << " and thumbnail " << thumbnail.file_id;
 
@@ -2947,7 +2947,7 @@ static Result<InputMessageContent> create_input_message_content(
               td->option_manager_->get_option_integer("paid_media_message_star_count_max")) {
         return Status::Error(400, "Invalid media price specified");
       }
-      vector<MessageExtendedMedia> extended_media;
+      std::vector<MessageExtendedMedia> extended_media;
       for (auto &paid_media : input_paid_media->paid_media_) {
         TRY_RESULT(media, MessageExtendedMedia::get_message_extended_media(td, std::move(paid_media), dialog_id));
         if (media.is_empty()) {
@@ -3086,7 +3086,7 @@ static Result<InputMessageContent> create_input_message_content(
       if (input_poll->options_.size() > MAX_POLL_OPTIONS) {
         return Status::Error(400, PSLICE() << "Poll can't have more than " << MAX_POLL_OPTIONS << " options");
       }
-      vector<FormattedText> options;
+      std::vector<FormattedText> options;
       for (auto &input_option : input_poll->options_) {
         TRY_RESULT(option, get_formatted_text(td, dialog_id, std::move(input_option), is_bot, false, true, false));
         if (utf8_length(option.text) > MAX_POLL_OPTION_LENGTH) {
@@ -3175,7 +3175,7 @@ Result<InputMessageContent> get_input_message_content(
   auto file_type = FileType::None;
   auto allow_get_by_hash = false;
   td_api::object_ptr<td_api::inputThumbnail> input_thumbnail;
-  vector<FileId> sticker_file_ids;
+  std::vector<FileId> sticker_file_ids;
   switch (input_message_content->get_id()) {
     case td_api::inputMessageAnimation::ID: {
       auto input_message = static_cast<td_api::inputMessageAnimation *>(input_message_content.get());
@@ -3269,7 +3269,7 @@ Result<InputMessageContent> get_input_message_content(
       std::move(sticker_file_ids), is_premium);
 }
 
-Status check_message_group_message_contents(const vector<InputMessageContent> &message_contents) {
+Status check_message_group_message_contents(const std::vector<InputMessageContent> &message_contents) {
   static constexpr size_t MAX_GROUPED_MESSAGES = 10;  // server side limit
   if (message_contents.size() > MAX_GROUPED_MESSAGES) {
     return Status::Error(400, "Too many messages to send as an album");
@@ -3587,7 +3587,7 @@ static telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_in
         return m->media[media_pos].get_input_media(td, std::move(input_file), std::move(input_thumbnail));
       }
       CHECK(m->media.size() == 1u || (input_file == nullptr && input_thumbnail == nullptr));
-      vector<telegram_api::object_ptr<telegram_api::InputMedia>> input_media;
+      std::vector<telegram_api::object_ptr<telegram_api::InputMedia>> input_media;
       for (auto &extended_media : m->media) {
         auto media = extended_media.get_input_media(td, std::move(input_file), std::move(input_thumbnail));
         if (media == nullptr) {
@@ -3757,7 +3757,7 @@ telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_fake_inpu
   FileView file_view = td->file_manager_->get_file_view(file_id);
   auto file_type = file_view.get_type();
   if (is_document_file_type(file_type)) {
-    vector<telegram_api::object_ptr<telegram_api::DocumentAttribute>> attributes;
+    std::vector<telegram_api::object_ptr<telegram_api::DocumentAttribute>> attributes;
     auto file_path = file_view.suggested_path();
     const PathView path_view(file_path);
     Slice file_name = path_view.file_name();
@@ -3774,13 +3774,13 @@ telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_fake_inpu
     }
     return telegram_api::make_object<telegram_api::inputMediaUploadedDocument>(
         flags, false /*ignored*/, false /*ignored*/, false /*ignored*/, std::move(input_file), nullptr, mime_type,
-        std::move(attributes), vector<telegram_api::object_ptr<telegram_api::InputDocument>>(), 0);
+        std::move(attributes), std::vector<telegram_api::object_ptr<telegram_api::InputDocument>>(), 0);
   } else {
     CHECK(file_type == FileType::Photo || file_type == FileType::PhotoStory);
     int32 flags = 0;
     return telegram_api::make_object<telegram_api::inputMediaUploadedPhoto>(
         flags, false /*ignored*/, std::move(input_file),
-        vector<telegram_api::object_ptr<telegram_api::InputDocument>>(), 0);
+        std::vector<telegram_api::object_ptr<telegram_api::InputDocument>>(), 0);
   }
 }
 
@@ -4427,8 +4427,8 @@ std::pair<InputGroupCallId, bool> get_message_content_group_call_info(const Mess
   return {m->input_group_call_id, m->duration >= 0};
 }
 
-static vector<UserId> get_formatted_text_user_ids(const FormattedText *formatted_text) {
-  vector<UserId> user_ids;
+static std::vector<UserId> get_formatted_text_user_ids(const FormattedText *formatted_text) {
+  std::vector<UserId> user_ids;
   if (formatted_text != nullptr) {
     for (auto &entity : formatted_text->entities) {
       if (entity.user_id.is_valid()) {
@@ -4553,7 +4553,7 @@ vector<UserId> get_message_content_min_user_ids(const Td *td, const MessageConte
       break;
     case MessageContentType::ProximityAlertTriggered: {
       const auto *content = static_cast<const MessageProximityAlertTriggered *>(message_content);
-      vector<UserId> user_ids;
+      std::vector<UserId> user_ids;
       if (content->traveler_dialog_id.get_type() == DialogType::User) {
         user_ids.push_back(content->traveler_dialog_id.get_user_id());
       }
@@ -4646,7 +4646,7 @@ vector<ChannelId> get_message_content_min_channel_ids(const Td *td, const Messag
     }
     case MessageContentType::ProximityAlertTriggered: {
       const auto *content = static_cast<const MessageProximityAlertTriggered *>(message_content);
-      vector<ChannelId> channel_ids;
+      std::vector<ChannelId> channel_ids;
       if (content->traveler_dialog_id.get_type() == DialogType::Channel) {
         channel_ids.push_back(content->traveler_dialog_id.get_channel_id());
       }
@@ -4763,7 +4763,7 @@ bool can_message_content_have_media_timestamp(const MessageContent *content) {
 }
 
 void set_message_content_poll_answer(Td *td, const MessageContent *content, MessageFullId message_full_id,
-                                     vector<int32> &&option_ids, Promise<Unit> &&promise) {
+                                     std::vector<int32> &&option_ids, Promise<Unit> &&promise) {
   CHECK(content->get_type() == MessageContentType::Poll);
   td->poll_manager_->set_poll_answer(static_cast<const MessagePoll *>(content)->poll_id, message_full_id,
                                      std::move(option_ids), std::move(promise));
@@ -4815,8 +4815,8 @@ static bool need_message_text_changed_warning(const MessageText *old_content, co
   return true;
 }
 
-static bool need_message_entities_changed_warning(const vector<MessageEntity> &old_entities,
-                                                  const vector<MessageEntity> &new_entities) {
+static bool need_message_entities_changed_warning(const std::vector<MessageEntity> &old_entities,
+                                                  const std::vector<MessageEntity> &new_entities) {
   size_t old_pos = 0;
   size_t new_pos = 0;
   // compare entities, skipping some known to be different
@@ -6214,7 +6214,7 @@ static auto secret_to_telegram_document(secret_api::decryptedMessageMediaExterna
   if (!clean_input_string(from.mime_type_)) {
     from.mime_type_.clear();
   }
-  vector<telegram_api::object_ptr<telegram_api::PhotoSize>> thumbnails;
+  std::vector<telegram_api::object_ptr<telegram_api::PhotoSize>> thumbnails;
   thumbnails.push_back(secret_to_telegram<telegram_api::PhotoSize>(*from.thumb_));
   return make_tl_object<telegram_api::document>(0, from.id_, from.access_hash_, BufferSlice(), from.date_,
                                                 from.mime_type_, from.size_, std::move(thumbnails), Auto(), from.dc_id_,
@@ -6269,7 +6269,7 @@ static unique_ptr<MessageContent> get_document_message_content(Td *td, tl_object
 unique_ptr<MessageContent> get_secret_message_content(
     Td *td, string message_text, unique_ptr<EncryptedFile> file,
     tl_object_ptr<secret_api::DecryptedMessageMedia> &&media_ptr,
-    vector<tl_object_ptr<secret_api::MessageEntity>> &&secret_entities, DialogId owner_dialog_id,
+    std::vector<tl_object_ptr<secret_api::MessageEntity>> &&secret_entities, DialogId owner_dialog_id,
     MultiPromiseActor &load_data_multipromise, bool is_premium) {
   int32 constructor_id = media_ptr == nullptr ? secret_api::decryptedMessageMediaEmpty::ID : media_ptr->get_id();
   auto caption = [&] {
@@ -6328,7 +6328,7 @@ unique_ptr<MessageContent> get_secret_message_content(
     }
     case secret_api::decryptedMessageMediaVideo::ID: {
       auto media = move_tl_object_as<secret_api::decryptedMessageMediaVideo>(media_ptr);
-      vector<tl_object_ptr<secret_api::DocumentAttribute>> attributes;
+      std::vector<tl_object_ptr<secret_api::DocumentAttribute>> attributes;
       attributes.emplace_back(
           make_tl_object<secret_api::documentAttributeVideo>(0, false, media->duration_, media->w_, media->h_));
       media_ptr = make_tl_object<secret_api::decryptedMessageMediaDocument>(
@@ -6674,7 +6674,7 @@ unique_ptr<MessageContent> get_message_content(Td *td, FormattedText message,
     }
     case telegram_api::messageMediaGiveaway::ID: {
       auto media = move_tl_object_as<telegram_api::messageMediaGiveaway>(media_ptr);
-      vector<ChannelId> channel_ids;
+      std::vector<ChannelId> channel_ids;
       for (auto channel : media->channels_) {
         ChannelId channel_id(channel);
         if (channel_id.is_valid()) {
@@ -6706,7 +6706,7 @@ unique_ptr<MessageContent> get_message_content(Td *td, FormattedText message,
         break;
       }
       td->dialog_manager_->force_create_dialog(DialogId(boosted_channel_id), "messageMediaGiveawayResults", true);
-      vector<UserId> winner_user_ids;
+      std::vector<UserId> winner_user_ids;
       for (auto winner : media->winners_) {
         UserId winner_user_id(winner);
         if (winner_user_id.is_valid()) {
@@ -7077,7 +7077,7 @@ unique_ptr<MessageContent> get_action_message_content(Td *td, tl_object_ptr<tele
     case telegram_api::messageActionChatCreate::ID: {
       auto action = move_tl_object_as<telegram_api::messageActionChatCreate>(action_ptr);
 
-      vector<UserId> participant_user_ids;
+      std::vector<UserId> participant_user_ids;
       participant_user_ids.reserve(action->users_.size());
       for (auto &user : action->users_) {
         UserId user_id(user);
@@ -7109,7 +7109,7 @@ unique_ptr<MessageContent> get_action_message_content(Td *td, tl_object_ptr<tele
     case telegram_api::messageActionChatAddUser::ID: {
       auto action = move_tl_object_as<telegram_api::messageActionChatAddUser>(action_ptr);
 
-      vector<UserId> user_ids;
+      std::vector<UserId> user_ids;
       user_ids.reserve(action->users_.size());
       for (auto &user : action->users_) {
         UserId user_id(user);
@@ -7295,7 +7295,7 @@ unique_ptr<MessageContent> get_action_message_content(Td *td, tl_object_ptr<tele
     case telegram_api::messageActionInviteToGroupCall::ID: {
       auto action = move_tl_object_as<telegram_api::messageActionInviteToGroupCall>(action_ptr);
 
-      vector<UserId> user_ids;
+      std::vector<UserId> user_ids;
       user_ids.reserve(action->users_.size());
       for (auto &user : action->users_) {
         UserId user_id(user);
@@ -7390,7 +7390,7 @@ unique_ptr<MessageContent> get_action_message_content(Td *td, tl_object_ptr<tele
     }
     case telegram_api::messageActionRequestedPeer::ID: {
       auto action = move_tl_object_as<telegram_api::messageActionRequestedPeer>(action_ptr);
-      vector<DialogId> shared_dialog_ids;
+      std::vector<DialogId> shared_dialog_ids;
       for (const auto &peer : action->peers_) {
         DialogId dialog_id(peer);
         if (dialog_id.is_valid()) {
@@ -7459,7 +7459,7 @@ unique_ptr<MessageContent> get_action_message_content(Td *td, tl_object_ptr<tele
     }
     case telegram_api::messageActionRequestedPeerSentMe::ID: {
       auto action = move_tl_object_as<telegram_api::messageActionRequestedPeerSentMe>(action_ptr);
-      vector<SharedDialog> shared_dialogs;
+      std::vector<SharedDialog> shared_dialogs;
       for (auto &peer : action->peers_) {
         SharedDialog shared_dialog(td, std::move(peer));
         if (shared_dialog.is_valid()) {
@@ -7854,7 +7854,7 @@ tl_object_ptr<td_api::MessageContent> get_message_content_object(const MessageCo
       const auto *m = static_cast<const MessageRequestedDialog *>(content);
       CHECK(!m->shared_dialog_ids.empty());
       if (m->shared_dialog_ids[0].get_type() == DialogType::User) {
-        vector<td_api::object_ptr<td_api::sharedUser>> users;
+        std::vector<td_api::object_ptr<td_api::sharedUser>> users;
         for (auto shared_dialog_id : m->shared_dialog_ids) {
           users.push_back(SharedDialog(shared_dialog_id).get_shared_user_object(td));
         }
@@ -7926,7 +7926,7 @@ tl_object_ptr<td_api::MessageContent> get_message_content_object(const MessageCo
       const auto *m = static_cast<const MessageDialogShared *>(content);
       CHECK(!m->shared_dialogs.empty());
       if (m->shared_dialogs[0].is_user()) {
-        vector<td_api::object_ptr<td_api::sharedUser>> users;
+        std::vector<td_api::object_ptr<td_api::sharedUser>> users;
         for (const auto &shared_dialog : m->shared_dialogs) {
           users.push_back(shared_dialog.get_shared_user_object(td));
         }
@@ -8264,7 +8264,7 @@ void update_message_content_file_id_remote(MessageContent *content, FileId file_
   }
 }
 
-void update_message_content_file_id_remotes(MessageContent *content, const vector<FileId> &file_ids) {
+void update_message_content_file_id_remotes(MessageContent *content, const std::vector<FileId> &file_ids) {
   if (content->get_type() == MessageContentType::PaidMedia) {
     auto &media = static_cast<MessagePaidMedia *>(content)->media;
     if (file_ids.size() != media.size()) {
@@ -8368,7 +8368,7 @@ vector<FileId> get_message_content_file_ids(const MessageContent *content, const
     case MessageContentType::ChatChangePhoto:
       return photo_get_file_ids(static_cast<const MessageChatChangePhoto *>(content)->photo);
     case MessageContentType::PassportDataReceived: {
-      vector<FileId> result;
+      std::vector<FileId> result;
       for (auto &value : static_cast<const MessagePassportDataReceived *>(content)->values) {
         auto process_encrypted_secure_file = [&result](const EncryptedSecureFile &file) {
           if (file.file.file_id.is_valid()) {
@@ -8398,7 +8398,7 @@ vector<FileId> get_message_content_file_ids(const MessageContent *content, const
       // story file references are repaired independently
       return {};
     case MessageContentType::PaidMedia: {
-      vector<FileId> result;
+      std::vector<FileId> result;
       for (const auto &media : static_cast<const MessagePaidMedia *>(content)->media) {
         media.append_file_ids(td, result);
       }
@@ -8539,7 +8539,7 @@ string get_message_content_search_text(const Td *td, const MessageContent *conte
 }
 
 bool update_message_content_extended_media(
-    MessageContent *content, vector<telegram_api::object_ptr<telegram_api::MessageExtendedMedia>> extended_media,
+    MessageContent *content, std::vector<telegram_api::object_ptr<telegram_api::MessageExtendedMedia>> extended_media,
     DialogId owner_dialog_id, Td *td) {
   CHECK(content != nullptr);
   switch (content->get_type()) {
@@ -8978,7 +8978,7 @@ void move_message_content_sticker_set_to_top(Td *td, const MessageContent *conte
   if (text == nullptr) {
     return;
   }
-  vector<CustomEmojiId> custom_emoji_ids;
+  std::vector<CustomEmojiId> custom_emoji_ids;
   for (auto &entity : text->entities) {
     if (entity.type == MessageEntity::Type::CustomEmoji) {
       custom_emoji_ids.push_back(entity.custom_emoji_id);

@@ -201,7 +201,7 @@ int32 MessageQuote::search_quote(FormattedText &&text, FormattedText &&quote, in
   process_quote_entities(quote, quote_length);
 
   quote_position = clamp(quote_position, 0, length - 1);
-  vector<size_t> byte_positions;
+  std::vector<size_t> byte_positions;
   byte_positions.reserve(length);
   for (size_t i = 0; i < text.text.size(); i++) {
     auto c = static_cast<unsigned char>(text.text[i]);

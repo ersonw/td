@@ -32,7 +32,7 @@ static td_api::object_ptr<td_api::JsonValue> get_json_value_object(const JsonVal
     case JsonValue::Type::Array:
       return td_api::make_object<td_api::jsonValueArray>(transform(json_value.get_array(), get_json_value_object));
     case JsonValue::Type::Object: {
-      vector<td_api::object_ptr<td_api::jsonObjectMember>> members;
+      std::vector<td_api::object_ptr<td_api::jsonObjectMember>> members;
       json_value.get_object().foreach([&members](Slice name, const JsonValue &value) {
         members.push_back(td_api::make_object<td_api::jsonObjectMember>(name.str(), get_json_value_object(value)));
       });

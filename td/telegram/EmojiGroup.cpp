@@ -57,7 +57,7 @@ td_api::object_ptr<td_api::emojiCategory> EmojiGroup::get_emoji_category_object(
 }
 
 EmojiGroupList::EmojiGroupList(string used_language_codes, int32 hash,
-                               vector<telegram_api::object_ptr<telegram_api::EmojiGroup>> &&emoji_groups)
+                               std::vector<telegram_api::object_ptr<telegram_api::EmojiGroup>> &&emoji_groups)
     : used_language_codes_(std::move(used_language_codes))
     , hash_(hash)
     , emoji_groups_(transform(std::move(emoji_groups),

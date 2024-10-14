@@ -73,13 +73,13 @@ InputDialogId::InputDialogId(const tl_object_ptr<telegram_api::InputPeer> &input
 }
 
 vector<InputDialogId> InputDialogId::get_input_dialog_ids(
-    const vector<tl_object_ptr<telegram_api::InputPeer>> &input_peers,
+    const std::vector<tl_object_ptr<telegram_api::InputPeer>> &input_peers,
     FlatHashSet<DialogId, DialogIdHash> *added_dialog_ids) {
   FlatHashSet<DialogId, DialogIdHash> temp_added_dialog_ids;
   if (added_dialog_ids == nullptr) {
     added_dialog_ids = &temp_added_dialog_ids;
   }
-  vector<InputDialogId> result;
+  std::vector<InputDialogId> result;
   result.reserve(input_peers.size());
   for (auto &input_peer : input_peers) {
     InputDialogId input_dialog_id(input_peer);
@@ -90,13 +90,13 @@ vector<InputDialogId> InputDialogId::get_input_dialog_ids(
   return result;
 }
 
-vector<DialogId> InputDialogId::get_dialog_ids(const vector<InputDialogId> &input_dialog_ids) {
+vector<DialogId> InputDialogId::get_dialog_ids(const std::vector<InputDialogId> &input_dialog_ids) {
   return transform(input_dialog_ids, [](InputDialogId input_dialog_id) { return input_dialog_id.get_dialog_id(); });
 }
 
 vector<telegram_api::object_ptr<telegram_api::InputDialogPeer>> InputDialogId::get_input_dialog_peers(
-    const vector<InputDialogId> &input_dialog_ids) {
-  vector<telegram_api::object_ptr<telegram_api::InputDialogPeer>> result;
+    const std::vector<InputDialogId> &input_dialog_ids) {
+  std::vector<telegram_api::object_ptr<telegram_api::InputDialogPeer>> result;
   result.reserve(input_dialog_ids.size());
   for (const auto &input_dialog_id : input_dialog_ids) {
     auto input_peer = input_dialog_id.get_input_peer();
@@ -108,8 +108,8 @@ vector<telegram_api::object_ptr<telegram_api::InputDialogPeer>> InputDialogId::g
 }
 
 vector<telegram_api::object_ptr<telegram_api::InputPeer>> InputDialogId::get_input_peers(
-    const vector<InputDialogId> &input_dialog_ids) {
-  vector<telegram_api::object_ptr<telegram_api::InputPeer>> result;
+    const std::vector<InputDialogId> &input_dialog_ids) {
+  std::vector<telegram_api::object_ptr<telegram_api::InputPeer>> result;
   result.reserve(input_dialog_ids.size());
   for (const auto &input_dialog_id : input_dialog_ids) {
     auto input_peer = input_dialog_id.get_input_peer();
@@ -136,7 +136,7 @@ tl_object_ptr<telegram_api::InputPeer> InputDialogId::get_input_peer() const {
   }
 }
 
-bool InputDialogId::are_equivalent(const vector<InputDialogId> &lhs, const vector<InputDialogId> &rhs) {
+bool InputDialogId::are_equivalent(const std::vector<InputDialogId> &lhs, const std::vector<InputDialogId> &rhs) {
   auto lhs_it = lhs.begin();
   auto rhs_it = rhs.begin();
   while (lhs_it != lhs.end() || rhs_it != rhs.end()) {
@@ -158,7 +158,7 @@ bool InputDialogId::are_equivalent(const vector<InputDialogId> &lhs, const vecto
   return lhs_it == lhs.end() && rhs_it == rhs.end();
 }
 
-bool InputDialogId::contains(const vector<InputDialogId> &input_dialog_ids, DialogId dialog_id) {
+bool InputDialogId::contains(const std::vector<InputDialogId> &input_dialog_ids, DialogId dialog_id) {
   for (auto &input_dialog_id : input_dialog_ids) {
     if (input_dialog_id.get_dialog_id() == dialog_id) {
       return true;

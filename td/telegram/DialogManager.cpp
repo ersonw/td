@@ -418,7 +418,7 @@ class ReportPeerQuery final : public Td::ResultHandler {
   explicit ReportPeerQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(DialogId dialog_id, const vector<MessageId> &message_ids, ReportReason &&report_reason) {
+  void send(DialogId dialog_id, const std::vector<MessageId> &message_ids, ReportReason &&report_reason) {
     dialog_id_ = dialog_id;
 
     auto input_peer = td_->dialog_manager_->get_input_peer(dialog_id, AccessRights::Read);
@@ -633,9 +633,9 @@ tl_object_ptr<telegram_api::InputPeer> DialogManager::get_input_peer_force(Dialo
   }
 }
 
-vector<tl_object_ptr<telegram_api::InputPeer>> DialogManager::get_input_peers(const vector<DialogId> &dialog_ids,
+vector<tl_object_ptr<telegram_api::InputPeer>> DialogManager::get_input_peers(const std::vector<DialogId> &dialog_ids,
                                                                               AccessRights access_rights) const {
-  vector<tl_object_ptr<telegram_api::InputPeer>> input_peers;
+  std::vector<tl_object_ptr<telegram_api::InputPeer>> input_peers;
   input_peers.reserve(dialog_ids.size());
   for (auto &dialog_id : dialog_ids) {
     auto input_peer = get_input_peer(dialog_id, access_rights);
@@ -665,8 +665,8 @@ tl_object_ptr<telegram_api::InputDialogPeer> DialogManager::get_input_dialog_pee
 }
 
 vector<tl_object_ptr<telegram_api::InputDialogPeer>> DialogManager::get_input_dialog_peers(
-    const vector<DialogId> &dialog_ids, AccessRights access_rights) const {
-  vector<tl_object_ptr<telegram_api::InputDialogPeer>> input_dialog_peers;
+    const std::vector<DialogId> &dialog_ids, AccessRights access_rights) const {
+  std::vector<tl_object_ptr<telegram_api::InputDialogPeer>> input_dialog_peers;
   input_dialog_peers.reserve(dialog_ids.size());
   for (auto &dialog_id : dialog_ids) {
     auto input_dialog_peer = get_input_dialog_peer(dialog_id, access_rights);
@@ -736,7 +736,7 @@ void DialogManager::force_create_dialog(DialogId dialog_id, const char *source, 
 
 vector<DialogId> DialogManager::get_peers_dialog_ids(vector<telegram_api::object_ptr<telegram_api::Peer>> &&peers,
                                                      bool expect_no_access) {
-  vector<DialogId> result;
+  std::vector<DialogId> result;
   result.reserve(peers.size());
   for (auto &peer : peers) {
     DialogId dialog_id(peer);
@@ -883,11 +883,11 @@ int64 DialogManager::get_chat_id_object(DialogId dialog_id, const char *source) 
   return td_->messages_manager_->get_chat_id_object(dialog_id, source);
 }
 
-vector<int64> DialogManager::get_chat_ids_object(const vector<DialogId> &dialog_ids, const char *source) const {
+vector<int64> DialogManager::get_chat_ids_object(const std::vector<DialogId> &dialog_ids, const char *source) const {
   return transform(dialog_ids, [this, source](DialogId dialog_id) { return get_chat_id_object(dialog_id, source); });
 }
 
-td_api::object_ptr<td_api::chats> DialogManager::get_chats_object(int32 total_count, const vector<DialogId> &dialog_ids,
+td_api::object_ptr<td_api::chats> DialogManager::get_chats_object(int32 total_count, const std::vector<DialogId> &dialog_ids,
                                                                   const char *source) const {
   if (total_count == -1) {
     total_count = narrow_cast<int32>(dialog_ids.size());
@@ -895,7 +895,7 @@ td_api::object_ptr<td_api::chats> DialogManager::get_chats_object(int32 total_co
   return td_api::make_object<td_api::chats>(total_count, get_chat_ids_object(dialog_ids, source));
 }
 
-td_api::object_ptr<td_api::chats> DialogManager::get_chats_object(const std::pair<int32, vector<DialogId>> &dialog_ids,
+td_api::object_ptr<td_api::chats> DialogManager::get_chats_object(const std::pair<int32, std::vector<DialogId>> &dialog_ids,
                                                                   const char *source) const {
   return get_chats_object(dialog_ids.first, dialog_ids.second, source);
 }
@@ -1466,7 +1466,7 @@ void DialogManager::send_edit_dialog_photo_query(
 
 void DialogManager::upload_dialog_photo(DialogId dialog_id, FileId file_id, bool is_animation,
                                         double main_frame_timestamp, bool is_reupload, Promise<Unit> &&promise,
-                                        vector<int> bad_parts) {
+                                        std::vector<int> bad_parts) {
   CHECK(file_id.is_valid());
   LOG(INFO) << "Ask to upload chat photo " << file_id;
   bool is_inserted = being_uploaded_dialog_photos_
@@ -1786,7 +1786,7 @@ bool DialogManager::can_report_dialog(DialogId dialog_id) const {
   }
 }
 
-void DialogManager::report_dialog(DialogId dialog_id, const vector<MessageId> &message_ids, ReportReason &&reason,
+void DialogManager::report_dialog(DialogId dialog_id, const std::vector<MessageId> &message_ids, ReportReason &&reason,
                                   Promise<Unit> &&promise) {
   TRY_STATUS_PROMISE(promise, check_dialog_access(dialog_id, true, AccessRights::Read, "report_dialog"));
 
@@ -1906,7 +1906,7 @@ bool DialogManager::is_dialog_removed_from_dialog_list(DialogId dialog_id) const
 }
 
 void DialogManager::on_update_dialog_bot_commands(
-    DialogId dialog_id, UserId bot_user_id, vector<telegram_api::object_ptr<telegram_api::botCommand>> &&bot_commands) {
+    DialogId dialog_id, UserId bot_user_id, std::vector<telegram_api::object_ptr<telegram_api::botCommand>> &&bot_commands) {
   if (!bot_user_id.is_valid()) {
     LOG(ERROR) << "Receive updateBotCommands about invalid " << bot_user_id;
     return;
@@ -2259,7 +2259,7 @@ void DialogManager::drop_username(const string &username) {
   }
 }
 
-void DialogManager::set_dialog_pending_suggestions(DialogId dialog_id, vector<string> &&pending_suggestions) {
+void DialogManager::set_dialog_pending_suggestions(DialogId dialog_id, std::vector<string> &&pending_suggestions) {
   if (dismiss_suggested_action_queries_.count(dialog_id) != 0) {
     return;
   }
@@ -2267,7 +2267,7 @@ void DialogManager::set_dialog_pending_suggestions(DialogId dialog_id, vector<st
   if (it == dialog_suggested_actions_.end() && !pending_suggestions.empty()) {
     return;
   }
-  vector<SuggestedAction> suggested_actions;
+  std::vector<SuggestedAction> suggested_actions;
   for (auto &action_str : pending_suggestions) {
     SuggestedAction suggested_action(action_str, dialog_id);
     if (!suggested_action.is_empty()) {
@@ -2281,7 +2281,7 @@ void DialogManager::set_dialog_pending_suggestions(DialogId dialog_id, vector<st
     }
   }
   if (it == dialog_suggested_actions_.end()) {
-    it = dialog_suggested_actions_.emplace(dialog_id, vector<SuggestedAction>()).first;
+    it = dialog_suggested_actions_.emplace(dialog_id, std::vector<SuggestedAction>()).first;
   }
   update_suggested_actions(it->second, std::move(suggested_actions));
   if (it->second.empty()) {

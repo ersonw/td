@@ -14,8 +14,8 @@
 namespace td {
 
 FileGcParameters::FileGcParameters(int64 size, int32 ttl, int32 count, int32 immunity_delay,
-                                   vector<FileType> file_types, vector<DialogId> owner_dialog_ids,
-                                   vector<DialogId> exclude_owner_dialog_ids, int32 dialog_limit)
+                                   std::vector<FileType> file_types, std::vector<DialogId> owner_dialog_ids,
+                                   std::vector<DialogId> exclude_owner_dialog_ids, int32 dialog_limit)
     : file_types_(std::move(file_types))
     , owner_dialog_ids_(std::move(owner_dialog_ids))
     , exclude_owner_dialog_ids_(std::move(exclude_owner_dialog_ids))

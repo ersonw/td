@@ -60,7 +60,7 @@ td_api::object_ptr<td_api::businessOpeningHours> BusinessWorkHours::get_business
   if (is_empty()) {
     return nullptr;
   }
-  vector<td_api::object_ptr<td_api::businessOpeningHoursInterval>> intervals;
+  std::vector<td_api::object_ptr<td_api::businessOpeningHoursInterval>> intervals;
   for (const auto &work_hour : work_hours_) {
     auto interval = work_hour;
     while (interval.start_minute_ / (24 * 60) + 1 < interval.end_minute_ / (24 * 60)) {

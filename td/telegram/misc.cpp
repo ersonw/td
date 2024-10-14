@@ -306,7 +306,7 @@ uint64 get_md5_string_hash(const string &str) {
   return result;
 }
 
-int64 get_vector_hash(const vector<uint64> &numbers) {
+int64 get_vector_hash(const std::vector<uint64> &numbers) {
   uint64 acc = 0;
   for (auto number : numbers) {
     acc ^= acc >> 21;
@@ -318,7 +318,7 @@ int64 get_vector_hash(const vector<uint64> &numbers) {
 }
 
 string get_emoji_fingerprint(uint64 num) {
-  static const vector<Slice> emojis{
+  static const std::vector<Slice> emojis{
       u8"\U0001f609", u8"\U0001f60d", u8"\U0001f61b", u8"\U0001f62d", u8"\U0001f631", u8"\U0001f621", u8"\U0001f60e",
       u8"\U0001f634", u8"\U0001f635", u8"\U0001f608", u8"\U0001f62c", u8"\U0001f607", u8"\U0001f60f", u8"\U0001f46e",
       u8"\U0001f477", u8"\U0001f482", u8"\U0001f476", u8"\U0001f468", u8"\U0001f469", u8"\U0001f474", u8"\U0001f475",
@@ -390,7 +390,7 @@ Status validate_bot_language_code(const string &language_code) {
   return Status::Error(400, "Invalid language code specified");
 }
 
-vector<int32> search_strings_by_prefix(const vector<string> &strings, const string &query, int32 limit,
+vector<int32> search_strings_by_prefix(const std::vector<string> &strings, const string &query, int32 limit,
                                        bool return_all_for_empty_query, int32 &total_count) {
   Hints hints;
   for (size_t i = 0; i < strings.size(); i++) {

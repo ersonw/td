@@ -29,12 +29,12 @@
 namespace td {
 
 class GetChannelRecommendationsQuery final : public Td::ResultHandler {
-  Promise<std::pair<int32, vector<tl_object_ptr<telegram_api::Chat>>>> promise_;
+  Promise<std::pair<int32, std::vector<tl_object_ptr<telegram_api::Chat>>>> promise_;
   ChannelId channel_id_;
 
  public:
   explicit GetChannelRecommendationsQuery(
-      Promise<std::pair<int32, vector<tl_object_ptr<telegram_api::Chat>>>> &&promise)
+      Promise<std::pair<int32, std::vector<tl_object_ptr<telegram_api::Chat>>>> &&promise)
       : promise_(std::move(promise)) {
   }
 
@@ -206,7 +206,7 @@ void ChannelRecommendationManager::fail_load_recommended_channels_queries(Status
 }
 
 void ChannelRecommendationManager::finish_load_recommended_channels_queries(int32 total_count,
-                                                                            vector<DialogId> dialog_ids) {
+                                                                            std::vector<DialogId> dialog_ids) {
   are_recommended_channels_inited_ = true;
   auto promises = std::move(get_recommended_channels_queries_);
   CHECK(!promises.empty());
@@ -252,14 +252,14 @@ void ChannelRecommendationManager::on_load_recommended_channels_from_database(st
 
 void ChannelRecommendationManager::reload_recommended_channels() {
   auto query_promise = PromiseCreator::lambda(
-      [actor_id = actor_id(this)](Result<std::pair<int32, vector<tl_object_ptr<telegram_api::Chat>>>> &&result) {
+      [actor_id = actor_id(this)](Result<std::pair<int32, std::vector<tl_object_ptr<telegram_api::Chat>>>> &&result) {
         send_closure(actor_id, &ChannelRecommendationManager::on_get_recommended_channels, std::move(result));
       });
   td_->create_handler<GetChannelRecommendationsQuery>(std::move(query_promise))->send(ChannelId());
 }
 
 void ChannelRecommendationManager::on_get_recommended_channels(
-    Result<std::pair<int32, vector<tl_object_ptr<telegram_api::Chat>>>> &&r_chats) {
+    Result<std::pair<int32, std::vector<tl_object_ptr<telegram_api::Chat>>>> &&r_chats) {
   G()->ignore_result_if_closing(r_chats);
 
   if (r_chats.is_error()) {
@@ -269,7 +269,7 @@ void ChannelRecommendationManager::on_get_recommended_channels(
   auto chats = r_chats.move_as_ok();
   auto total_count = chats.first;
   auto channel_ids = td_->chat_manager_->get_channel_ids(std::move(chats.second), "on_get_recommended_channels");
-  vector<DialogId> dialog_ids;
+  std::vector<DialogId> dialog_ids;
   if (total_count < static_cast<int32>(channel_ids.size())) {
     LOG(ERROR) << "Receive total_count = " << total_count << " and " << channel_ids.size() << " recommended chats";
     total_count = static_cast<int32>(channel_ids.size());
@@ -403,7 +403,7 @@ void ChannelRecommendationManager::fail_load_channel_recommendations_queries(Cha
 }
 
 void ChannelRecommendationManager::finish_load_channel_recommendations_queries(ChannelId channel_id, int32 total_count,
-                                                                               vector<DialogId> dialog_ids) {
+                                                                               std::vector<DialogId> dialog_ids) {
   for (int return_local = 0; return_local < 2; return_local++) {
     auto it = get_channel_recommendation_count_queries_[return_local].find(channel_id);
     if (it != get_channel_recommendation_count_queries_[return_local].end()) {
@@ -474,7 +474,7 @@ void ChannelRecommendationManager::reload_channel_recommendations(ChannelId chan
   }
   auto query_promise =
       PromiseCreator::lambda([actor_id = actor_id(this), channel_id](
-                                 Result<std::pair<int32, vector<tl_object_ptr<telegram_api::Chat>>>> &&result) {
+                                 Result<std::pair<int32, std::vector<tl_object_ptr<telegram_api::Chat>>>> &&result) {
         send_closure(actor_id, &ChannelRecommendationManager::on_get_channel_recommendations, channel_id,
                      std::move(result));
       });
@@ -482,7 +482,7 @@ void ChannelRecommendationManager::reload_channel_recommendations(ChannelId chan
 }
 
 void ChannelRecommendationManager::on_get_channel_recommendations(
-    ChannelId channel_id, Result<std::pair<int32, vector<tl_object_ptr<telegram_api::Chat>>>> &&r_chats) {
+    ChannelId channel_id, Result<std::pair<int32, std::vector<tl_object_ptr<telegram_api::Chat>>>> &&r_chats) {
   G()->ignore_result_if_closing(r_chats);
 
   if (r_chats.is_error()) {
@@ -492,7 +492,7 @@ void ChannelRecommendationManager::on_get_channel_recommendations(
   auto chats = r_chats.move_as_ok();
   auto total_count = chats.first;
   auto channel_ids = td_->chat_manager_->get_channel_ids(std::move(chats.second), "on_get_channel_recommendations");
-  vector<DialogId> dialog_ids;
+  std::vector<DialogId> dialog_ids;
   if (total_count < static_cast<int32>(channel_ids.size())) {
     LOG(ERROR) << "Receive total_count = " << total_count << " and " << channel_ids.size() << " similar chats for "
                << channel_id;
@@ -529,7 +529,7 @@ void ChannelRecommendationManager::open_channel_recommended_channel(DialogId dia
   if (dialog_id.get_type() != DialogType::Channel || opened_dialog_id.get_type() != DialogType::Channel) {
     return promise.set_error(Status::Error(400, "Invalid chat specified"));
   }
-  vector<telegram_api::object_ptr<telegram_api::jsonObjectValue>> data;
+  std::vector<telegram_api::object_ptr<telegram_api::jsonObjectValue>> data;
   data.push_back(telegram_api::make_object<telegram_api::jsonObjectValue>(
       "ref_channel_id", make_tl_object<telegram_api::jsonString>(to_string(dialog_id.get_channel_id().get()))));
   data.push_back(telegram_api::make_object<telegram_api::jsonObjectValue>(

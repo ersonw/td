@@ -386,7 +386,7 @@ unique_ptr<ReplyMarkup> get_reply_markup(tl_object_ptr<telegram_api::ReplyMarkup
       reply_markup->type = ReplyMarkup::Type::InlineKeyboard;
       reply_markup->inline_keyboard.reserve(inline_markup->rows_.size());
       for (auto &row : inline_markup->rows_) {
-        vector<InlineKeyboardButton> buttons;
+        std::vector<InlineKeyboardButton> buttons;
         buttons.reserve(row->buttons_.size());
         for (auto &button : row->buttons_) {
           buttons.push_back(get_inline_keyboard_button(std::move(button)));
@@ -413,7 +413,7 @@ unique_ptr<ReplyMarkup> get_reply_markup(tl_object_ptr<telegram_api::ReplyMarkup
       reply_markup->placeholder = std::move(keyboard_markup->placeholder_);
       reply_markup->keyboard.reserve(keyboard_markup->rows_.size());
       for (auto &row : keyboard_markup->rows_) {
-        vector<KeyboardButton> buttons;
+        std::vector<KeyboardButton> buttons;
         buttons.reserve(row->buttons_.size());
         for (auto &button : row->buttons_) {
           buttons.push_back(get_keyboard_button(std::move(button)));
@@ -737,7 +737,7 @@ Result<unique_ptr<ReplyMarkup>> get_reply_markup(td_api::object_ptr<td_api::Repl
       reply_markup->keyboard.reserve(show_keyboard_markup->rows_.size());
       int32 total_button_count = 0;
       for (auto &row : show_keyboard_markup->rows_) {
-        vector<KeyboardButton> row_buttons;
+        std::vector<KeyboardButton> row_buttons;
         row_buttons.reserve(row.size());
 
         int32 row_button_count = 0;
@@ -774,7 +774,7 @@ Result<unique_ptr<ReplyMarkup>> get_reply_markup(td_api::object_ptr<td_api::Repl
       reply_markup->inline_keyboard.reserve(inline_keyboard_markup->rows_.size());
       int32 total_button_count = 0;
       for (auto &row : inline_keyboard_markup->rows_) {
-        vector<InlineKeyboardButton> row_buttons;
+        std::vector<InlineKeyboardButton> row_buttons;
         row_buttons.reserve(row.size());
 
         int32 row_button_count = 0;
@@ -862,7 +862,7 @@ unique_ptr<ReplyMarkup> dup_reply_markup(const unique_ptr<ReplyMarkup> &reply_ma
   result->is_personal = reply_markup->is_personal;
   result->is_persistent = reply_markup->is_persistent;
   result->need_resize_keyboard = reply_markup->need_resize_keyboard;
-  result->keyboard = transform(reply_markup->keyboard, [](const vector<KeyboardButton> &row) {
+  result->keyboard = transform(reply_markup->keyboard, [](const std::vector<KeyboardButton> &row) {
     return transform(row, [](const KeyboardButton &button) {
       KeyboardButton result;
       result.type = button.type;
@@ -914,7 +914,7 @@ static tl_object_ptr<telegram_api::KeyboardButton> get_input_keyboard_button(
       return make_tl_object<telegram_api::keyboardButtonGame>(keyboard_button.text);
     case InlineKeyboardButton::Type::SwitchInline: {
       int32 flags = 0;
-      vector<telegram_api::object_ptr<telegram_api::InlineQueryPeerType>> peer_types;
+      std::vector<telegram_api::object_ptr<telegram_api::InlineQueryPeerType>> peer_types;
       if (keyboard_button.id != 0) {
         CHECK(keyboard_button.type == InlineKeyboardButton::Type::SwitchInline);
         flags |= telegram_api::keyboardButtonSwitchInline::PEER_TYPES_MASK;
@@ -938,7 +938,7 @@ static tl_object_ptr<telegram_api::KeyboardButton> get_input_keyboard_button(
     case InlineKeyboardButton::Type::SwitchInlineCurrentDialog:
       return make_tl_object<telegram_api::keyboardButtonSwitchInline>(
           telegram_api::keyboardButtonSwitchInline::SAME_PEER_MASK, true, keyboard_button.text, keyboard_button.data,
-          vector<telegram_api::object_ptr<telegram_api::InlineQueryPeerType>>());
+          std::vector<telegram_api::object_ptr<telegram_api::InlineQueryPeerType>>());
     case InlineKeyboardButton::Type::Buy:
       return make_tl_object<telegram_api::keyboardButtonBuy>(keyboard_button.text);
     case InlineKeyboardButton::Type::UrlAuth: {
@@ -985,10 +985,10 @@ tl_object_ptr<telegram_api::ReplyMarkup> ReplyMarkup::get_input_reply_markup(Use
   LOG(DEBUG) << "Send " << *this;
   switch (type) {
     case ReplyMarkup::Type::InlineKeyboard: {
-      vector<tl_object_ptr<telegram_api::keyboardButtonRow>> rows;
+      std::vector<tl_object_ptr<telegram_api::keyboardButtonRow>> rows;
       rows.reserve(inline_keyboard.size());
       for (auto &row : inline_keyboard) {
-        vector<tl_object_ptr<telegram_api::KeyboardButton>> buttons;
+        std::vector<tl_object_ptr<telegram_api::KeyboardButton>> buttons;
         buttons.reserve(row.size());
         for (auto &button : row) {
           buttons.push_back(get_input_keyboard_button(user_manager, button));
@@ -999,10 +999,10 @@ tl_object_ptr<telegram_api::ReplyMarkup> ReplyMarkup::get_input_reply_markup(Use
       return make_tl_object<telegram_api::replyInlineMarkup>(std::move(rows));
     }
     case ReplyMarkup::Type::ShowKeyboard: {
-      vector<tl_object_ptr<telegram_api::keyboardButtonRow>> rows;
+      std::vector<tl_object_ptr<telegram_api::keyboardButtonRow>> rows;
       rows.reserve(keyboard.size());
       for (auto &row : keyboard) {
-        vector<tl_object_ptr<telegram_api::KeyboardButton>> buttons;
+        std::vector<tl_object_ptr<telegram_api::KeyboardButton>> buttons;
         buttons.reserve(row.size());
         for (auto &button : row) {
           buttons.push_back(get_input_keyboard_button(button));
@@ -1126,10 +1126,10 @@ static tl_object_ptr<td_api::inlineKeyboardButton> get_inline_keyboard_button_ob
 tl_object_ptr<td_api::ReplyMarkup> ReplyMarkup::get_reply_markup_object(UserManager *user_manager) const {
   switch (type) {
     case ReplyMarkup::Type::InlineKeyboard: {
-      vector<vector<tl_object_ptr<td_api::inlineKeyboardButton>>> rows;
+      std::vector<vector<tl_object_ptr<td_api::inlineKeyboardButton>>> rows;
       rows.reserve(inline_keyboard.size());
       for (auto &row : inline_keyboard) {
-        vector<tl_object_ptr<td_api::inlineKeyboardButton>> buttons;
+        std::vector<tl_object_ptr<td_api::inlineKeyboardButton>> buttons;
         buttons.reserve(row.size());
         for (auto &button : row) {
           buttons.push_back(get_inline_keyboard_button_object(user_manager, button));
@@ -1140,10 +1140,10 @@ tl_object_ptr<td_api::ReplyMarkup> ReplyMarkup::get_reply_markup_object(UserMana
       return make_tl_object<td_api::replyMarkupInlineKeyboard>(std::move(rows));
     }
     case ReplyMarkup::Type::ShowKeyboard: {
-      vector<vector<tl_object_ptr<td_api::keyboardButton>>> rows;
+      std::vector<vector<tl_object_ptr<td_api::keyboardButton>>> rows;
       rows.reserve(keyboard.size());
       for (auto &row : keyboard) {
-        vector<tl_object_ptr<td_api::keyboardButton>> buttons;
+        std::vector<tl_object_ptr<td_api::keyboardButton>> buttons;
         buttons.reserve(row.size());
         for (auto &button : row) {
           buttons.push_back(get_keyboard_button_object(button));

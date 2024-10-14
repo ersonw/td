@@ -85,8 +85,8 @@ class SetSecureValue final : public NetQueryCallback {
 
   size_t files_left_to_upload_ = 0;
   uint32 upload_generation_{0};
-  vector<SecureInputFile> files_to_upload_;
-  vector<SecureInputFile> translations_to_upload_;
+  std::vector<SecureInputFile> files_to_upload_;
+  std::vector<SecureInputFile> translations_to_upload_;
   optional<SecureInputFile> front_side_;
   optional<SecureInputFile> reverse_side_;
   optional<SecureInputFile> selfie_;
@@ -138,7 +138,7 @@ class SetSecureValueErrorsQuery final : public Td::ResultHandler {
   }
 
   void send(tl_object_ptr<telegram_api::InputUser> input_user,
-            vector<tl_object_ptr<telegram_api::SecureValueError>> input_errors) {
+            std::vector<tl_object_ptr<telegram_api::SecureValueError>> input_errors) {
     send_query(G()->net_query_creator().create(
         telegram_api::users_setSecureValueErrors(std::move(input_user), std::move(input_errors))));
   }
@@ -853,11 +853,11 @@ void SecureManager::on_delete_secure_value(SecureValueType type, Promise<Unit> p
 }
 
 void SecureManager::set_secure_value_errors(Td *td, tl_object_ptr<telegram_api::InputUser> input_user,
-                                            vector<tl_object_ptr<td_api::inputPassportElementError>> errors,
+                                            std::vector<tl_object_ptr<td_api::inputPassportElementError>> errors,
                                             Promise<Unit> promise) {
   CHECK(td != nullptr);
   CHECK(input_user != nullptr);
-  vector<tl_object_ptr<telegram_api::SecureValueError>> input_errors;
+  std::vector<tl_object_ptr<telegram_api::SecureValueError>> input_errors;
   for (auto &error : errors) {
     if (error == nullptr) {
       return promise.set_error(Status::Error(400, "Error must be non-empty"));
@@ -990,11 +990,11 @@ void SecureManager::on_get_passport_authorization_form(
   G()->td().get_actor_unsafe()->user_manager_->on_get_users(std::move(authorization_form->users_),
                                                             "on_get_passport_authorization_form");
 
-  vector<vector<SuitableSecureValue>> required_types;
+  std::vector<vector<SuitableSecureValue>> required_types;
   std::map<SecureValueType, SuitableSecureValue> all_types;
   for (auto &type_ptr : authorization_form->required_types_) {
     CHECK(type_ptr != nullptr);
-    vector<SuitableSecureValue> required_type;
+    std::vector<SuitableSecureValue> required_type;
     switch (type_ptr->get_id()) {
       case telegram_api::secureRequiredType::ID: {
         auto value = get_suitable_secure_value(move_tl_object_as<telegram_api::secureRequiredType>(type_ptr));
@@ -1117,7 +1117,7 @@ void SecureManager::on_get_passport_authorization_form_secret(int32 authorizatio
     }
   }
 
-  auto get_file_index = [](const vector<SecureFileCredentials> &file_credentials, Slice file_hash) -> int32 {
+  auto get_file_index = [](const std::vector<SecureFileCredentials> &file_credentials, Slice file_hash) -> int32 {
     for (size_t i = 0; i < file_credentials.size(); i++) {
       if (file_credentials[i].hash == file_hash) {
         return narrow_cast<int32>(i);
@@ -1126,7 +1126,7 @@ void SecureManager::on_get_passport_authorization_form_secret(int32 authorizatio
     return -1;
   };
 
-  vector<td_api::object_ptr<td_api::passportElementError>> errors;
+  std::vector<td_api::object_ptr<td_api::passportElementError>> errors;
   for (auto &error_ptr : it->second->errors) {
     CHECK(error_ptr != nullptr);
     SecureValueType type = SecureValueType::None;

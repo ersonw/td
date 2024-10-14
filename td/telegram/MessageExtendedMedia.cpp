@@ -223,7 +223,7 @@ td_api::object_ptr<td_api::PaidMedia> MessageExtendedMedia::get_message_extended
   }
 }
 
-void MessageExtendedMedia::append_file_ids(const Td *td, vector<FileId> &file_ids) const {
+void MessageExtendedMedia::append_file_ids(const Td *td, std::vector<FileId> &file_ids) const {
   switch (type_) {
     case Type::Empty:
     case Type::Unsupported:

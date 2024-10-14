@@ -117,7 +117,7 @@ void CallManager::discard_call(CallId call_id, bool is_disconnected, int32 durat
 }
 
 void CallManager::rate_call(CallId call_id, int32 rating, string comment,
-                            vector<td_api::object_ptr<td_api::CallProblem>> &&problems, Promise<Unit> promise) {
+                            std::vector<td_api::object_ptr<td_api::CallProblem>> &&problems, Promise<Unit> promise) {
   auto actor = get_call_actor(call_id);
   if (actor.empty()) {
     return promise.set_error(Status::Error(400, "Call not found"));

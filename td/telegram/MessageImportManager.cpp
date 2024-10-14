@@ -99,14 +99,14 @@ class InitHistoryImportQuery final : public Td::ResultHandler {
   Promise<Unit> promise_;
   FileId file_id_;
   DialogId dialog_id_;
-  vector<FileId> attached_file_ids_;
+  std::vector<FileId> attached_file_ids_;
 
  public:
   explicit InitHistoryImportQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
   void send(DialogId dialog_id, FileId file_id, tl_object_ptr<telegram_api::InputFile> &&input_file,
-            vector<FileId> attached_file_ids) {
+            std::vector<FileId> attached_file_ids) {
     CHECK(input_file != nullptr);
     file_id_ = file_id;
     dialog_id_ = dialog_id;
@@ -322,14 +322,14 @@ void MessageImportManager::get_message_import_confirmation_text(DialogId dialog_
 
 void MessageImportManager::import_messages(DialogId dialog_id,
                                            const td_api::object_ptr<td_api::InputFile> &message_file,
-                                           const vector<td_api::object_ptr<td_api::InputFile>> &attached_files,
+                                           const std::vector<td_api::object_ptr<td_api::InputFile>> &attached_files,
                                            Promise<Unit> &&promise) {
   TRY_STATUS_PROMISE(promise, can_import_messages(dialog_id));
 
   TRY_RESULT_PROMISE(promise, file_id,
                      td_->file_manager_->get_input_file_id(FileType::Document, message_file, dialog_id, false, false));
 
-  vector<FileId> attached_file_ids;
+  std::vector<FileId> attached_file_ids;
   attached_file_ids.reserve(attached_files.size());
   for (auto &attached_file : attached_files) {
     auto file_type = td_->file_manager_->guess_file_type(attached_file);
@@ -349,8 +349,8 @@ void MessageImportManager::import_messages(DialogId dialog_id,
 }
 
 void MessageImportManager::upload_imported_messages(DialogId dialog_id, FileId file_id,
-                                                    vector<FileId> attached_file_ids, bool is_reupload,
-                                                    Promise<Unit> &&promise, vector<int> bad_parts) {
+                                                    std::vector<FileId> attached_file_ids, bool is_reupload,
+                                                    Promise<Unit> &&promise, std::vector<int> bad_parts) {
   CHECK(file_id.is_valid());
   LOG(INFO) << "Ask to upload imported messages file " << file_id;
   auto info = td::make_unique<UploadedImportedMessagesInfo>(dialog_id, std::move(attached_file_ids), is_reupload,
@@ -374,7 +374,7 @@ void MessageImportManager::on_upload_imported_messages(FileId file_id,
 
   CHECK(it->second != nullptr);
   DialogId dialog_id = it->second->dialog_id;
-  vector<FileId> attached_file_ids = std::move(it->second->attached_file_ids);
+  std::vector<FileId> attached_file_ids = std::move(it->second->attached_file_ids);
   bool is_reupload = it->second->is_reupload;
   Promise<Unit> promise = std::move(it->second->promise);
 
@@ -429,7 +429,7 @@ void MessageImportManager::on_upload_imported_messages_error(FileId file_id, Sta
 }
 
 void MessageImportManager::start_import_messages(DialogId dialog_id, int64 import_id,
-                                                 vector<FileId> &&attached_file_ids, Promise<Unit> &&promise) {
+                                                 std::vector<FileId> &&attached_file_ids, Promise<Unit> &&promise) {
   TRY_STATUS_PROMISE(promise, G()->close_status());
   TRY_STATUS_PROMISE(promise,
                      td_->dialog_manager_->check_dialog_access_in_memory(dialog_id, false, AccessRights::Write));
@@ -464,7 +464,7 @@ void MessageImportManager::start_import_messages(DialogId dialog_id, int64 impor
 
 void MessageImportManager::upload_imported_message_attachment(DialogId dialog_id, int64 import_id, FileId file_id,
                                                               bool is_reupload, Promise<Unit> &&promise,
-                                                              vector<int> bad_parts) {
+                                                              std::vector<int> bad_parts) {
   CHECK(file_id.is_valid());
   LOG(INFO) << "Ask to upload imported message attached file " << file_id;
   auto info =

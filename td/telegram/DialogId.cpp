@@ -175,7 +175,7 @@ DialogId DialogId::get_message_dialog_id(const tl_object_ptr<telegram_api::Messa
   return get_message_dialog_id(message_ptr.get());
 }
 
-vector<DialogId> DialogId::get_dialog_ids(const vector<int64> &chat_ids) {
+vector<DialogId> DialogId::get_dialog_ids(const std::vector<int64> &chat_ids) {
   return transform(chat_ids, [](int64 chat_id) { return DialogId(chat_id); });
 }
 

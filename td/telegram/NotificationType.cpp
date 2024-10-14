@@ -39,7 +39,7 @@ class NotificationTypeMessage final : public NotificationType {
     return message_id_;
   }
 
-  vector<FileId> get_file_ids(const Td *td) const final {
+  std::vector<FileId> get_file_ids(const Td *td) const final {
     return {};
   }
 
@@ -78,7 +78,7 @@ class NotificationTypeSecretChat final : public NotificationType {
     return NotificationObjectId();
   }
 
-  vector<FileId> get_file_ids(const Td *td) const final {
+  std::vector<FileId> get_file_ids(const Td *td) const final {
     return {};
   }
 
@@ -108,7 +108,7 @@ class NotificationTypeCall final : public NotificationType {
     return NotificationObjectId::max();
   }
 
-  vector<FileId> get_file_ids(const Td *td) const final {
+  std::vector<FileId> get_file_ids(const Td *td) const final {
     return {};
   }
 
@@ -140,7 +140,7 @@ class NotificationTypePushMessage final : public NotificationType {
     return message_id_;
   }
 
-  vector<FileId> get_file_ids(const Td *td) const final {
+  std::vector<FileId> get_file_ids(const Td *td) const final {
     if (!document_.empty()) {
       return document_.get_file_ids(td);
     }

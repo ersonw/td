@@ -402,7 +402,7 @@ class SearchPublicChatRequest final : public RequestActor<> {
 class SearchPublicChatsRequest final : public RequestActor<> {
   string query_;
 
-  vector<DialogId> dialog_ids_;
+  std::vector<DialogId> dialog_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     dialog_ids_ = td_->messages_manager_->search_public_dialogs(query_, std::move(promise));
@@ -422,7 +422,7 @@ class SearchChatsRequest final : public RequestActor<> {
   string query_;
   int32 limit_;
 
-  std::pair<int32, vector<DialogId>> dialog_ids_;
+  std::pair<int32, std::vector<DialogId>> dialog_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     dialog_ids_ = td_->messages_manager_->search_dialogs(query_, limit_, std::move(promise));
@@ -442,7 +442,7 @@ class SearchChatsOnServerRequest final : public RequestActor<> {
   string query_;
   int32 limit_;
 
-  vector<DialogId> dialog_ids_;
+  std::vector<DialogId> dialog_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     dialog_ids_ = td_->messages_manager_->search_dialogs_on_server(query_, limit_, std::move(promise));
@@ -463,7 +463,7 @@ class GetGroupsInCommonRequest final : public RequestActor<> {
   DialogId offset_dialog_id_;
   int32 limit_;
 
-  std::pair<int32, vector<DialogId>> dialog_ids_;
+  std::pair<int32, std::vector<DialogId>> dialog_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     dialog_ids_ = td_->common_dialog_manager_->get_common_dialogs(user_id_, offset_dialog_id_, limit_, get_tries() < 2,
@@ -481,7 +481,7 @@ class GetGroupsInCommonRequest final : public RequestActor<> {
 };
 
 class GetSuitableDiscussionChatsRequest final : public RequestActor<> {
-  vector<DialogId> dialog_ids_;
+  std::vector<DialogId> dialog_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     dialog_ids_ = td_->chat_manager_->get_dialogs_for_discussion(std::move(promise));
@@ -497,7 +497,7 @@ class GetSuitableDiscussionChatsRequest final : public RequestActor<> {
 };
 
 class GetInactiveSupergroupChatsRequest final : public RequestActor<> {
-  vector<DialogId> dialog_ids_;
+  std::vector<DialogId> dialog_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     dialog_ids_ = td_->chat_manager_->get_inactive_channels(std::move(promise));
@@ -516,7 +516,7 @@ class SearchRecentlyFoundChatsRequest final : public RequestActor<> {
   string query_;
   int32 limit_;
 
-  std::pair<int32, vector<DialogId>> dialog_ids_;
+  std::pair<int32, std::vector<DialogId>> dialog_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     dialog_ids_ = td_->messages_manager_->search_recently_found_dialogs(query_, limit_, std::move(promise));
@@ -535,7 +535,7 @@ class SearchRecentlyFoundChatsRequest final : public RequestActor<> {
 class GetRecentlyOpenedChatsRequest final : public RequestActor<> {
   int32 limit_;
 
-  std::pair<int32, vector<DialogId>> dialog_ids_;
+  std::pair<int32, std::vector<DialogId>> dialog_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     dialog_ids_ = td_->messages_manager_->get_recently_opened_dialogs(limit_, std::move(promise));
@@ -665,7 +665,7 @@ class GetCallbackQueryMessageRequest final : public RequestOnceActor {
 
 class GetMessagesRequest final : public RequestOnceActor {
   DialogId dialog_id_;
-  vector<MessageId> message_ids_;
+  std::vector<MessageId> message_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     td_->messages_manager_->get_messages(dialog_id_, message_ids_, std::move(promise));
@@ -676,7 +676,7 @@ class GetMessagesRequest final : public RequestOnceActor {
   }
 
  public:
-  GetMessagesRequest(ActorShared<Td> td, uint64 request_id, int64 dialog_id, const vector<int64> &message_ids)
+  GetMessagesRequest(ActorShared<Td> td, uint64 request_id, int64 dialog_id, const std::vector<int64> &message_ids)
       : RequestOnceActor(std::move(td), request_id)
       , dialog_id_(dialog_id)
       , message_ids_(MessageId::get_message_ids(message_ids)) {
@@ -932,7 +932,7 @@ class GetMessageThreadHistoryRequest final : public RequestActor<> {
   int32 limit_;
   int64 random_id_;
 
-  std::pair<DialogId, vector<MessageId>> messages_;
+  std::pair<DialogId, std::vector<MessageId>> messages_;
 
   void do_run(Promise<Unit> &&promise) final {
     messages_ = td_->messages_manager_->get_message_thread_history(dialog_id_, message_id_, from_message_id_, offset_,
@@ -1016,7 +1016,7 @@ class SearchChatMessagesRequest final : public RequestActor<> {
 class GetChatScheduledMessagesRequest final : public RequestActor<> {
   DialogId dialog_id_;
 
-  vector<MessageId> message_ids_;
+  std::vector<MessageId> message_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     message_ids_ =
@@ -1130,10 +1130,10 @@ class JoinChatByInviteLinkRequest final : public RequestActor<DialogId> {
 };
 
 class ImportContactsRequest final : public RequestActor<> {
-  vector<Contact> contacts_;
+  std::vector<Contact> contacts_;
   int64 random_id_;
 
-  std::pair<vector<UserId>, vector<int32>> imported_contacts_;
+  std::pair<vector<UserId>, std::vector<int32>> imported_contacts_;
 
   void do_run(Promise<Unit> &&promise) final {
     imported_contacts_ = td_->user_manager_->import_contacts(contacts_, random_id_, std::move(promise));
@@ -1151,7 +1151,7 @@ class ImportContactsRequest final : public RequestActor<> {
   }
 
  public:
-  ImportContactsRequest(ActorShared<Td> td, uint64 request_id, vector<Contact> &&contacts)
+  ImportContactsRequest(ActorShared<Td> td, uint64 request_id, std::vector<Contact> &&contacts)
       : RequestActor(std::move(td), request_id), contacts_(std::move(contacts)), random_id_(0) {
     set_tries(3);  // load_contacts + import_contacts
   }
@@ -1161,7 +1161,7 @@ class SearchContactsRequest final : public RequestActor<> {
   string query_;
   int32 limit_;
 
-  std::pair<int32, vector<UserId>> user_ids_;
+  std::pair<int32, std::vector<UserId>> user_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     user_ids_ = td_->user_manager_->search_contacts(query_, limit_, std::move(promise));
@@ -1178,14 +1178,14 @@ class SearchContactsRequest final : public RequestActor<> {
 };
 
 class RemoveContactsRequest final : public RequestActor<> {
-  vector<UserId> user_ids_;
+  std::vector<UserId> user_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     td_->user_manager_->remove_contacts(user_ids_, std::move(promise));
   }
 
  public:
-  RemoveContactsRequest(ActorShared<Td> td, uint64 request_id, vector<UserId> &&user_ids)
+  RemoveContactsRequest(ActorShared<Td> td, uint64 request_id, std::vector<UserId> &&user_ids)
       : RequestActor(std::move(td), request_id), user_ids_(std::move(user_ids)) {
     set_tries(3);  // load_contacts + delete_contacts
   }
@@ -1208,11 +1208,11 @@ class GetImportedContactCountRequest final : public RequestActor<> {
 };
 
 class ChangeImportedContactsRequest final : public RequestActor<> {
-  vector<Contact> contacts_;
+  std::vector<Contact> contacts_;
   size_t contacts_size_;
   int64 random_id_;
 
-  std::pair<vector<UserId>, vector<int32>> imported_contacts_;
+  std::pair<vector<UserId>, std::vector<int32>> imported_contacts_;
 
   void do_run(Promise<Unit> &&promise) final {
     imported_contacts_ = td_->user_manager_->change_imported_contacts(contacts_, random_id_, std::move(promise));
@@ -1230,7 +1230,7 @@ class ChangeImportedContactsRequest final : public RequestActor<> {
   }
 
  public:
-  ChangeImportedContactsRequest(ActorShared<Td> td, uint64 request_id, vector<Contact> &&contacts)
+  ChangeImportedContactsRequest(ActorShared<Td> td, uint64 request_id, std::vector<Contact> &&contacts)
       : RequestActor(std::move(td), request_id)
       , contacts_(std::move(contacts))
       , contacts_size_(contacts_.size())
@@ -1240,7 +1240,7 @@ class ChangeImportedContactsRequest final : public RequestActor<> {
 };
 
 class GetCloseFriendsRequest final : public RequestActor<> {
-  vector<UserId> user_ids_;
+  std::vector<UserId> user_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     user_ids_ = td_->user_manager_->get_close_friends(std::move(promise));
@@ -1256,7 +1256,7 @@ class GetCloseFriendsRequest final : public RequestActor<> {
 };
 
 class GetRecentInlineBotsRequest final : public RequestActor<> {
-  vector<UserId> user_ids_;
+  std::vector<UserId> user_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     user_ids_ = td_->inline_queries_manager_->get_recent_inline_bots(std::move(promise));
@@ -1276,7 +1276,7 @@ class GetChatNotificationSettingsExceptionsRequest final : public RequestActor<>
   bool filter_scope_;
   bool compare_sound_;
 
-  vector<DialogId> dialog_ids_;
+  std::vector<DialogId> dialog_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     dialog_ids_ = td_->messages_manager_->get_dialog_notification_settings_exceptions(
@@ -1326,7 +1326,7 @@ class GetStickersRequest final : public RequestActor<> {
   int32 limit_;
   DialogId dialog_id_;
 
-  vector<FileId> sticker_ids_;
+  std::vector<FileId> sticker_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     sticker_ids_ = td_->stickers_manager_->get_stickers(sticker_type_, query_, limit_, dialog_id_, get_tries() < 2,
@@ -1355,7 +1355,7 @@ class GetAllStickerEmojisRequest final : public RequestActor<> {
   DialogId dialog_id_;
   bool return_only_main_emoji_;
 
-  vector<FileId> sticker_ids_;
+  std::vector<FileId> sticker_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     sticker_ids_ = td_->stickers_manager_->get_stickers(sticker_type_, query_, 1000000, dialog_id_, get_tries() < 2,
@@ -1381,7 +1381,7 @@ class GetAllStickerEmojisRequest final : public RequestActor<> {
 class GetInstalledStickerSetsRequest final : public RequestActor<> {
   StickerType sticker_type_;
 
-  vector<StickerSetId> sticker_set_ids_;
+  std::vector<StickerSetId> sticker_set_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     sticker_set_ids_ = td_->stickers_manager_->get_installed_sticker_sets(sticker_type_, std::move(promise));
@@ -1403,7 +1403,7 @@ class GetArchivedStickerSetsRequest final : public RequestActor<> {
   int32 limit_;
 
   int32 total_count_ = -1;
-  vector<StickerSetId> sticker_set_ids_;
+  std::vector<StickerSetId> sticker_set_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     std::tie(total_count_, sticker_set_ids_) = td_->stickers_manager_->get_archived_sticker_sets(
@@ -1449,7 +1449,7 @@ class GetTrendingStickerSetsRequest final : public RequestActor<> {
 class GetAttachedStickerSetsRequest final : public RequestActor<> {
   FileId file_id_;
 
-  vector<StickerSetId> sticker_set_ids_;
+  std::vector<StickerSetId> sticker_set_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     sticker_set_ids_ = td_->stickers_manager_->get_attached_sticker_sets(file_id_, std::move(promise));
@@ -1510,7 +1510,7 @@ class SearchInstalledStickerSetsRequest final : public RequestActor<> {
   string query_;
   int32 limit_;
 
-  std::pair<int32, vector<StickerSetId>> sticker_set_ids_;
+  std::pair<int32, std::vector<StickerSetId>> sticker_set_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     sticker_set_ids_ =
@@ -1532,7 +1532,7 @@ class SearchStickerSetsRequest final : public RequestActor<> {
   StickerType sticker_type_;
   string query_;
 
-  vector<StickerSetId> sticker_set_ids_;
+  std::vector<StickerSetId> sticker_set_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     sticker_set_ids_ = td_->stickers_manager_->search_sticker_sets(sticker_type_, query_, std::move(promise));
@@ -1595,7 +1595,7 @@ class UploadStickerFileRequest final : public RequestOnceActor {
 class GetRecentStickersRequest final : public RequestActor<> {
   bool is_attached_;
 
-  vector<FileId> sticker_ids_;
+  std::vector<FileId> sticker_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     sticker_ids_ = td_->stickers_manager_->get_recent_stickers(is_attached_, std::move(promise));
@@ -1658,7 +1658,7 @@ class ClearRecentStickersRequest final : public RequestActor<> {
 };
 
 class GetFavoriteStickersRequest final : public RequestActor<> {
-  vector<FileId> sticker_ids_;
+  std::vector<FileId> sticker_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     sticker_ids_ = td_->stickers_manager_->get_favorite_stickers(std::move(promise));
@@ -1705,7 +1705,7 @@ class RemoveFavoriteStickerRequest final : public RequestOnceActor {
 class GetStickerEmojisRequest final : public RequestActor<> {
   td_api::object_ptr<td_api::InputFile> input_file_;
 
-  vector<string> emojis_;
+  std::vector<string> emojis_;
 
   void do_run(Promise<Unit> &&promise) final {
     emojis_ = td_->stickers_manager_->get_sticker_emojis(input_file_, std::move(promise));
@@ -1724,9 +1724,9 @@ class GetStickerEmojisRequest final : public RequestActor<> {
 
 class SearchEmojisRequest final : public RequestActor<> {
   string text_;
-  vector<string> input_language_codes_;
+  std::vector<string> input_language_codes_;
 
-  vector<std::pair<string, string>> emoji_keywords_;
+  std::vector<std::pair<string, string>> emoji_keywords_;
 
   void do_run(Promise<Unit> &&promise) final {
     emoji_keywords_ =
@@ -1741,7 +1741,7 @@ class SearchEmojisRequest final : public RequestActor<> {
   }
 
  public:
-  SearchEmojisRequest(ActorShared<Td> td, uint64 request_id, string &&text, vector<string> &&input_language_codes)
+  SearchEmojisRequest(ActorShared<Td> td, uint64 request_id, string &&text, std::vector<string> &&input_language_codes)
       : RequestActor(std::move(td), request_id)
       , text_(std::move(text))
       , input_language_codes_(std::move(input_language_codes)) {
@@ -1751,9 +1751,9 @@ class SearchEmojisRequest final : public RequestActor<> {
 
 class GetKeywordEmojisRequest final : public RequestActor<> {
   string text_;
-  vector<string> input_language_codes_;
+  std::vector<string> input_language_codes_;
 
-  vector<string> emojis_;
+  std::vector<string> emojis_;
 
   void do_run(Promise<Unit> &&promise) final {
     emojis_ =
@@ -1765,7 +1765,7 @@ class GetKeywordEmojisRequest final : public RequestActor<> {
   }
 
  public:
-  GetKeywordEmojisRequest(ActorShared<Td> td, uint64 request_id, string &&text, vector<string> &&input_language_codes)
+  GetKeywordEmojisRequest(ActorShared<Td> td, uint64 request_id, string &&text, std::vector<string> &&input_language_codes)
       : RequestActor(std::move(td), request_id)
       , text_(std::move(text))
       , input_language_codes_(std::move(input_language_codes)) {
@@ -1793,7 +1793,7 @@ class GetEmojiSuggestionsUrlRequest final : public RequestOnceActor {
 };
 
 class GetSavedAnimationsRequest final : public RequestActor<> {
-  vector<FileId> animation_ids_;
+  std::vector<FileId> animation_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     animation_ids_ = td_->animations_manager_->get_saved_animations(std::move(promise));
@@ -1857,7 +1857,7 @@ class GetSavedNotificationSoundRequest final : public RequestActor<> {
 };
 
 class GetSavedNotificationSoundsRequest final : public RequestActor<> {
-  vector<FileId> ringtone_file_ids_;
+  std::vector<FileId> ringtone_file_ids_;
 
   void do_run(Promise<Unit> &&promise) final {
     ringtone_file_ids_ = td_->notification_settings_manager_->get_saved_ringtones(std::move(promise));
@@ -2123,7 +2123,7 @@ void Requests::on_request(uint64 id, td_api::confirmQrCodeAuthentication &reques
 }
 
 void Requests::on_request(uint64 id, const td_api::getCurrentState &request) {
-  vector<td_api::object_ptr<td_api::Update>> updates;
+  std::vector<td_api::object_ptr<td_api::Update>> updates;
 
   td_->option_manager_->get_current_state(updates);
 
@@ -5626,7 +5626,7 @@ void Requests::on_request(uint64 id, td_api::addContact &request) {
 
 void Requests::on_request(uint64 id, td_api::importContacts &request) {
   CHECK_IS_USER();
-  vector<Contact> contacts;
+  std::vector<Contact> contacts;
   contacts.reserve(request.contacts_.size());
   for (auto &contact : request.contacts_) {
     auto r_contact = get_contact(td_, std::move(contact));
@@ -5661,7 +5661,7 @@ void Requests::on_request(uint64 id, const td_api::getImportedContactCount &requ
 
 void Requests::on_request(uint64 id, td_api::changeImportedContacts &request) {
   CHECK_IS_USER();
-  vector<Contact> contacts;
+  std::vector<Contact> contacts;
   contacts.reserve(request.contacts_.size());
   for (auto &contact : request.contacts_) {
     auto r_contact = get_contact(td_, std::move(contact));

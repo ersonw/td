@@ -42,7 +42,7 @@ Result<GiveawayParameters> GiveawayParameters::get_giveaway_parameters(
     return Status::Error(400, "Giveaway parameters must be non-empty");
   }
   TRY_RESULT(boosted_channel_id, get_boosted_channel_id(td, DialogId(parameters->boosted_chat_id_)));
-  vector<ChannelId> additional_channel_ids;
+  std::vector<ChannelId> additional_channel_ids;
   for (auto additional_chat_id : parameters->additional_chat_ids_) {
     TRY_RESULT(channel_id, get_boosted_channel_id(td, DialogId(additional_chat_id)));
     additional_channel_ids.push_back(channel_id);
@@ -69,7 +69,7 @@ Result<GiveawayParameters> GiveawayParameters::get_giveaway_parameters(
   }
   return GiveawayParameters(boosted_channel_id, std::move(additional_channel_ids), parameters->only_new_members_,
                             parameters->has_public_winners_, parameters->winners_selection_date_,
-                            vector<string>(parameters->country_codes_), std::move(prize_description));
+                            std::vector<string>(parameters->country_codes_), std::move(prize_description));
 }
 
 vector<ChannelId> GiveawayParameters::get_channel_ids() const {
@@ -95,7 +95,7 @@ GiveawayParameters::get_input_store_payment_premium_giveaway(Td *td, const strin
   auto boost_input_peer = td->dialog_manager_->get_input_peer(DialogId(boosted_channel_id_), AccessRights::Write);
   CHECK(boost_input_peer != nullptr);
 
-  vector<telegram_api::object_ptr<telegram_api::InputPeer>> additional_input_peers;
+  std::vector<telegram_api::object_ptr<telegram_api::InputPeer>> additional_input_peers;
   for (auto additional_channel_id : additional_channel_ids_) {
     auto input_peer = td->dialog_manager_->get_input_peer(DialogId(additional_channel_id), AccessRights::Write);
     CHECK(input_peer != nullptr);
@@ -120,13 +120,13 @@ GiveawayParameters::get_input_store_payment_premium_giveaway(Td *td, const strin
   }
   return telegram_api::make_object<telegram_api::inputStorePaymentPremiumGiveaway>(
       flags, false /*ignored*/, false /*ignored*/, std::move(boost_input_peer), std::move(additional_input_peers),
-      vector<string>(country_codes_), prize_description_, random_id, date_, currency, amount);
+      std::vector<string>(country_codes_), prize_description_, random_id, date_, currency, amount);
 }
 
 td_api::object_ptr<td_api::premiumGiveawayParameters> GiveawayParameters::get_premium_giveaway_parameters_object(
     Td *td) const {
   CHECK(is_valid());
-  vector<int64> chat_ids;
+  std::vector<int64> chat_ids;
   for (auto channel_id : additional_channel_ids_) {
     DialogId dialog_id(channel_id);
     td->dialog_manager_->force_create_dialog(dialog_id, "premiumGiveawayParameters", true);
@@ -136,7 +136,7 @@ td_api::object_ptr<td_api::premiumGiveawayParameters> GiveawayParameters::get_pr
   td->dialog_manager_->force_create_dialog(dialog_id, "premiumGiveawayParameters", true);
   return td_api::make_object<td_api::premiumGiveawayParameters>(
       td->dialog_manager_->get_chat_id_object(dialog_id, "premiumGiveawayParameters"), std::move(chat_ids), date_,
-      only_new_subscribers_, winners_are_visible_, vector<string>(country_codes_), prize_description_);
+      only_new_subscribers_, winners_are_visible_, std::vector<string>(country_codes_), prize_description_);
 }
 
 bool operator==(const GiveawayParameters &lhs, const GiveawayParameters &rhs) {

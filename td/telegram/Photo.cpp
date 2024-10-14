@@ -140,7 +140,7 @@ tl_object_ptr<td_api::chatPhotoInfo> get_chat_photo_info_object(FileManager *fil
 }
 
 vector<FileId> dialog_photo_get_file_ids(const DialogPhoto &dialog_photo) {
-  vector<FileId> result;
+  std::vector<FileId> result;
   if (dialog_photo.small_file_id.is_valid()) {
     result.push_back(dialog_photo.small_file_id);
   }
@@ -238,11 +238,11 @@ static tl_object_ptr<td_api::photoSize> get_photo_size_object(FileManager *file_
       photo_size->type ? std::string(1, static_cast<char>(photo_size->type))
                        : std::string(),  // TODO replace string type with integer type
       file_manager->get_file_object(photo_size->file_id), photo_size->dimensions.width, photo_size->dimensions.height,
-      vector<int32>(photo_size->progressive_sizes));
+      std::vector<int32>(photo_size->progressive_sizes));
 }
 
-static vector<td_api::object_ptr<td_api::photoSize>> get_photo_sizes_object(FileManager *file_manager,
-                                                                            const vector<PhotoSize> &photo_sizes) {
+static std::vector<td_api::object_ptr<td_api::photoSize>> get_photo_sizes_object(FileManager *file_manager,
+                                                                            const std::vector<PhotoSize> &photo_sizes) {
   auto sizes = transform(photo_sizes, [file_manager](const PhotoSize &photo_size) {
     return get_photo_size_object(file_manager, &photo_size);
   });
@@ -370,7 +370,7 @@ Photo get_web_document_photo(FileManager *file_manager, tl_object_ptr<telegram_a
 }
 
 Result<Photo> create_photo(FileManager *file_manager, FileId file_id, PhotoSize &&thumbnail, int32 width, int32 height,
-                           vector<FileId> &&sticker_file_ids) {
+                           std::vector<FileId> &&sticker_file_ids) {
   TRY_RESULT(input_photo_size, get_input_photo_size(file_manager, file_id, width, height));
 
   Photo photo;
@@ -633,7 +633,7 @@ tl_object_ptr<telegram_api::InputMedia> photo_get_input_media(FileManager *file_
   }
   if (input_file != nullptr) {
     int32 flags = 0;
-    vector<tl_object_ptr<telegram_api::InputDocument>> added_stickers;
+    std::vector<tl_object_ptr<telegram_api::InputDocument>> added_stickers;
     if (photo.has_stickers) {
       flags |= telegram_api::inputMediaUploadedPhoto::STICKERS_MASK;
       added_stickers = file_manager->get_input_documents(photo.sticker_file_ids);

@@ -202,7 +202,7 @@ class ClientManager::Impl final {
     RequestId id;
     td_api::object_ptr<td_api::Function> request;
   };
-  vector<Request> requests_;
+  std::vector<Request> requests_;
   unique_ptr<ConcurrentScheduler> concurrent_scheduler_;
   ClientId client_id_{0};
   Td::Options options_;

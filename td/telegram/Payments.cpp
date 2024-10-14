@@ -86,7 +86,7 @@ Result<InputInvoiceInfo> get_input_invoice_info(Td *td, td_api::object_ptr<td_ap
       switch (invoice->purpose_->get_id()) {
         case td_api::telegramPaymentPurposePremiumGiftCodes::ID: {
           auto p = static_cast<td_api::telegramPaymentPurposePremiumGiftCodes *>(invoice->purpose_.get());
-          vector<telegram_api::object_ptr<telegram_api::InputUser>> input_users;
+          std::vector<telegram_api::object_ptr<telegram_api::InputUser>> input_users;
           for (auto user_id : p->user_ids_) {
             TRY_RESULT(input_user, td->user_manager_->get_input_user(UserId(user_id)));
             input_users.push_back(std::move(input_user));
@@ -191,7 +191,7 @@ class SetBotShippingAnswerQuery final : public Td::ResultHandler {
   }
 
   void send(int64 shipping_query_id, const string &error_message,
-            vector<tl_object_ptr<telegram_api::shippingOption>> &&shipping_options) {
+            std::vector<tl_object_ptr<telegram_api::shippingOption>> &&shipping_options) {
     int32 flags = 0;
     if (!error_message.empty()) {
       flags |= telegram_api::messages_setBotShippingResults::ERROR_MASK;
@@ -451,8 +451,8 @@ static tl_object_ptr<telegram_api::paymentRequestedInfo> convert_order_info(
       convert_address(std::move(order_info->shipping_address_)));
 }
 
-static vector<tl_object_ptr<td_api::savedCredentials>> convert_saved_credentials(
-    vector<tl_object_ptr<telegram_api::paymentSavedCredentialsCard>> saved_credentials) {
+static std::vector<tl_object_ptr<td_api::savedCredentials>> convert_saved_credentials(
+    std::vector<tl_object_ptr<telegram_api::paymentSavedCredentialsCard>> saved_credentials) {
   return transform(
       std::move(saved_credentials), [](tl_object_ptr<telegram_api::paymentSavedCredentialsCard> &&credentials) {
         return make_tl_object<td_api::savedCredentials>(std::move(credentials->id_), std::move(credentials->title_));
@@ -978,9 +978,9 @@ class GetCollectibleInfoQuery final : public Td::ResultHandler {
 };
 
 void answer_shipping_query(Td *td, int64 shipping_query_id,
-                           vector<tl_object_ptr<td_api::shippingOption>> &&shipping_options,
+                           std::vector<tl_object_ptr<td_api::shippingOption>> &&shipping_options,
                            const string &error_message, Promise<Unit> &&promise) {
-  vector<tl_object_ptr<telegram_api::shippingOption>> options;
+  std::vector<tl_object_ptr<telegram_api::shippingOption>> options;
   for (auto &option : shipping_options) {
     if (option == nullptr) {
       return promise.set_error(Status::Error(400, "Shipping option must be non-empty"));
@@ -992,7 +992,7 @@ void answer_shipping_query(Td *td, int64 shipping_query_id,
       return promise.set_error(Status::Error(400, "Shipping option title must be encoded in UTF-8"));
     }
 
-    vector<tl_object_ptr<telegram_api::labeledPrice>> prices;
+    std::vector<tl_object_ptr<telegram_api::labeledPrice>> prices;
     for (auto &price_part : option->price_parts_) {
       if (price_part == nullptr) {
         return promise.set_error(Status::Error(400, "Shipping option price part must be non-empty"));

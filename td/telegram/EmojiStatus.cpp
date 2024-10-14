@@ -22,7 +22,7 @@ namespace td {
 
 struct EmojiStatuses {
   int64 hash_ = 0;
-  vector<EmojiStatus> emoji_statuses_;
+  std::vector<EmojiStatus> emoji_statuses_;
 
   td_api::object_ptr<td_api::emojiStatuses> get_emoji_statuses_object() const {
     auto custom_emoji_ids = transform(emoji_statuses_, [](const EmojiStatus &emoji_status) {
@@ -324,7 +324,7 @@ StringBuilder &operator<<(StringBuilder &string_builder, const EmojiStatus &emoj
   return string_builder;
 }
 
-td_api::object_ptr<td_api::emojiStatuses> get_emoji_statuses_object(const vector<CustomEmojiId> &custom_emoji_ids) {
+td_api::object_ptr<td_api::emojiStatuses> get_emoji_statuses_object(const std::vector<CustomEmojiId> &custom_emoji_ids) {
   return td_api::make_object<td_api::emojiStatuses>(
       transform(custom_emoji_ids, [](CustomEmojiId custom_emoji_id) { return custom_emoji_id.get(); }));
 }

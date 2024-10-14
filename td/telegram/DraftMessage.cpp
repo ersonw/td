@@ -42,7 +42,7 @@ class SaveDraftMessageQuery final : public Td::ResultHandler {
 
     int32 flags = 0;
     telegram_api::object_ptr<telegram_api::InputReplyTo> input_reply_to;
-    vector<telegram_api::object_ptr<telegram_api::MessageEntity>> input_message_entities;
+    std::vector<telegram_api::object_ptr<telegram_api::MessageEntity>> input_message_entities;
     telegram_api::object_ptr<telegram_api::InputMedia> media;
     int64 message_effect_id = 0;
     if (draft_message != nullptr) {

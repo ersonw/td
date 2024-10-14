@@ -46,10 +46,10 @@ static size_t get_max_reaction_count() {
 
 class GetMessagesReactionsQuery final : public Td::ResultHandler {
   DialogId dialog_id_;
-  vector<MessageId> message_ids_;
+  std::vector<MessageId> message_ids_;
 
  public:
-  void send(DialogId dialog_id, vector<MessageId> &&message_ids) {
+  void send(DialogId dialog_id, std::vector<MessageId> &&message_ids) {
     dialog_id_ = dialog_id;
     message_ids_ = std::move(message_ids);
 
@@ -106,7 +106,7 @@ class SendReactionQuery final : public Td::ResultHandler {
   explicit SendReactionQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(MessageFullId message_full_id, vector<ReactionType> reaction_types, bool is_big, bool add_to_recent) {
+  void send(MessageFullId message_full_id, std::vector<ReactionType> reaction_types, bool is_big, bool add_to_recent) {
     dialog_id_ = message_full_id.get_dialog_id();
 
     auto input_peer = td_->dialog_manager_->get_input_peer(dialog_id_, AccessRights::Read);
@@ -295,8 +295,8 @@ class GetMessageReactionsListQuery final : public Td::ResultHandler {
       total_count = received_reaction_count;
     }
 
-    vector<td_api::object_ptr<td_api::addedReaction>> reactions;
-    FlatHashMap<ReactionType, vector<DialogId>, ReactionTypeHash> recent_reaction_types;
+    std::vector<td_api::object_ptr<td_api::addedReaction>> reactions;
+    FlatHashMap<ReactionType, std::vector<DialogId>, ReactionTypeHash> recent_reaction_types;
     for (const auto &reaction : ptr->reactions_) {
       DialogId dialog_id(reaction->peer_id_);
       auto reaction_type = ReactionType(reaction->reaction_);
@@ -371,8 +371,8 @@ class ReportReactionQuery final : public Td::ResultHandler {
 };
 
 MessageReaction::MessageReaction(ReactionType reaction_type, int32 choose_count, bool is_chosen,
-                                 DialogId my_recent_chooser_dialog_id, vector<DialogId> &&recent_chooser_dialog_ids,
-                                 vector<std::pair<ChannelId, MinChannel>> &&recent_chooser_min_channels)
+                                 DialogId my_recent_chooser_dialog_id, std::vector<DialogId> &&recent_chooser_dialog_ids,
+                                 std::vector<std::pair<ChannelId, MinChannel>> &&recent_chooser_min_channels)
     : reaction_type_(std::move(reaction_type))
     , choose_count_(choose_count)
     , is_chosen_(is_chosen)
@@ -479,7 +479,7 @@ td_api::object_ptr<td_api::messageReaction> MessageReaction::get_message_reactio
   CHECK(!is_empty());
 
   td_api::object_ptr<td_api::MessageSender> used_sender;
-  vector<td_api::object_ptr<td_api::MessageSender>> recent_choosers;
+  std::vector<td_api::object_ptr<td_api::MessageSender>> recent_choosers;
   if (my_user_id.is_valid()) {
     CHECK(peer_user_id.is_valid());
     if (is_chosen()) {
@@ -579,7 +579,7 @@ unique_ptr<MessageReactions> MessageReactions::get_message_reactions(
   }
 
   FlatHashSet<ReactionType, ReactionTypeHash> reaction_types;
-  vector<std::pair<int32, ReactionType>> chosen_reaction_order;
+  std::vector<std::pair<int32, ReactionType>> chosen_reaction_order;
   for (auto &reaction_count : reactions->results_) {
     auto reaction_type = ReactionType(reaction_count->reaction_);
     if (reaction_count->count_ <= 0 || reaction_count->count_ >= MessageReaction::MAX_CHOOSE_COUNT ||
@@ -595,8 +595,8 @@ unique_ptr<MessageReactions> MessageReactions::get_message_reactions(
 
     FlatHashSet<DialogId, DialogIdHash> recent_choosers;
     DialogId my_recent_chooser_dialog_id;
-    vector<DialogId> recent_chooser_dialog_ids;
-    vector<std::pair<ChannelId, MinChannel>> recent_chooser_min_channels;
+    std::vector<DialogId> recent_chooser_dialog_ids;
+    std::vector<std::pair<ChannelId, MinChannel>> recent_chooser_min_channels;
     for (auto &peer_reaction : reactions->recent_reactions_) {
       auto peer_reaction_type = ReactionType(peer_reaction->reaction_);
       if (peer_reaction_type == reaction_type) {
@@ -752,11 +752,11 @@ void MessageReactions::update_from(const MessageReactions &old_reactions, Dialog
 
 bool MessageReactions::add_my_reaction(const ReactionType &reaction_type, bool is_big, DialogId my_dialog_id,
                                        bool have_recent_choosers, bool is_tag) {
-  vector<ReactionType> new_chosen_reaction_order = get_chosen_reaction_types();
+  std::vector<ReactionType> new_chosen_reaction_order = get_chosen_reaction_types();
 
   auto added_reaction = get_reaction(reaction_type);
   if (added_reaction == nullptr) {
-    vector<DialogId> recent_chooser_dialog_ids;
+    std::vector<DialogId> recent_chooser_dialog_ids;
     DialogId my_recent_chooser_dialog_id;
     if (have_recent_choosers) {
       recent_chooser_dialog_ids.push_back(my_dialog_id);
@@ -919,7 +919,7 @@ vector<ReactionType> MessageReactions::get_chosen_reaction_types() const {
     return chosen_reaction_order_;
   }
 
-  vector<ReactionType> reaction_order;
+  std::vector<ReactionType> reaction_order;
   for (const auto &reaction : reactions_) {
     if (!reaction.get_reaction_type().is_paid_reaction() && reaction.is_chosen()) {
       reaction_order.push_back(reaction.get_reaction_type());
@@ -929,9 +929,9 @@ vector<ReactionType> MessageReactions::get_chosen_reaction_types() const {
 }
 
 bool MessageReactions::are_consistent_with_list(
-    const ReactionType &reaction_type, FlatHashMap<ReactionType, vector<DialogId>, ReactionTypeHash> reaction_types,
+    const ReactionType &reaction_type, FlatHashMap<ReactionType, std::vector<DialogId>, ReactionTypeHash> reaction_types,
     int32 total_count) const {
-  auto are_consistent = [](const vector<DialogId> &lhs, const vector<DialogId> &rhs) {
+  auto are_consistent = [](const std::vector<DialogId> &lhs, const std::vector<DialogId> &rhs) {
     size_t i = 0;
     size_t max_i = td::min(lhs.size(), rhs.size());
     while (i < max_i && lhs[i] == rhs[i]) {
@@ -966,7 +966,7 @@ bool MessageReactions::are_consistent_with_list(
 }
 
 vector<MessageReactor> MessageReactions::apply_reactor_pending_paid_reactions(DialogId my_dialog_id) const {
-  vector<MessageReactor> top_reactors;
+  std::vector<MessageReactor> top_reactors;
   bool was_me = false;
   for (auto &reactor : top_reactors_) {
     top_reactors.push_back(reactor);
@@ -1127,7 +1127,7 @@ StringBuilder &operator<<(StringBuilder &string_builder, const unique_ptr<Messag
   return string_builder << *reactions;
 }
 
-void reload_message_reactions(Td *td, DialogId dialog_id, vector<MessageId> &&message_ids) {
+void reload_message_reactions(Td *td, DialogId dialog_id, std::vector<MessageId> &&message_ids) {
   if (!td->dialog_manager_->have_input_peer(dialog_id, false, AccessRights::Read) || message_ids.empty()) {
     create_actor<SleepActor>(
         "RetryReloadMessageReactionsActor", 0.2,
@@ -1146,13 +1146,13 @@ void reload_message_reactions(Td *td, DialogId dialog_id, vector<MessageId> &&me
   td->create_handler<GetMessagesReactionsQuery>()->send(dialog_id, std::move(message_ids));
 }
 
-void send_message_reaction(Td *td, MessageFullId message_full_id, vector<ReactionType> reaction_types, bool is_big,
+void send_message_reaction(Td *td, MessageFullId message_full_id, std::vector<ReactionType> reaction_types, bool is_big,
                            bool add_to_recent, Promise<Unit> &&promise) {
   td->create_handler<SendReactionQuery>(std::move(promise))
       ->send(message_full_id, std::move(reaction_types), is_big, add_to_recent);
 }
 
-void set_message_reactions(Td *td, MessageFullId message_full_id, vector<ReactionType> reaction_types, bool is_big,
+void set_message_reactions(Td *td, MessageFullId message_full_id, std::vector<ReactionType> reaction_types, bool is_big,
                            Promise<Unit> &&promise) {
   if (!td->messages_manager_->have_message_force(message_full_id, "set_message_reactions")) {
     return promise.set_error(Status::Error(400, "Message not found"));

@@ -32,7 +32,7 @@ StringBuilder &operator<<(StringBuilder &string_builder, const BusinessChatLink 
 }
 
 BusinessChatLinks::BusinessChatLinks(const UserManager *user_manager,
-                                     vector<telegram_api::object_ptr<telegram_api::businessChatLink>> &&links) {
+                                     std::vector<telegram_api::object_ptr<telegram_api::businessChatLink>> &&links) {
   for (auto &link : links) {
     business_chat_links_.emplace_back(user_manager, std::move(link));
     if (!business_chat_links_.back().is_valid()) {

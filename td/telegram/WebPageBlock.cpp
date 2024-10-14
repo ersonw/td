@@ -61,15 +61,15 @@ struct GetWebPageBlockObjectContext {
   std::unordered_map<Slice, const RichText *, SliceHash> anchors_;  // anchor -> text
 };
 
-static vector<td_api::object_ptr<td_api::PageBlock>> get_page_blocks_object(
-    const vector<unique_ptr<WebPageBlock>> &page_blocks, GetWebPageBlockObjectContext *context) {
+static std::vector<td_api::object_ptr<td_api::PageBlock>> get_page_blocks_object(
+    const std::vector<unique_ptr<WebPageBlock>> &page_blocks, GetWebPageBlockObjectContext *context) {
   return transform(page_blocks, [context](const unique_ptr<WebPageBlock> &page_block) {
     return page_block->get_page_block_object(context);
   });
 }
 
 class RichText {
-  static vector<td_api::object_ptr<td_api::RichText>> get_rich_texts_object(const vector<RichText> &rich_texts,
+  static std::vector<td_api::object_ptr<td_api::RichText>> get_rich_texts_object(const std::vector<RichText> &rich_texts,
                                                                             GetWebPageBlockObjectContext *context) {
     return transform(rich_texts,
                      [context](const RichText &rich_text) { return rich_text.get_rich_text_object(context); });
@@ -95,7 +95,7 @@ class RichText {
   };
   Type type = Type::Plain;
   string content;
-  vector<RichText> texts;
+  std::vector<RichText> texts;
   FileId document_file_id;
   WebPageId web_page_id;
 
@@ -103,7 +103,7 @@ class RichText {
     return type == Type::Plain && content.empty();
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const {
     if (type == RichText::Type::Icon) {
       CHECK(document_file_id.is_valid());
       Document(Document::Type::General, document_file_id).append_file_ids(td, file_ids);
@@ -246,7 +246,7 @@ class WebPageBlockCaption {
   RichText text;
   RichText credit;
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const {
     text.append_file_ids(td, file_ids);
     credit.append_file_ids(td, file_ids);
   }
@@ -473,7 +473,7 @@ class WebPageBlockTitle final : public WebPageBlock {
     return Type::Title;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     title.append_file_ids(td, file_ids);
   }
 
@@ -506,7 +506,7 @@ class WebPageBlockSubtitle final : public WebPageBlock {
     return Type::Subtitle;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     subtitle.append_file_ids(td, file_ids);
   }
 
@@ -540,7 +540,7 @@ class WebPageBlockAuthorDate final : public WebPageBlock {
     return Type::AuthorDate;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     author.append_file_ids(td, file_ids);
   }
 
@@ -575,7 +575,7 @@ class WebPageBlockHeader final : public WebPageBlock {
     return Type::Header;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     header.append_file_ids(td, file_ids);
   }
 
@@ -608,7 +608,7 @@ class WebPageBlockSubheader final : public WebPageBlock {
     return Type::Subheader;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     subheader.append_file_ids(td, file_ids);
   }
 
@@ -641,7 +641,7 @@ class WebPageBlockKicker final : public WebPageBlock {
     return Type::Kicker;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     kicker.append_file_ids(td, file_ids);
   }
 
@@ -674,7 +674,7 @@ class WebPageBlockParagraph final : public WebPageBlock {
     return Type::Paragraph;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     text.append_file_ids(td, file_ids);
   }
 
@@ -708,7 +708,7 @@ class WebPageBlockPreformatted final : public WebPageBlock {
     return Type::Preformatted;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     text.append_file_ids(td, file_ids);
   }
 
@@ -743,7 +743,7 @@ class WebPageBlockFooter final : public WebPageBlock {
     return Type::Footer;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     footer.append_file_ids(td, file_ids);
   }
 
@@ -770,7 +770,7 @@ class WebPageBlockDivider final : public WebPageBlock {
     return Type::Divider;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
   }
 
   td_api::object_ptr<td_api::PageBlock> get_page_block_object(Context *context) const final {
@@ -798,7 +798,7 @@ class WebPageBlockAnchor final : public WebPageBlock {
     return Type::Anchor;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
   }
 
   td_api::object_ptr<td_api::PageBlock> get_page_block_object(Context *context) const final {
@@ -825,7 +825,7 @@ class WebPageBlockList final : public WebPageBlock {
  public:
   struct Item {
     string label;
-    vector<unique_ptr<WebPageBlock>> page_blocks;
+    std::vector<unique_ptr<WebPageBlock>> page_blocks;
 
     template <class StorerT>
     void store(StorerT &storer) const {
@@ -843,7 +843,7 @@ class WebPageBlockList final : public WebPageBlock {
   };
 
  private:
-  vector<Item> items;
+  std::vector<Item> items;
 
   static td_api::object_ptr<td_api::pageBlockListItem> get_page_block_list_item_object(const Item &item,
                                                                                        Context *context) {
@@ -861,7 +861,7 @@ class WebPageBlockList final : public WebPageBlock {
     return Type::List;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     for (auto &item : items) {
       for (auto &page_block : item.page_blocks) {
         page_block->append_file_ids(td, file_ids);
@@ -887,7 +887,7 @@ class WebPageBlockList final : public WebPageBlock {
     if (parser.version() >= static_cast<int32>(Version::SupportInstantView2_0)) {
       parse(items, parser);
     } else {
-      vector<RichText> text_items;
+      std::vector<RichText> text_items;
       bool is_ordered;
 
       BEGIN_PARSE_FLAGS();
@@ -924,7 +924,7 @@ class WebPageBlockBlockQuote final : public WebPageBlock {
     return Type::BlockQuote;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     text.append_file_ids(td, file_ids);
     credit.append_file_ids(td, file_ids);
   }
@@ -962,7 +962,7 @@ class WebPageBlockPullQuote final : public WebPageBlock {
     return Type::PullQuote;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     text.append_file_ids(td, file_ids);
     credit.append_file_ids(td, file_ids);
   }
@@ -1002,7 +1002,7 @@ class WebPageBlockAnimation final : public WebPageBlock {
     return Type::Animation;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     caption.append_file_ids(td, file_ids);
     Document(Document::Type::Animation, animation_file_id).append_file_ids(td, file_ids);
   }
@@ -1069,7 +1069,7 @@ class WebPageBlockPhoto final : public WebPageBlock {
     return Type::Photo;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     append(file_ids, photo_get_file_ids(photo));
     caption.append_file_ids(td, file_ids);
   }
@@ -1119,7 +1119,7 @@ class WebPageBlockVideo final : public WebPageBlock {
     return Type::Video;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     caption.append_file_ids(td, file_ids);
     Document(Document::Type::Video, video_file_id).append_file_ids(td, file_ids);
   }
@@ -1184,7 +1184,7 @@ class WebPageBlockCover final : public WebPageBlock {
     return Type::Cover;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     cover->append_file_ids(td, file_ids);
   }
 
@@ -1231,7 +1231,7 @@ class WebPageBlockEmbedded final : public WebPageBlock {
     return Type::Embedded;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     append(file_ids, photo_get_file_ids(poster_photo));
     caption.append_file_ids(td, file_ids);
   }
@@ -1278,13 +1278,13 @@ class WebPageBlockEmbeddedPost final : public WebPageBlock {
   string author;
   Photo author_photo;
   int32 date;
-  vector<unique_ptr<WebPageBlock>> page_blocks;
+  std::vector<unique_ptr<WebPageBlock>> page_blocks;
   WebPageBlockCaption caption;
 
  public:
   WebPageBlockEmbeddedPost() = default;
   WebPageBlockEmbeddedPost(string &&url, string &&author, Photo &&author_photo, int32 date,
-                           vector<unique_ptr<WebPageBlock>> &&page_blocks, WebPageBlockCaption &&caption)
+                           std::vector<unique_ptr<WebPageBlock>> &&page_blocks, WebPageBlockCaption &&caption)
       : url(std::move(url))
       , author(std::move(author))
       , author_photo(std::move(author_photo))
@@ -1297,7 +1297,7 @@ class WebPageBlockEmbeddedPost final : public WebPageBlock {
     return Type::EmbeddedPost;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     append(file_ids, photo_get_file_ids(author_photo));
     for (auto &page_block : page_blocks) {
       page_block->append_file_ids(td, file_ids);
@@ -1335,7 +1335,7 @@ class WebPageBlockEmbeddedPost final : public WebPageBlock {
 };
 
 class WebPageBlockCollage final : public WebPageBlock {
-  vector<unique_ptr<WebPageBlock>> page_blocks;
+  std::vector<unique_ptr<WebPageBlock>> page_blocks;
   WebPageBlockCaption caption;
 
  public:
@@ -1348,7 +1348,7 @@ class WebPageBlockCollage final : public WebPageBlock {
     return Type::Collage;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     for (auto &page_block : page_blocks) {
       page_block->append_file_ids(td, file_ids);
     }
@@ -1376,7 +1376,7 @@ class WebPageBlockCollage final : public WebPageBlock {
 };
 
 class WebPageBlockSlideshow final : public WebPageBlock {
-  vector<unique_ptr<WebPageBlock>> page_blocks;
+  std::vector<unique_ptr<WebPageBlock>> page_blocks;
   WebPageBlockCaption caption;
 
  public:
@@ -1389,7 +1389,7 @@ class WebPageBlockSlideshow final : public WebPageBlock {
     return Type::Slideshow;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     for (auto &page_block : page_blocks) {
       page_block->append_file_ids(td, file_ids);
     }
@@ -1438,7 +1438,7 @@ class WebPageBlockChatLink final : public WebPageBlock {
     return Type::ChatLink;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     append(file_ids, dialog_photo_get_file_ids(photo));
   }
 
@@ -1535,7 +1535,7 @@ class WebPageBlockAudio final : public WebPageBlock {
     return Type::Audio;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     Document(Document::Type::Audio, audio_file_id).append_file_ids(td, file_ids);
     caption.append_file_ids(td, file_ids);
   }
@@ -1592,13 +1592,13 @@ class WebPageBlockAudio final : public WebPageBlock {
 
 class WebPageBlockTable final : public WebPageBlock {
   RichText title;
-  vector<vector<WebPageBlockTableCell>> cells;
+  std::vector<vector<WebPageBlockTableCell>> cells;
   bool is_bordered = false;
   bool is_striped = false;
 
  public:
   WebPageBlockTable() = default;
-  WebPageBlockTable(RichText &&title, vector<vector<WebPageBlockTableCell>> &&cells, bool is_bordered, bool is_striped)
+  WebPageBlockTable(RichText &&title, std::vector<vector<WebPageBlockTableCell>> &&cells, bool is_bordered, bool is_striped)
       : title(std::move(title)), cells(std::move(cells)), is_bordered(is_bordered), is_striped(is_striped) {
   }
 
@@ -1606,7 +1606,7 @@ class WebPageBlockTable final : public WebPageBlock {
     return Type::Table;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     title.append_file_ids(td, file_ids);
     for (auto &row : cells) {
       for (auto &cell : row) {
@@ -1616,7 +1616,7 @@ class WebPageBlockTable final : public WebPageBlock {
   }
 
   td_api::object_ptr<td_api::PageBlock> get_page_block_object(Context *context) const final {
-    auto cell_objects = transform(cells, [&](const vector<WebPageBlockTableCell> &row) {
+    auto cell_objects = transform(cells, [&](const std::vector<WebPageBlockTableCell> &row) {
       return transform(
           row, [&](const WebPageBlockTableCell &cell) { return cell.get_page_block_table_cell_object(context); });
     });
@@ -1650,12 +1650,12 @@ class WebPageBlockTable final : public WebPageBlock {
 
 class WebPageBlockDetails final : public WebPageBlock {
   RichText header;
-  vector<unique_ptr<WebPageBlock>> page_blocks;
+  std::vector<unique_ptr<WebPageBlock>> page_blocks;
   bool is_open;
 
  public:
   WebPageBlockDetails() = default;
-  WebPageBlockDetails(RichText &&header, vector<unique_ptr<WebPageBlock>> &&page_blocks, bool is_open)
+  WebPageBlockDetails(RichText &&header, std::vector<unique_ptr<WebPageBlock>> &&page_blocks, bool is_open)
       : header(std::move(header)), page_blocks(std::move(page_blocks)), is_open(is_open) {
   }
 
@@ -1663,7 +1663,7 @@ class WebPageBlockDetails final : public WebPageBlock {
     return Type::Details;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     header.append_file_ids(td, file_ids);
     for (auto &page_block : page_blocks) {
       page_block->append_file_ids(td, file_ids);
@@ -1698,11 +1698,11 @@ class WebPageBlockDetails final : public WebPageBlock {
 
 class WebPageBlockRelatedArticles final : public WebPageBlock {
   RichText header;
-  vector<RelatedArticle> related_articles;
+  std::vector<RelatedArticle> related_articles;
 
  public:
   WebPageBlockRelatedArticles() = default;
-  WebPageBlockRelatedArticles(RichText &&header, vector<RelatedArticle> &&related_articles)
+  WebPageBlockRelatedArticles(RichText &&header, std::vector<RelatedArticle> &&related_articles)
       : header(std::move(header)), related_articles(std::move(related_articles)) {
   }
 
@@ -1710,7 +1710,7 @@ class WebPageBlockRelatedArticles final : public WebPageBlock {
     return Type::RelatedArticles;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     header.append_file_ids(td, file_ids);
     for (auto &article : related_articles) {
       if (!article.photo.is_empty()) {
@@ -1760,7 +1760,7 @@ class WebPageBlockMap final : public WebPageBlock {
     return Type::Map;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     caption.append_file_ids(td, file_ids);
   }
 
@@ -1802,7 +1802,7 @@ class WebPageBlockVoiceNote final : public WebPageBlock {
     return Type::VoiceNote;
   }
 
-  void append_file_ids(const Td *td, vector<FileId> &file_ids) const final {
+  void append_file_ids(const Td *td, std::vector<FileId> &file_ids) const final {
     Document(Document::Type::VoiceNote, voice_note_file_id).append_file_ids(td, file_ids);
     caption.append_file_ids(td, file_ids);
   }
@@ -2453,11 +2453,11 @@ void parse(unique_ptr<WebPageBlock> &block, LogEventParser &parser) {
 }
 
 vector<unique_ptr<WebPageBlock>> get_web_page_blocks(
-    Td *td, vector<tl_object_ptr<telegram_api::PageBlock>> page_block_ptrs,
+    Td *td, std::vector<tl_object_ptr<telegram_api::PageBlock>> page_block_ptrs,
     const FlatHashMap<int64, FileId> &animations, const FlatHashMap<int64, FileId> &audios,
     const FlatHashMap<int64, FileId> &documents, const FlatHashMap<int64, unique_ptr<Photo>> &photos,
     const FlatHashMap<int64, FileId> &videos, const FlatHashMap<int64, FileId> &voice_notes) {
-  vector<unique_ptr<WebPageBlock>> result;
+  std::vector<unique_ptr<WebPageBlock>> result;
   result.reserve(page_block_ptrs.size());
   for (auto &page_block_ptr : page_block_ptrs) {
     auto page_block =
@@ -2470,7 +2470,7 @@ vector<unique_ptr<WebPageBlock>> get_web_page_blocks(
 }
 
 vector<td_api::object_ptr<td_api::PageBlock>> get_page_blocks_object(
-    const vector<unique_ptr<WebPageBlock>> &page_blocks, Td *td, Slice base_url, Slice real_url) {
+    const std::vector<unique_ptr<WebPageBlock>> &page_blocks, Td *td, Slice base_url, Slice real_url) {
   GetWebPageBlockObjectContext context;
   context.td_ = td;
   context.base_url_ = base_url;
@@ -2491,7 +2491,7 @@ vector<td_api::object_ptr<td_api::PageBlock>> get_page_blocks_object(
   return get_page_blocks_object(page_blocks, &context);
 }
 
-bool WebPageBlock::are_allowed_album_block_types(const vector<unique_ptr<WebPageBlock>> &page_blocks) {
+bool WebPageBlock::are_allowed_album_block_types(const std::vector<unique_ptr<WebPageBlock>> &page_blocks) {
   for (const auto &block : page_blocks) {
     switch (block->get_type()) {
       case Type::Title:

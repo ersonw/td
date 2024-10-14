@@ -65,14 +65,14 @@ BusinessRecipients::BusinessRecipients(td_api::object_ptr<td_api::businessRecipi
 }
 
 td_api::object_ptr<td_api::businessRecipients> BusinessRecipients::get_business_recipients_object(Td *td) const {
-  vector<int64> chat_ids;
+  std::vector<int64> chat_ids;
   for (auto user_id : user_ids_) {
     DialogId dialog_id(user_id);
     td->dialog_manager_->force_create_dialog(dialog_id, "get_business_recipients_object", true);
     CHECK(td->dialog_manager_->have_dialog_force(dialog_id, "get_business_recipients_object"));
     chat_ids.push_back(td->dialog_manager_->get_chat_id_object(dialog_id, "businessRecipients"));
   }
-  vector<int64> excluded_chat_ids;
+  std::vector<int64> excluded_chat_ids;
   for (auto user_id : excluded_user_ids_) {
     DialogId dialog_id(user_id);
     td->dialog_manager_->force_create_dialog(dialog_id, "get_business_recipients_object", true);
@@ -102,7 +102,7 @@ telegram_api::object_ptr<telegram_api::inputBusinessRecipients> BusinessRecipien
   if (exclude_selected_) {
     flags |= telegram_api::inputBusinessRecipients::EXCLUDE_SELECTED_MASK;
   }
-  vector<telegram_api::object_ptr<telegram_api::InputUser>> input_users;
+  std::vector<telegram_api::object_ptr<telegram_api::InputUser>> input_users;
   for (auto user_id : user_ids_) {
     auto r_input_user = td->user_manager_->get_input_user(user_id);
     if (r_input_user.is_ok()) {
@@ -135,7 +135,7 @@ BusinessRecipients::get_input_business_bot_recipients(Td *td) const {
   if (exclude_selected_) {
     flags |= telegram_api::inputBusinessBotRecipients::EXCLUDE_SELECTED_MASK;
   }
-  vector<telegram_api::object_ptr<telegram_api::InputUser>> input_users;
+  std::vector<telegram_api::object_ptr<telegram_api::InputUser>> input_users;
   for (auto user_id : user_ids_) {
     auto r_input_user = td->user_manager_->get_input_user(user_id);
     if (r_input_user.is_ok()) {
@@ -145,7 +145,7 @@ BusinessRecipients::get_input_business_bot_recipients(Td *td) const {
   if (!input_users.empty()) {
     flags |= telegram_api::inputBusinessBotRecipients::USERS_MASK;
   }
-  vector<telegram_api::object_ptr<telegram_api::InputUser>> excluded_input_users;
+  std::vector<telegram_api::object_ptr<telegram_api::InputUser>> excluded_input_users;
   for (auto user_id : excluded_user_ids_) {
     auto r_input_user = td->user_manager_->get_input_user(user_id);
     if (r_input_user.is_ok()) {

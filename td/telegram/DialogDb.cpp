@@ -83,7 +83,7 @@ Status init_dialog_db(SqliteDb &db, int32 version, KeyValueSyncInterface &binlog
                db.get_statement("SELECT dialog_id FROM dialogs WHERE folder_id = ?1 AND dialog_order > "
                                 "9221294780217032704 ORDER BY dialog_order DESC, dialog_id DESC"));
     for (auto folder_id = 0; folder_id < 2; folder_id++) {
-      vector<string> pinned_dialog_ids;
+      std::vector<string> pinned_dialog_ids;
       TRY_STATUS(get_pinned_dialogs_stmt.bind_int32(1, folder_id));
       TRY_STATUS(get_pinned_dialogs_stmt.step());
       while (get_pinned_dialogs_stmt.has_row()) {
@@ -154,7 +154,7 @@ class DialogDbImpl final : public DialogDbSyncInterface {
   }
 
   void add_dialog(DialogId dialog_id, FolderId folder_id, int64 order, BufferSlice data,
-                  vector<NotificationGroupKey> notification_groups) final {
+                  std::vector<NotificationGroupKey> notification_groups) final {
     SCOPE_EXIT {
       add_dialog_stmt_.reset();
     };
@@ -254,7 +254,7 @@ class DialogDbImpl final : public DialogDbSyncInterface {
     return result;
   }
 
-  vector<NotificationGroupKey> get_notification_groups_by_last_notification_date(
+  std::vector<NotificationGroupKey> get_notification_groups_by_last_notification_date(
       NotificationGroupKey notification_group_key, int32 limit) final {
     auto &stmt = get_notification_groups_by_last_notification_date_stmt_;
     SCOPE_EXIT {
@@ -266,7 +266,7 @@ class DialogDbImpl final : public DialogDbSyncInterface {
     stmt.bind_int32(3, notification_group_key.group_id.get()).ensure();
     stmt.bind_int32(4, limit).ensure();
 
-    vector<NotificationGroupKey> notification_groups;
+    std::vector<NotificationGroupKey> notification_groups;
     stmt.step().ensure();
     while (stmt.has_row()) {
       notification_groups.emplace_back(NotificationGroupId(stmt.view_int32(0)), DialogId(stmt.view_int64(1)),
@@ -333,7 +333,7 @@ class DialogDbAsync final : public DialogDbAsyncInterface {
   }
 
   void add_dialog(DialogId dialog_id, FolderId folder_id, int64 order, BufferSlice data,
-                  vector<NotificationGroupKey> notification_groups, Promise<Unit> promise) final {
+                  std::vector<NotificationGroupKey> notification_groups, Promise<Unit> promise) final {
     send_closure(impl_, &Impl::add_dialog, dialog_id, folder_id, order, std::move(data), std::move(notification_groups),
                  std::move(promise));
   }
@@ -376,7 +376,7 @@ class DialogDbAsync final : public DialogDbAsyncInterface {
     }
 
     void add_dialog(DialogId dialog_id, FolderId folder_id, int64 order, BufferSlice data,
-                    vector<NotificationGroupKey> notification_groups, Promise<Unit> promise) {
+                    std::vector<NotificationGroupKey> notification_groups, Promise<Unit> promise) {
       add_write_query([this, dialog_id, folder_id, order, promise = std::move(promise), data = std::move(data),
                        notification_groups = std::move(notification_groups)](Unit) mutable {
         sync_db_->add_dialog(dialog_id, folder_id, order, std::move(data), std::move(notification_groups));
@@ -437,8 +437,8 @@ class DialogDbAsync final : public DialogDbAsyncInterface {
     static constexpr double MAX_PENDING_QUERIES_DELAY{0.01};
 
     //NB: order is important, destructor of pending_writes_ will change finished_writes_
-    vector<Promise<Unit>> finished_writes_;
-    vector<Promise<Unit>> pending_writes_;  // TODO use Action
+    std::vector<Promise<Unit>> finished_writes_;
+    std::vector<Promise<Unit>> pending_writes_;  // TODO use Action
     double wakeup_at_ = 0;
 
     template <class F>

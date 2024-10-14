@@ -474,15 +474,15 @@ td_api::object_ptr<td_api::Update> OptionManager::get_internal_option_update(Sli
   if (name == "otherwise_relogin_days") {
     auto days = narrow_cast<int32>(get_option_integer(name));
     if (days > 0) {
-      vector<SuggestedAction> added_actions{SuggestedAction{SuggestedAction::Type::SetPassword, DialogId(), days}};
+      std::vector<SuggestedAction> added_actions{SuggestedAction{SuggestedAction::Type::SetPassword, DialogId(), days}};
       return get_update_suggested_actions_object(added_actions, {}, "get_internal_option_update");
     }
   }
   return nullptr;
 }
 
-const vector<Slice> &OptionManager::get_synchronous_options() {
-  static const vector<Slice> options{"version", "commit_hash"};
+const std::vector<Slice> &OptionManager::get_synchronous_options() {
+  static const std::vector<Slice> options{"version", "commit_hash"};
   return options;
 }
 

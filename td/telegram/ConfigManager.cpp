@@ -190,7 +190,7 @@ static ActorOwn<> get_simple_config_dns(Slice address, Slice host, Promise<Simpl
   auto get_config = [](HttpQuery &http_query) -> Result<string> {
     auto get_data = [](JsonValue &answer) -> Result<string> {
       auto &answer_array = answer.get_array();
-      vector<string> parts;
+      std::vector<string> parts;
       for (auto &answer_part : answer_array) {
         if (answer_part.type() != JsonValue::Type::Object) {
           return Status::Error("Expected JSON object");
@@ -418,7 +418,7 @@ static ActorOwn<> get_full_config(DcOption option, Promise<tl_object_ptr<telegra
    private:
     DcId dc_id_;
     std::shared_ptr<mtproto::PublicRsaKeyInterface> public_rsa_key_;
-    vector<unique_ptr<Listener>> auth_key_listeners_;
+    std::vector<unique_ptr<Listener>> auth_key_listeners_;
     /*
     void notify() {
       td::remove_if(auth_key_listeners_, [&](auto &listener) {
@@ -877,7 +877,7 @@ void ConfigManager::start_up() {
 
   auto log_event_string = G()->td_db()->get_binlog_pmc()->get(get_suggested_actions_database_key());
   if (!log_event_string.empty()) {
-    vector<SuggestedAction> suggested_actions;
+    std::vector<SuggestedAction> suggested_actions;
     auto status = log_event_parse(suggested_actions, log_event_string);
     if (status.is_error()) {
       LOG(ERROR) << "Failed to parse suggested actions from binlog: " << status;
@@ -1392,27 +1392,27 @@ void ConfigManager::process_app_config(tl_object_ptr<telegram_api::JSONValue> &c
   CHECK(config != nullptr);
   LOG(INFO) << "Receive app config " << to_string(config);
 
-  vector<string> autologin_domains;
-  vector<string> url_auth_domains;
-  vector<string> whitelisted_domains;
+  std::vector<string> autologin_domains;
+  std::vector<string> url_auth_domains;
+  std::vector<string> whitelisted_domains;
 
-  vector<tl_object_ptr<telegram_api::jsonObjectValue>> new_values;
+  std::vector<tl_object_ptr<telegram_api::jsonObjectValue>> new_values;
   string ignored_restriction_reasons;
   string restriction_add_platforms;
-  vector<string> dice_emojis;
+  std::vector<string> dice_emojis;
   FlatHashMap<string, size_t> dice_emoji_index;
   FlatHashMap<string, string> dice_emoji_success_value;
-  vector<string> emoji_sounds;
+  std::vector<string> emoji_sounds;
   string animation_search_provider;
   string animation_search_emojis;
-  vector<SuggestedAction> suggested_actions;
-  vector<string> dismissed_suggestions;
+  std::vector<SuggestedAction> suggested_actions;
+  std::vector<string> dismissed_suggestions;
   bool can_archive_and_mute_new_chats_from_unknown_users = false;
   int32 chat_read_mark_expire_period = 0;
   int32 chat_read_mark_size_threshold = 0;
   double animated_emoji_zoom = 0.0;
   int32 reactions_uniq_max = 0;
-  vector<string> premium_features;
+  std::vector<string> premium_features;
   auto &premium_limit_keys = get_premium_limit_keys();
   string premium_bot_username;
   string premium_invoice_slug;
@@ -1421,7 +1421,7 @@ void ConfigManager::process_app_config(tl_object_ptr<telegram_api::JSONValue> &c
   int32 stickers_normal_by_emoji_per_premium_num = 2;
   int32 telegram_antispam_group_size_min = 100;
   int32 topics_pinned_limit = -1;
-  vector<string> fragment_prefixes;
+  std::vector<string> fragment_prefixes;
   bool premium_gift_attach_menu_icon = false;
   bool premium_gift_text_field_icon = false;
   int32 dialog_filter_update_period = 300;
@@ -1431,7 +1431,7 @@ void ConfigManager::process_app_config(tl_object_ptr<telegram_api::JSONValue> &c
   int32 transcribe_audio_trial_weekly_number = 0;
   int32 transcribe_audio_trial_duration_max = 0;
   int32 transcribe_audio_trial_cooldown_until = 0;
-  vector<string> business_features;
+  std::vector<string> business_features;
   string premium_manage_subscription_url;
   bool need_premium_for_new_chat_privacy = true;
   bool channel_revenue_withdrawal_enabled = false;
@@ -2021,7 +2021,7 @@ void ConfigManager::process_app_config(tl_object_ptr<telegram_api::JSONValue> &c
       }
       if (key == "web_app_allowed_protocols") {
         if (value->get_id() == telegram_api::jsonArray::ID) {
-          vector<string> protocol_names;
+          std::vector<string> protocol_names;
           auto protocols = std::move(static_cast<telegram_api::jsonArray *>(value)->value_);
           for (auto &protocol : protocols) {
             auto protocol_name = get_json_value_string(std::move(protocol), key);
@@ -2110,7 +2110,7 @@ void ConfigManager::process_app_config(tl_object_ptr<telegram_api::JSONValue> &c
   }
 
   if (!dice_emojis.empty()) {
-    vector<string> dice_success_values(dice_emojis.size());
+    std::vector<string> dice_success_values(dice_emojis.size());
     for (auto &it : dice_emoji_success_value) {
       auto dice_emoji_it = dice_emoji_index.find(it.first);
       if (dice_emoji_it == dice_emoji_index.end()) {

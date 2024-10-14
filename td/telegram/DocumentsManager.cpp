@@ -513,7 +513,7 @@ Document DocumentsManager::on_get_document(RemoteDocument remote_document, Dialo
     case Document::Type::Animation:
       td_->animations_manager_->create_animation(
           file_id, std::move(minithumbnail), std::move(thumbnail), std::move(animated_thumbnail), has_stickers,
-          vector<FileId>(), std::move(file_name), std::move(mime_type), video_duration, dimensions, !is_web);
+          std::vector<FileId>(), std::move(file_name), std::move(mime_type), video_duration, dimensions, !is_web);
       break;
     case Document::Type::Audio: {
       int32 duration = 0;
@@ -544,7 +544,7 @@ Document DocumentsManager::on_get_document(RemoteDocument remote_document, Dialo
     case Document::Type::Video:
       td_->videos_manager_->create_video(
           file_id, std::move(minithumbnail), std::move(thumbnail), std::move(animated_thumbnail), has_stickers,
-          vector<FileId>(), std::move(file_name), std::move(mime_type), video_duration, video_precise_duration,
+          std::vector<FileId>(), std::move(file_name), std::move(mime_type), video_duration, video_precise_duration,
           dimensions, supports_streaming, video_is_animation, video_preload_prefix_size, video_start_ts, !is_web);
       break;
     case Document::Type::VideoNote:
@@ -661,7 +661,7 @@ SecretInputMedia DocumentsManager::get_secret_input_media(FileId document_file_i
   if (document->thumbnail.file_id.is_valid() && thumbnail.empty()) {
     return SecretInputMedia{};
   }
-  vector<tl_object_ptr<secret_api::DocumentAttribute>> attributes;
+  std::vector<tl_object_ptr<secret_api::DocumentAttribute>> attributes;
   if (!document->file_name.empty()) {
     attributes.push_back(make_tl_object<secret_api::documentAttributeFilename>(document->file_name));
   }
@@ -694,7 +694,7 @@ tl_object_ptr<telegram_api::InputMedia> DocumentsManager::get_input_media(
     const GeneralDocument *document = get_document(file_id);
     CHECK(document != nullptr);
 
-    vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
+    std::vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
     if (!document->file_name.empty()) {
       attributes.push_back(make_tl_object<telegram_api::documentAttributeFilename>(document->file_name));
     }
@@ -709,7 +709,7 @@ tl_object_ptr<telegram_api::InputMedia> DocumentsManager::get_input_media(
     return make_tl_object<telegram_api::inputMediaUploadedDocument>(
         flags, false /*ignored*/, false /*ignored*/, false /*ignored*/, std::move(input_file),
         std::move(input_thumbnail), document->mime_type, std::move(attributes),
-        vector<tl_object_ptr<telegram_api::InputDocument>>(), 0);
+        std::vector<tl_object_ptr<telegram_api::InputDocument>>(), 0);
   } else {
     CHECK(!file_view.has_remote_location());
   }

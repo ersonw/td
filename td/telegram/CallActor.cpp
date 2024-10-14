@@ -53,7 +53,7 @@ tl_object_ptr<telegram_api::phoneCallProtocol> CallProtocol::get_input_phone_cal
     flags |= telegram_api::phoneCallProtocol::UDP_REFLECTOR_MASK;
   }
   return make_tl_object<telegram_api::phoneCallProtocol>(flags, udp_p2p, udp_reflector, min_layer, max_layer,
-                                                         vector<string>(library_versions));
+                                                         std::vector<string>(library_versions));
 }
 
 CallProtocol::CallProtocol(const td_api::callProtocol &protocol)
@@ -97,7 +97,7 @@ CallConnection::CallConnection(const telegram_api::PhoneConnection &connection) 
 
 tl_object_ptr<td_api::callProtocol> CallProtocol::get_call_protocol_object() const {
   return make_tl_object<td_api::callProtocol>(udp_p2p, udp_reflector, min_layer, max_layer,
-                                              vector<string>(library_versions));
+                                              std::vector<string>(library_versions));
 }
 
 tl_object_ptr<td_api::callServer> CallConnection::get_call_server_object() const {
@@ -124,7 +124,7 @@ tl_object_ptr<td_api::CallState> CallState::get_call_state_object() const {
     case Type::Ready: {
       auto call_connections = transform(connections, [](auto &c) { return c.get_call_server_object(); });
       return make_tl_object<td_api::callStateReady>(protocol.get_call_protocol_object(), std::move(call_connections),
-                                                    config, key, vector<string>(emojis_fingerprint), allow_p2p,
+                                                    config, key, std::vector<string>(emojis_fingerprint), allow_p2p,
                                                     custom_parameters);
     }
     case Type::HangingUp:
@@ -246,7 +246,7 @@ void CallActor::discard_call(bool is_disconnected, int32 duration, bool is_video
   loop();
 }
 
-void CallActor::rate_call(int32 rating, string comment, vector<td_api::object_ptr<td_api::CallProblem>> &&problems,
+void CallActor::rate_call(int32 rating, string comment, std::vector<td_api::object_ptr<td_api::CallProblem>> &&problems,
                           Promise<Unit> promise) {
   if (!call_state_.need_rating) {
     return promise.set_error(Status::Error(400, "Unexpected sendCallRating"));
@@ -1015,7 +1015,7 @@ vector<string> CallActor::get_emojis_fingerprint(const string &key, const string
   unsigned char sha256_buf[32];
   sha256(str, {sha256_buf, 32});
 
-  vector<string> result;
+  std::vector<string> result;
   result.reserve(4);
   for (int i = 0; i < 4; i++) {
     uint64 num = big_endian_to_host64(as<uint64>(sha256_buf + 8 * i));

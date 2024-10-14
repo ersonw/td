@@ -26,7 +26,7 @@
 
 namespace td {
 
-static bool are_colors_valid(const vector<int32> &colors, size_t min_size, size_t max_size) {
+static bool are_colors_valid(const std::vector<int32> &colors, size_t min_size, size_t max_size) {
   if (min_size > colors.size() || colors.size() > max_size) {
     return false;
   }
@@ -203,7 +203,7 @@ void ThemeManager::AccentColors::parse(ParserT &parser) {
   td::parse(size, parser);
   for (int32 i = 0; i < size; i++) {
     AccentColorId accent_color_id;
-    vector<int32> colors;
+    std::vector<int32> colors;
     td::parse(accent_color_id, parser);
     td::parse(colors, parser);
     CHECK(accent_color_id.is_valid());
@@ -212,7 +212,7 @@ void ThemeManager::AccentColors::parse(ParserT &parser) {
   td::parse(size, parser);
   for (int32 i = 0; i < size; i++) {
     AccentColorId accent_color_id;
-    vector<int32> colors;
+    std::vector<int32> colors;
     td::parse(accent_color_id, parser);
     td::parse(colors, parser);
     CHECK(accent_color_id.is_valid());
@@ -480,13 +480,13 @@ void ThemeManager::on_update_theme(telegram_api::object_ptr<telegram_api::theme>
   promise.set_value(Unit());
 }
 
-bool ThemeManager::on_update_accent_colors(FlatHashMap<AccentColorId, vector<int32>, AccentColorIdHash> light_colors,
-                                           FlatHashMap<AccentColorId, vector<int32>, AccentColorIdHash> dark_colors,
-                                           vector<AccentColorId> accent_color_ids,
-                                           vector<int32> min_broadcast_boost_levels,
-                                           vector<int32> min_megagroup_boost_levels) {
-  auto are_equal = [](const FlatHashMap<AccentColorId, vector<int32>, AccentColorIdHash> &lhs,
-                      const FlatHashMap<AccentColorId, vector<int32>, AccentColorIdHash> &rhs) {
+bool ThemeManager::on_update_accent_colors(FlatHashMap<AccentColorId, std::vector<int32>, AccentColorIdHash> light_colors,
+                                           FlatHashMap<AccentColorId, std::vector<int32>, AccentColorIdHash> dark_colors,
+                                           std::vector<AccentColorId> accent_color_ids,
+                                           std::vector<int32> min_broadcast_boost_levels,
+                                           std::vector<int32> min_megagroup_boost_levels) {
+  auto are_equal = [](const FlatHashMap<AccentColorId, std::vector<int32>, AccentColorIdHash> &lhs,
+                      const FlatHashMap<AccentColorId, std::vector<int32>, AccentColorIdHash> &rhs) {
     for (auto &lhs_it : lhs) {
       auto rhs_it = rhs.find(lhs_it.first);
       if (rhs_it == rhs.end() || rhs_it->second != lhs_it.second) {
@@ -519,8 +519,8 @@ bool ThemeManager::on_update_accent_colors(FlatHashMap<AccentColorId, vector<int
 bool ThemeManager::on_update_profile_accent_colors(
     FlatHashMap<AccentColorId, ProfileAccentColor, AccentColorIdHash> light_colors,
     FlatHashMap<AccentColorId, ProfileAccentColor, AccentColorIdHash> dark_colors,
-    vector<AccentColorId> accent_color_ids, vector<int32> min_broadcast_boost_levels,
-    vector<int32> min_megagroup_boost_levels) {
+    std::vector<AccentColorId> accent_color_ids, std::vector<int32> min_broadcast_boost_levels,
+    std::vector<int32> min_megagroup_boost_levels) {
   auto are_equal = [](const FlatHashMap<AccentColorId, ProfileAccentColor, AccentColorIdHash> &lhs,
                       const FlatHashMap<AccentColorId, ProfileAccentColor, AccentColorIdHash> &rhs) {
     for (auto &lhs_it : lhs) {
@@ -620,7 +620,7 @@ td_api::object_ptr<td_api::updateAccentColors> ThemeManager::get_update_accent_c
 }
 
 td_api::object_ptr<td_api::updateAccentColors> ThemeManager::AccentColors::get_update_accent_colors_object() const {
-  vector<td_api::object_ptr<td_api::accentColor>> colors;
+  std::vector<td_api::object_ptr<td_api::accentColor>> colors;
   int32 base_colors[] = {0xDF2020, 0xDFA520, 0xA040A0, 0x208020, 0x20DFDF, 0x2044DF, 0xDF1493};
   auto get_distance = [](int32 lhs_color, int32 rhs_color) {
     auto get_color_distance = [](int32 lhs, int32 rhs) {
@@ -672,7 +672,7 @@ bool ThemeManager::ProfileAccentColor::is_valid() const {
 td_api::object_ptr<td_api::profileAccentColors> ThemeManager::ProfileAccentColor::get_profile_accent_colors_object()
     const {
   return td_api::make_object<td_api::profileAccentColors>(
-      vector<int32>(palette_colors_), vector<int32>(background_colors_), vector<int32>(story_colors_));
+      std::vector<int32>(palette_colors_), std::vector<int32>(background_colors_), std::vector<int32>(story_colors_));
 }
 
 td_api::object_ptr<td_api::updateProfileAccentColors>
@@ -687,7 +687,7 @@ ThemeManager::ProfileAccentColors::get_update_profile_accent_colors_object() con
     CHECK(i < accent_color_ids_.size());
     min_megagroup_boost_levels[accent_color_ids_[i]] = min_megagroup_boost_levels_[i];
   }
-  vector<td_api::object_ptr<td_api::profileAccentColor>> colors;
+  std::vector<td_api::object_ptr<td_api::profileAccentColor>> colors;
   for (auto &it : light_colors_) {
     auto light_colors = it.second.get_profile_accent_colors_object();
     auto dark_it = dark_colors_.find(it.first);
@@ -827,11 +827,11 @@ void ThemeManager::on_get_accent_colors(Result<telegram_api::object_ptr<telegram
   }
   CHECK(peer_colors_ptr->get_id() == telegram_api::help_peerColors::ID);
   auto peer_colors = telegram_api::move_object_as<telegram_api::help_peerColors>(peer_colors_ptr);
-  FlatHashMap<AccentColorId, vector<int32>, AccentColorIdHash> light_colors;
-  FlatHashMap<AccentColorId, vector<int32>, AccentColorIdHash> dark_colors;
-  vector<AccentColorId> accent_color_ids;
-  vector<int32> min_broadcast_boost_levels;
-  vector<int32> min_megagroup_boost_levels;
+  FlatHashMap<AccentColorId, std::vector<int32>, AccentColorIdHash> light_colors;
+  FlatHashMap<AccentColorId, std::vector<int32>, AccentColorIdHash> dark_colors;
+  std::vector<AccentColorId> accent_color_ids;
+  std::vector<int32> min_broadcast_boost_levels;
+  std::vector<int32> min_megagroup_boost_levels;
   for (auto &option : peer_colors->colors_) {
     if ((option->colors_ != nullptr && option->colors_->get_id() != telegram_api::help_peerColorSet::ID) ||
         (option->dark_colors_ != nullptr && option->dark_colors_->get_id() != telegram_api::help_peerColorSet::ID)) {
@@ -846,8 +846,8 @@ void ThemeManager::on_get_accent_colors(Result<telegram_api::object_ptr<telegram
       continue;
     }
     bool is_valid = true;
-    vector<int32> current_light_colors;
-    vector<int32> current_dark_colors;
+    std::vector<int32> current_light_colors;
+    std::vector<int32> current_dark_colors;
     if (option->colors_ != nullptr) {
       auto colors = telegram_api::move_object_as<telegram_api::help_peerColorSet>(option->colors_);
       current_light_colors = std::move(colors->colors_);
@@ -927,9 +927,9 @@ void ThemeManager::on_get_profile_accent_colors(
   auto peer_colors = telegram_api::move_object_as<telegram_api::help_peerColors>(peer_colors_ptr);
   FlatHashMap<AccentColorId, ProfileAccentColor, AccentColorIdHash> light_colors;
   FlatHashMap<AccentColorId, ProfileAccentColor, AccentColorIdHash> dark_colors;
-  vector<AccentColorId> accent_color_ids;
-  vector<int32> min_broadcast_boost_levels;
-  vector<int32> min_megagroup_boost_levels;
+  std::vector<AccentColorId> accent_color_ids;
+  std::vector<int32> min_broadcast_boost_levels;
+  std::vector<int32> min_megagroup_boost_levels;
   for (auto &option : peer_colors->colors_) {
     AccentColorId accent_color_id(option->color_id_);
     if (option->colors_ == nullptr || option->colors_->get_id() != telegram_api::help_peerColorProfileSet::ID ||

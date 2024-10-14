@@ -80,8 +80,8 @@ Result<vector<char *>> OptionParser::run(int argc, char *argv[], int expected_no
   if (utf16_argv == nullptr) {
     return Status::Error("Failed to parse command line");
   }
-  vector<string> args_storage(argc);
-  vector<char *> args(argc);
+  std::vector<string> args_storage(argc);
+  std::vector<char *> args(argc);
   for (int i = 0; i < argc; i++) {
     TRY_RESULT_ASSIGN(args_storage[i], from_wstring(utf16_argv[i]));
     args[i] = &args_storage[i][0];
@@ -106,7 +106,7 @@ Result<vector<char *>> OptionParser::run_impl(int argc, char *argv[], int expect
     }
   }
 
-  vector<char *> non_options;
+  std::vector<char *> non_options;
   for (int arg_pos = 1; arg_pos < argc; arg_pos++) {
     const char *arg = argv[arg_pos];
     if (arg[0] != '-' || arg[1] == '\0') {

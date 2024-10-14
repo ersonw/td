@@ -43,7 +43,7 @@ class TlsHello {
     int length;
     int seed;
     string data;
-    vector<vector<Op>> parts;
+    std::vector<vector<Op>> parts;
 
     static Op str(Slice str) {
       Op res;
@@ -150,20 +150,20 @@ class TlsHello {
           Op::permutation(
               {vector<Op>{Op::str("\x00\x00"), Op::begin_scope(), Op::begin_scope(), Op::str("\x00"), Op::begin_scope(),
                           Op::domain(), Op::end_scope(), Op::end_scope(), Op::end_scope()},
-               vector<Op>{Op::str("\x00\x05\x00\x05\x01\x00\x00\x00\x00")},
-               vector<Op>{Op::str("\x00\x0a\x00\x0a\x00\x08"), Op::grease(4), Op::str("\x00\x1d\x00\x17\x00\x18")},
-               vector<Op>{Op::str("\x00\x0b\x00\x02\x01\x00")},
-               vector<Op>{
+               std::vector<Op>{Op::str("\x00\x05\x00\x05\x01\x00\x00\x00\x00")},
+               std::vector<Op>{Op::str("\x00\x0a\x00\x0a\x00\x08"), Op::grease(4), Op::str("\x00\x1d\x00\x17\x00\x18")},
+               std::vector<Op>{Op::str("\x00\x0b\x00\x02\x01\x00")},
+               std::vector<Op>{
                    Op::str("\x00\x0d\x00\x12\x00\x10\x04\x03\x08\x04\x04\x01\x05\x03\x08\x05\x05\x01\x08\x06\x06\x01")},
-               vector<Op>{Op::str("\x00\x10\x00\x0e\x00\x0c\x02\x68\x32\x08\x68\x74\x74\x70\x2f\x31\x2e\x31")},
-               vector<Op>{Op::str("\x00\x12\x00\x00")}, vector<Op>{Op::str("\x00\x17\x00\x00")},
-               vector<Op>{Op::str("\x00\x1b\x00\x03\x02\x00\x02")}, vector<Op>{Op::str("\x00\x23\x00\x00")},
-               vector<Op>{Op::str("\x00\x2b\x00\x07\x06"), Op::grease(6), Op::str("\x03\x04\x03\x03")},
-               vector<Op>{Op::str("\x00\x2d\x00\x02\x01\x01")},
-               vector<Op>{Op::str("\x00\x33\x00\x2b\x00\x29"), Op::grease(4), Op::str("\x00\x01\x00\x00\x1d\x00\x20"),
+               std::vector<Op>{Op::str("\x00\x10\x00\x0e\x00\x0c\x02\x68\x32\x08\x68\x74\x74\x70\x2f\x31\x2e\x31")},
+               std::vector<Op>{Op::str("\x00\x12\x00\x00")}, std::vector<Op>{Op::str("\x00\x17\x00\x00")},
+               std::vector<Op>{Op::str("\x00\x1b\x00\x03\x02\x00\x02")}, std::vector<Op>{Op::str("\x00\x23\x00\x00")},
+               std::vector<Op>{Op::str("\x00\x2b\x00\x07\x06"), Op::grease(6), Op::str("\x03\x04\x03\x03")},
+               std::vector<Op>{Op::str("\x00\x2d\x00\x02\x01\x01")},
+               std::vector<Op>{Op::str("\x00\x33\x00\x2b\x00\x29"), Op::grease(4), Op::str("\x00\x01\x00\x00\x1d\x00\x20"),
                           Op::key()},
-               vector<Op>{Op::str("\x44\x69\x00\x05\x00\x03\x02\x68\x32")},
-               vector<Op>{Op::str("\xff\x01\x00\x01\x00")}}),
+               std::vector<Op>{Op::str("\x44\x69\x00\x05\x00\x03\x02\x68\x32")},
+               std::vector<Op>{Op::str("\xff\x01\x00\x01\x00")}}),
           Op::grease(3),
           Op::str("\x00\x01\x00\x00\x15")};
 #endif
@@ -382,7 +382,7 @@ class TlsHelloStore {
         break;
       }
       case Type::Permutation: {
-        vector<string> parts;
+        std::vector<string> parts;
         for (const auto &part : op.parts) {
           TlsHelloCalcLength calc_length;
           for (auto &nested_op : part) {
@@ -426,7 +426,7 @@ class TlsHelloStore {
  private:
   MutableSlice data_;
   MutableSlice dest_;
-  vector<size_t> scope_offset_;
+  std::vector<size_t> scope_offset_;
 
   static BigNum get_y2(BigNum &x, const BigNum &mod, BigNumContext &big_num_context) {
     // returns y = x^3 + 486662 * x^2 + x

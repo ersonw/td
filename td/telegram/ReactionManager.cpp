@@ -351,8 +351,8 @@ td_api::object_ptr<td_api::savedMessagesTags> ReactionManager::SavedReactionTags
       transform(tags_, [](const SavedReactionTag &tag) { return tag.get_saved_messages_tag_object(); }));
 }
 
-bool ReactionManager::SavedReactionTags::update_saved_messages_tags(const vector<ReactionType> &old_tags,
-                                                                    const vector<ReactionType> &new_tags) {
+bool ReactionManager::SavedReactionTags::update_saved_messages_tags(const std::vector<ReactionType> &old_tags,
+                                                                    const std::vector<ReactionType> &new_tags) {
   if (!is_inited_) {
     return false;
   }
@@ -422,7 +422,7 @@ bool ReactionManager::SavedReactionTags::set_tag_title(const ReactionType &react
 }
 
 int64 ReactionManager::SavedReactionTags::calc_hash() const {
-  vector<uint64> numbers;
+  std::vector<uint64> numbers;
   for (const auto &tag : tags_) {
     numbers.push_back(tag.hash_);
     if (!tag.title_.empty()) {
@@ -525,8 +525,8 @@ td_api::object_ptr<td_api::availableReactions> ReactionManager::get_sorted_avail
 
   bool is_premium = td_->option_manager_->get_option_boolean("is_premium");
   bool show_premium = is_premium || is_tag;
-  vector<ReactionType> recent_reactions;
-  vector<ReactionType> top_reactions;
+  std::vector<ReactionType> recent_reactions;
+  std::vector<ReactionType> top_reactions;
   if (is_tag) {
     if (is_premium) {
       auto all_tags = get_saved_reaction_tags(SavedMessagesTopicId());
@@ -577,14 +577,14 @@ td_api::object_ptr<td_api::availableReactions> ReactionManager::get_sorted_avail
     top_reactions.insert(top_reactions.begin(), ReactionType::paid());
   }
 
-  vector<td_api::object_ptr<td_api::availableReaction>> top_reaction_objects;
-  vector<td_api::object_ptr<td_api::availableReaction>> recent_reaction_objects;
-  vector<td_api::object_ptr<td_api::availableReaction>> popular_reaction_objects;
-  vector<td_api::object_ptr<td_api::availableReaction>> last_reaction_objects;
+  std::vector<td_api::object_ptr<td_api::availableReaction>> top_reaction_objects;
+  std::vector<td_api::object_ptr<td_api::availableReaction>> recent_reaction_objects;
+  std::vector<td_api::object_ptr<td_api::availableReaction>> popular_reaction_objects;
+  std::vector<td_api::object_ptr<td_api::availableReaction>> last_reaction_objects;
 
   FlatHashSet<ReactionType, ReactionTypeHash> added_custom_reaction_types;
   auto add_reactions = [&](vector<td_api::object_ptr<td_api::availableReaction>> &reaction_objects,
-                           const vector<ReactionType> &reaction_types) {
+                           const std::vector<ReactionType> &reaction_types) {
     for (auto &reaction_type : reaction_types) {
       if (all_available_reaction_types.erase(reaction_type) != 0) {
         // add available reaction
@@ -828,7 +828,7 @@ void ReactionManager::load_reaction_list(ReactionListType reaction_list_type) {
 }
 
 void ReactionManager::update_active_reactions() {
-  vector<ReactionType> active_reaction_types;
+  std::vector<ReactionType> active_reaction_types;
   for (auto &reaction : reactions_.reactions_) {
     if (reaction.is_active_) {
       active_reaction_types.emplace_back(reaction.reaction_type_);
@@ -872,7 +872,7 @@ void ReactionManager::on_get_available_reactions(
 
   CHECK(constructor_id == telegram_api::messages_availableReactions::ID);
   auto available_reactions = move_tl_object_as<telegram_api::messages_availableReactions>(available_reactions_ptr);
-  vector<Reaction> new_reactions;
+  std::vector<Reaction> new_reactions;
   for (auto &available_reaction : available_reactions->reactions_) {
     Reaction reaction;
     reaction.is_active_ = !available_reaction->inactive_;
@@ -1080,7 +1080,7 @@ void ReactionManager::on_get_saved_messages_tags(
     SavedMessagesTopicId saved_messages_topic_id,
     Result<telegram_api::object_ptr<telegram_api::messages_SavedReactionTags>> &&r_tags) {
   G()->ignore_result_if_closing(r_tags);
-  vector<Promise<td_api::object_ptr<td_api::savedMessagesTags>>> promises;
+  std::vector<Promise<td_api::object_ptr<td_api::savedMessagesTags>>> promises;
   if (saved_messages_topic_id == SavedMessagesTopicId()) {
     promises = std::move(pending_get_all_saved_reaction_tags_queries_);
     reset_to_empty(pending_get_all_saved_reaction_tags_queries_);
@@ -1107,7 +1107,7 @@ void ReactionManager::on_get_saved_messages_tags(
       break;
     case telegram_api::messages_savedReactionTags::ID: {
       auto tags = telegram_api::move_object_as<telegram_api::messages_savedReactionTags>(tags_ptr);
-      vector<SavedReactionTag> saved_reaction_tags;
+      std::vector<SavedReactionTag> saved_reaction_tags;
       for (auto &tag : tags->tags_) {
         saved_reaction_tags.emplace_back(std::move(tag));
         if (!saved_reaction_tags.back().is_valid()) {
@@ -1172,8 +1172,8 @@ void ReactionManager::on_update_saved_reaction_tags(Promise<Unit> &&promise) {
 }
 
 void ReactionManager::update_saved_messages_tags(SavedMessagesTopicId saved_messages_topic_id,
-                                                 const vector<ReactionType> &old_tags,
-                                                 const vector<ReactionType> &new_tags) {
+                                                 const std::vector<ReactionType> &old_tags,
+                                                 const std::vector<ReactionType> &new_tags) {
   if (old_tags == new_tags) {
     return;
   }
@@ -1240,7 +1240,7 @@ td_api::object_ptr<td_api::messageEffect> ReactionManager::get_message_effect_ob
 
 td_api::object_ptr<td_api::updateAvailableMessageEffects> ReactionManager::get_update_available_message_effects_object()
     const {
-  auto get_raw_effect_ids = [](const vector<MessageEffectId> &message_effect_ids) {
+  auto get_raw_effect_ids = [](const std::vector<MessageEffectId> &message_effect_ids) {
     return transform(message_effect_ids, [](MessageEffectId effect_id) { return effect_id.get(); });
   };
   return td_api::make_object<td_api::updateAvailableMessageEffects>(
@@ -1335,7 +1335,7 @@ void ReactionManager::on_get_message_effects(
           LOG(ERROR) << "Receive " << sticker.first << ' ' << sticker.second;
         }
       }
-      vector<Effect> new_effects;
+      std::vector<Effect> new_effects;
       bool was_sticker = false;
       bool have_invalid_order = false;
       for (const auto &available_effect : effects->effects_) {

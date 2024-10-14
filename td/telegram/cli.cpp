@@ -130,7 +130,7 @@ static void reactivate_readline() {
 }
 
 static char *command_generator(const char *text, int state) {
-  static const vector<CSlice> commands{"GetHistory",          "SetVerbosity",         "SendVideo",
+  static const std::vector<CSlice> commands{"GetHistory",          "SetVerbosity",         "SendVideo",
                                        "SearchDocument",      "GetChatMember",        "GetSupergroupAdministrators",
                                        "GetSupergroupBanned", "GetSupergroupMembers", "GetFile",
                                        "DownloadFile",        "CancelDownloadFile",   "ImportContacts",
@@ -240,7 +240,7 @@ class CliClient final : public Actor {
   FlatHashMap<int64, unique_ptr<User>> users_;
   FlatHashMap<string, int64> username_to_user_id_;
 
-  vector<string> authentication_tokens_;
+  std::vector<string> authentication_tokens_;
 
   void register_user(const td_api::user &user) {
     auto &new_user_ptr = users_[user.id_];
@@ -352,7 +352,7 @@ class CliClient final : public Actor {
   void on_get_message(const td_api::message &message) {
     if (message.sending_state_ != nullptr &&
         message.sending_state_->get_id() == td_api::messageSendingStatePending::ID) {
-      // send_request(td_api::make_object<td_api::deleteMessages>(message.chat_id_, vector<int64>{message.id_}, true));
+      // send_request(td_api::make_object<td_api::deleteMessages>(message.chat_id_, std::vector<int64>{message.id_}, true));
     }
   }
 
@@ -382,7 +382,7 @@ class CliClient final : public Actor {
     bool test_local_size_decrease = false;
   };
 
-  vector<FileGeneration> pending_file_generations_;
+  std::vector<FileGeneration> pending_file_generations_;
 
   void on_file_generation_start(const td_api::updateFileGenerationStart &update) {
     FileGeneration file_generation;
@@ -473,11 +473,11 @@ class CliClient final : public Actor {
     return ' ';
   }
 
-  static vector<Slice> autosplit(Slice str) {
+  static std::vector<Slice> autosplit(Slice str) {
     return full_split(trim(str), get_delimiter(str));
   }
 
-  static vector<string> autosplit_str(Slice str) {
+  static std::vector<string> autosplit_str(Slice str) {
     return transform(autosplit(str), [](Slice slice) { return slice.str(); });
   }
 
@@ -512,7 +512,7 @@ class CliClient final : public Actor {
     return to_integer<int32>(trim(str));
   }
 
-  static vector<int32> as_chat_folder_ids(Slice chat_folder_ids) {
+  static std::vector<int32> as_chat_folder_ids(Slice chat_folder_ids) {
     return transform(autosplit(chat_folder_ids), as_chat_folder_id);
   }
 
@@ -546,7 +546,7 @@ class CliClient final : public Actor {
     return td_api::make_object<td_api::blockListMain>();
   }
 
-  vector<int64> as_chat_ids(Slice chat_ids) const {
+  std::vector<int64> as_chat_ids(Slice chat_ids) const {
     return transform(autosplit(chat_ids), [this](Slice str) { return as_chat_id(str); });
   }
 
@@ -558,7 +558,7 @@ class CliClient final : public Actor {
     return to_integer<int64>(str);
   }
 
-  static vector<int64> as_message_ids(Slice message_ids) {
+  static std::vector<int64> as_message_ids(Slice message_ids) {
     return transform(autosplit(message_ids), as_message_id);
   }
 
@@ -566,7 +566,7 @@ class CliClient final : public Actor {
     return as_message_id(str);
   }
 
-  static vector<int64> as_message_thread_ids(Slice str) {
+  static std::vector<int64> as_message_thread_ids(Slice str) {
     return as_message_ids(str);
   }
 
@@ -646,7 +646,7 @@ class CliClient final : public Actor {
     return to_integer<int64>(str);
   }
 
-  vector<int64> as_user_ids(Slice user_ids) const {
+  std::vector<int64> as_user_ids(Slice user_ids) const {
     return transform(autosplit(user_ids), [this](Slice str) { return as_user_id(str); });
   }
 
@@ -693,7 +693,7 @@ class CliClient final : public Actor {
     return to_integer<int32>(trim(str));
   }
 
-  static vector<int32> as_file_ids(Slice str) {
+  static std::vector<int32> as_file_ids(Slice str) {
     return transform(autosplit(str), as_file_id);
   }
 
@@ -808,7 +808,7 @@ class CliClient final : public Actor {
   }
 
   template <class T>
-  static vector<T> to_integers(Slice integers) {
+  static std::vector<T> to_integers(Slice integers) {
     return transform(transform(autosplit(integers), trim<Slice>), to_integer<T>);
   }
 
@@ -952,7 +952,7 @@ class CliClient final : public Actor {
     return to_integer<int32>(trim(str));
   }
 
-  vector<int32> as_shortcut_ids(Slice shortcut_ids) const {
+  std::vector<int32> as_shortcut_ids(Slice shortcut_ids) const {
     return transform(autosplit(shortcut_ids), as_shortcut_id);
   }
 
@@ -1048,17 +1048,17 @@ class CliClient final : public Actor {
 
   struct PremiumGiveawayParameters {
     int64 chat_id = 0;
-    vector<int64> additional_chat_ids;
+    std::vector<int64> additional_chat_ids;
     int32 date;
-    vector<string> country_codes;
+    std::vector<string> country_codes;
 
     operator td_api::object_ptr<td_api::premiumGiveawayParameters>() const {
       if (chat_id == 0) {
         return nullptr;
       }
-      return td_api::make_object<td_api::premiumGiveawayParameters>(chat_id, vector<int64>(additional_chat_ids), date,
+      return td_api::make_object<td_api::premiumGiveawayParameters>(chat_id, std::vector<int64>(additional_chat_ids), date,
                                                                     rand_bool(), rand_bool(),
-                                                                    vector<string>(country_codes), "prize");
+                                                                    std::vector<string>(country_codes), "prize");
     }
   };
 
@@ -1213,7 +1213,7 @@ class CliClient final : public Actor {
       ChatTheme
     };
     Type type = Type::Null;
-    vector<int32> colors;
+    std::vector<int32> colors;
     string theme_name;
 
     operator td_api::object_ptr<td_api::BackgroundType>() const {
@@ -1292,9 +1292,9 @@ class CliClient final : public Actor {
     string rules_str;
 
     operator td_api::object_ptr<td_api::userPrivacySettingRules>() const {
-      vector<td_api::object_ptr<td_api::UserPrivacySettingRule>> rules;
+      std::vector<td_api::object_ptr<td_api::UserPrivacySettingRule>> rules;
       for (size_t i = 0; i < rules_str.size(); i++) {
-        auto arg = vector<int64>{to_integer<int64>(Slice(rules_str).substr(i + 1))};
+        auto arg = std::vector<int64>{to_integer<int64>(Slice(rules_str).substr(i + 1))};
         if (rules_str[i] == 'a') {
           rules.push_back(td_api::make_object<td_api::userPrivacySettingRuleAllowAll>());
         } else if (rules_str[i] == 'A') {
@@ -1329,7 +1329,7 @@ class CliClient final : public Actor {
 
   struct StoryPrivacySettings {
     string settings;
-    vector<int64> user_ids;
+    std::vector<int64> user_ids;
 
     operator td_api::object_ptr<td_api::StoryPrivacySettings>() const {
       if (settings == "f" || settings == "cf") {
@@ -1778,7 +1778,7 @@ class CliClient final : public Actor {
 #endif
 
   static td_api::object_ptr<td_api::formattedText> as_formatted_text(
-      const string &text, vector<td_api::object_ptr<td_api::textEntity>> entities = {}) {
+      const string &text, std::vector<td_api::object_ptr<td_api::textEntity>> entities = {}) {
     if (entities.empty() && !text.empty()) {
       Slice unused_reserved_characters("#+-={}.");
       string new_text;
@@ -1804,7 +1804,7 @@ class CliClient final : public Actor {
   }
 
   static td_api::object_ptr<td_api::formattedText> as_caption(
-      const string &caption, vector<td_api::object_ptr<td_api::textEntity>> entities = {}) {
+      const string &caption, std::vector<td_api::object_ptr<td_api::textEntity>> entities = {}) {
     return as_formatted_text(caption, std::move(entities));
   }
 
@@ -2225,7 +2225,7 @@ class CliClient final : public Actor {
   static td_api::object_ptr<td_api::InputPassportElement> as_input_passport_element(const string &passport_element_type,
                                                                                     const string &arg,
                                                                                     bool with_selfie) {
-    vector<td_api::object_ptr<td_api::InputFile>> input_files;
+    std::vector<td_api::object_ptr<td_api::InputFile>> input_files;
     td_api::object_ptr<td_api::InputFile> selfie;
     if (!arg.empty()) {
       auto files = autosplit(arg);
@@ -2281,7 +2281,7 @@ class CliClient final : public Actor {
                                                                std::move(selfie), std::move(input_files)));
       }
     } else if (passport_element_type == "rental_agreement" || passport_element_type == "ra") {
-      vector<td_api::object_ptr<td_api::InputFile>> translation;
+      std::vector<td_api::object_ptr<td_api::InputFile>> translation;
       if (selfie != nullptr) {
         translation.push_back(std::move(selfie));
       }
@@ -2381,7 +2381,7 @@ class CliClient final : public Actor {
 
   td_api::object_ptr<td_api::phoneNumberAuthenticationSettings> as_phone_number_authentication_settings() const {
     return td_api::make_object<td_api::phoneNumberAuthenticationSettings>(false, true, false, false, false, nullptr,
-                                                                          vector<string>(authentication_tokens_));
+                                                                          std::vector<string>(authentication_tokens_));
   }
 
   static td_api::object_ptr<td_api::Object> execute(td_api::object_ptr<td_api::Function> f) {
@@ -2839,8 +2839,8 @@ class CliClient final : public Actor {
       get_args(args, user_id);
       send_request(td_api::make_object<td_api::sharePhoneNumber>(user_id));
     } else if (op == "ImportContacts" || op == "cic") {
-      vector<string> contacts_str = full_split(args, ';');
-      vector<td_api::object_ptr<td_api::contact>> contacts;
+      std::vector<string> contacts_str = full_split(args, ';');
+      std::vector<td_api::object_ptr<td_api::contact>> contacts;
       for (auto c : contacts_str) {
         string phone_number;
         string first_name;
@@ -3233,7 +3233,7 @@ class CliClient final : public Actor {
       string native_name;
       string key;
       get_args(args, language_code, name, native_name, key);
-      vector<td_api::object_ptr<td_api::languagePackString>> strings;
+      std::vector<td_api::object_ptr<td_api::languagePackString>> strings;
       strings.push_back(td_api::make_object<td_api::languagePackString>(
           key, td_api::make_object<td_api::languagePackStringValueOrdinary>("Ordinary value")));
       strings.push_back(td_api::make_object<td_api::languagePackString>(
@@ -3511,7 +3511,7 @@ class CliClient final : public Actor {
       } else {
         send_request(td_api::make_object<td_api::canPurchaseFromStore>(
             td_api::make_object<td_api::storePaymentPurposePremiumGiftCodes>(boosted_chat_id, currency, amount,
-                                                                             vector<int64>{user_id})));
+                                                                             std::vector<int64>{user_id})));
       }
     } else if (op == "cpfsg") {
       PremiumGiveawayParameters parameters;
@@ -3726,7 +3726,7 @@ class CliClient final : public Actor {
       auto input_stickers =
           transform(autosplit(stickers), [op](Slice sticker) -> td_api::object_ptr<td_api::inputSticker> {
             return td_api::make_object<td_api::inputSticker>(as_input_file(sticker), as_sticker_format(op), "😀",
-                                                             as_mask_position(op), vector<string>{"keyword"});
+                                                             as_mask_position(op), std::vector<string>{"keyword"});
           });
       send_request(td_api::make_object<td_api::createNewStickerSet>(my_id_, title, name, as_sticker_type(op), false,
                                                                     std::move(input_stickers), "tg_cli"));
@@ -3777,13 +3777,13 @@ class CliClient final : public Actor {
     } else if (op == "gse") {
       send_request(td_api::make_object<td_api::getStickerEmojis>(as_input_file_id(args)));
     } else if (op == "se") {
-      send_request(td_api::make_object<td_api::searchEmojis>(args, vector<string>()));
+      send_request(td_api::make_object<td_api::searchEmojis>(args, std::vector<string>()));
     } else if (op == "seru") {
-      send_request(td_api::make_object<td_api::searchEmojis>(args, vector<string>{"ru_RU"}));
+      send_request(td_api::make_object<td_api::searchEmojis>(args, std::vector<string>{"ru_RU"}));
     } else if (op == "gke") {
-      send_request(td_api::make_object<td_api::getKeywordEmojis>(args, vector<string>()));
+      send_request(td_api::make_object<td_api::getKeywordEmojis>(args, std::vector<string>()));
     } else if (op == "gkeru") {
-      send_request(td_api::make_object<td_api::getKeywordEmojis>(args, vector<string>{"ru_RU"}));
+      send_request(td_api::make_object<td_api::getKeywordEmojis>(args, std::vector<string>{"ru_RU"}));
     } else if (op == "gec" || op == "geces" || op == "geccp" || op == "gecrs") {
       auto type = [&]() -> td_api::object_ptr<td_api::EmojiCategoryType> {
         if (op == "geces") {
@@ -4145,13 +4145,13 @@ class CliClient final : public Actor {
       UserId user_id;
       get_args(args, user_id);
       send_request(td_api::make_object<td_api::createCall>(
-          user_id, td_api::make_object<td_api::callProtocol>(true, true, 65, 65, vector<string>{"2.6", "3.0"}),
+          user_id, td_api::make_object<td_api::callProtocol>(true, true, 65, 65, std::vector<string>{"2.6", "3.0"}),
           rand_bool()));
     } else if (op == "ac" || op == "AcceptCall") {
       CallId call_id;
       get_args(args, call_id);
       send_request(td_api::make_object<td_api::acceptCall>(
-          call_id, td_api::make_object<td_api::callProtocol>(true, true, 65, 65, vector<string>{"2.6", "3.0"})));
+          call_id, td_api::make_object<td_api::callProtocol>(true, true, 65, 65, std::vector<string>{"2.6", "3.0"})));
     } else if (op == "scsd") {
       CallId call_id;
       get_args(args, call_id);
@@ -4165,7 +4165,7 @@ class CliClient final : public Actor {
       CallId call_id;
       int32 rating;
       get_args(args, call_id, rating);
-      vector<td_api::object_ptr<td_api::CallProblem>> problems;
+      std::vector<td_api::object_ptr<td_api::CallProblem>> problems;
       problems.emplace_back(td_api::make_object<td_api::callProblemNoise>());
       problems.emplace_back(td_api::make_object<td_api::callProblemNoise>());
       problems.emplace_back(td_api::make_object<td_api::callProblemDistortedVideo>());
@@ -4577,7 +4577,7 @@ class CliClient final : public Actor {
       td_api::object_ptr<td_api::draftMessage> draft_message;
       auto reply_to = get_input_message_reply_to();
       if (reply_to != nullptr || !message.empty()) {
-        vector<td_api::object_ptr<td_api::textEntity>> entities;
+        std::vector<td_api::object_ptr<td_api::textEntity>> entities;
         if (!message.empty()) {
           entities.push_back(
               td_api::make_object<td_api::textEntity>(0, 1, td_api::make_object<td_api::textEntityTypePre>()));
@@ -4792,7 +4792,7 @@ class CliClient final : public Actor {
     } else if (op == "scps") {
       ChatId chat_id;
       get_args(args, chat_id, args);
-      vector<int32> story_ids;
+      std::vector<int32> story_ids;
       while (true) {
         StoryId story_id;
         get_args(args, story_id, args);
@@ -5045,7 +5045,7 @@ class CliClient final : public Actor {
     } else if (op == "smce") {
       ChatId chat_id;
       get_args(args, chat_id);
-      vector<td_api::object_ptr<td_api::textEntity>> entities;
+      std::vector<td_api::object_ptr<td_api::textEntity>> entities;
       entities.push_back(td_api::make_object<td_api::textEntity>(
           0, 2, td_api::make_object<td_api::textEntityTypeCustomEmoji>(5368324170671202286)));
       entities.push_back(td_api::make_object<td_api::textEntity>(
@@ -5068,7 +5068,7 @@ class CliClient final : public Actor {
       get_args(args, chat_id, args);
       auto paid_media = transform(full_split(args), [](const string &photo) {
         return td_api::make_object<td_api::inputPaidMedia>(td_api::make_object<td_api::inputPaidMediaTypePhoto>(),
-                                                           as_input_file(photo), nullptr, vector<int32>(), 0, 0);
+                                                           as_input_file(photo), nullptr, std::vector<int32>(), 0, 0);
       });
       send_message(chat_id, td_api::make_object<td_api::inputMessagePaidMedia>(11, std::move(paid_media),
                                                                                as_caption("12_3_ __4__"), rand_bool()));
@@ -5078,7 +5078,7 @@ class CliClient final : public Actor {
       auto paid_media = transform(full_split(args), [](const string &video) {
         return td_api::make_object<td_api::inputPaidMedia>(
             td_api::make_object<td_api::inputPaidMediaTypeVideo>(10, true), as_input_file(video), nullptr,
-            vector<int32>(), 0, 0);
+            std::vector<int32>(), 0, 0);
       });
       send_message(chat_id, td_api::make_object<td_api::inputMessagePaidMedia>(12, std::move(paid_media),
                                                                                as_caption("12_3_ __4__"), rand_bool()));
@@ -5146,7 +5146,7 @@ class CliClient final : public Actor {
     } else if (op == "im") {
       ChatId chat_id;
       string message_file;
-      vector<string> attached_files;
+      std::vector<string> attached_files;
       get_args(args, chat_id, message_file, args);
       attached_files = full_split(args);
       send_request(td_api::make_object<td_api::importMessages>(chat_id, as_input_file(message_file),
@@ -5179,7 +5179,7 @@ class CliClient final : public Actor {
       get_args(args, chat_id, message_id, animation);
       send_request(td_api::make_object<td_api::editMessageMedia>(
           chat_id, message_id, nullptr,
-          td_api::make_object<td_api::inputMessageAnimation>(as_input_file(animation), nullptr, vector<int32>(), 0, 0,
+          td_api::make_object<td_api::inputMessageAnimation>(as_input_file(animation), nullptr, std::vector<int32>(), 0, 0,
                                                              0, as_caption("animation"), show_caption_above_media_,
                                                              has_spoiler_)));
     } else if (op == "emc") {
@@ -5450,7 +5450,7 @@ class CliClient final : public Actor {
       string caption;
       get_args(args, chat_id, animation_path, width, height, caption);
       send_message(chat_id, td_api::make_object<td_api::inputMessageAnimation>(
-                                as_input_file(animation_path), nullptr, vector<int32>(), 60, width, height,
+                                as_input_file(animation_path), nullptr, std::vector<int32>(), 60, width, height,
                                 as_caption(caption), show_caption_above_media_, has_spoiler_));
     } else if (op == "sang") {
       ChatId chat_id;
@@ -5458,28 +5458,28 @@ class CliClient final : public Actor {
       string animation_conversion;
       get_args(args, chat_id, animation_path, animation_conversion);
       send_message(chat_id, td_api::make_object<td_api::inputMessageAnimation>(
-                                as_generated_file(animation_path, animation_conversion), nullptr, vector<int32>(), 60,
+                                as_generated_file(animation_path, animation_conversion), nullptr, std::vector<int32>(), 60,
                                 0, 0, as_caption(""), show_caption_above_media_, has_spoiler_));
     } else if (op == "sanid") {
       ChatId chat_id;
       string file_id;
       get_args(args, chat_id, file_id);
       send_message(chat_id, td_api::make_object<td_api::inputMessageAnimation>(
-                                as_input_file_id(file_id), nullptr, vector<int32>(), 0, 0, 0, as_caption(""),
+                                as_input_file_id(file_id), nullptr, std::vector<int32>(), 0, 0, 0, as_caption(""),
                                 show_caption_above_media_, has_spoiler_));
     } else if (op == "sanurl") {
       ChatId chat_id;
       string url;
       get_args(args, chat_id, url);
       send_message(chat_id, td_api::make_object<td_api::inputMessageAnimation>(
-                                as_generated_file(url, "#url#"), nullptr, vector<int32>(), 0, 0, 0, as_caption(""),
+                                as_generated_file(url, "#url#"), nullptr, std::vector<int32>(), 0, 0, 0, as_caption(""),
                                 show_caption_above_media_, has_spoiler_));
     } else if (op == "sanurl2") {
       ChatId chat_id;
       string url;
       get_args(args, chat_id, url);
       send_message(chat_id, td_api::make_object<td_api::inputMessageAnimation>(
-                                as_remote_file(url), nullptr, vector<int32>(), 0, 0, 0, as_caption(""),
+                                as_remote_file(url), nullptr, std::vector<int32>(), 0, 0, 0, as_caption(""),
                                 show_caption_above_media_, has_spoiler_));
     } else if (op == "sau") {
       ChatId chat_id;
@@ -5640,7 +5640,7 @@ class CliClient final : public Actor {
       get_args(args, chat_id, photo_path, conversion, expected_size);
       send_message(chat_id,
                    td_api::make_object<td_api::inputMessagePhoto>(
-                       as_generated_file(photo_path, conversion, expected_size), nullptr, vector<int32>(), 0, 0,
+                       as_generated_file(photo_path, conversion, expected_size), nullptr, std::vector<int32>(), 0, 0,
                        as_caption(""), show_caption_above_media_, get_message_self_destruct_type(), has_spoiler_));
     } else if (op == "spt") {
       ChatId chat_id;
@@ -5649,7 +5649,7 @@ class CliClient final : public Actor {
       get_args(args, chat_id, photo_path, thumbnail_path);
       send_message(chat_id,
                    td_api::make_object<td_api::inputMessagePhoto>(
-                       as_input_file(photo_path), as_input_thumbnail(thumbnail_path, 90, 89), vector<int32>(), 0, 0,
+                       as_input_file(photo_path), as_input_thumbnail(thumbnail_path, 90, 89), std::vector<int32>(), 0, 0,
                        as_caption(""), show_caption_above_media_, get_message_self_destruct_type(), has_spoiler_));
     } else if (op == "sptg") {
       ChatId chat_id;
@@ -5660,7 +5660,7 @@ class CliClient final : public Actor {
       send_message(chat_id,
                    td_api::make_object<td_api::inputMessagePhoto>(
                        as_input_file(photo_path), as_input_thumbnail(thumbnail_path, thumbnail_conversion, 90, 89),
-                       vector<int32>(), 0, 0, as_caption(""), show_caption_above_media_,
+                       std::vector<int32>(), 0, 0, as_caption(""), show_caption_above_media_,
                        get_message_self_destruct_type(), has_spoiler_));
     } else if (op == "spgtg") {
       ChatId chat_id;
@@ -5672,14 +5672,14 @@ class CliClient final : public Actor {
       send_message(chat_id,
                    td_api::make_object<td_api::inputMessagePhoto>(
                        as_generated_file(photo_path, conversion),
-                       as_input_thumbnail(thumbnail_path, thumbnail_conversion, 90, 89), vector<int32>(), 0, 0,
+                       as_input_thumbnail(thumbnail_path, thumbnail_conversion, 90, 89), std::vector<int32>(), 0, 0,
                        as_caption(""), show_caption_above_media_, get_message_self_destruct_type(), has_spoiler_));
     } else if (op == "spid") {
       ChatId chat_id;
       string file_id;
       get_args(args, chat_id, file_id);
       send_message(chat_id, td_api::make_object<td_api::inputMessagePhoto>(
-                                as_input_file_id(file_id), nullptr, vector<int32>(), 0, 0, as_caption(""),
+                                as_input_file_id(file_id), nullptr, std::vector<int32>(), 0, 0, as_caption(""),
                                 show_caption_above_media_, get_message_self_destruct_type(), has_spoiler_));
     } else if (op == "ss") {
       ChatId chat_id;
@@ -5711,7 +5711,7 @@ class CliClient final : public Actor {
       ChatId chat_id;
       string video_path;
       string sticker_file_ids_str;
-      vector<int32> sticker_file_ids;
+      std::vector<int32> sticker_file_ids;
       get_args(args, chat_id, sticker_file_ids_str, video_path);
       if (trim(video_path).empty()) {
         video_path = sticker_file_ids_str;
@@ -5729,7 +5729,7 @@ class CliClient final : public Actor {
       get_args(args, chat_id, video, thumbnail);
       send_message(chat_id,
                    td_api::make_object<td_api::inputMessageVideo>(
-                       as_input_file(video), as_input_thumbnail(thumbnail), vector<int32>(), 0, 0, 0, true,
+                       as_input_file(video), as_input_thumbnail(thumbnail), std::vector<int32>(), 0, 0, 0, true,
                        as_caption(""), show_caption_above_media_, get_message_self_destruct_type(), has_spoiler_));
     } else if (op == "svn") {
       ChatId chat_id;
@@ -6481,7 +6481,7 @@ class CliClient final : public Actor {
         if (minutes.size() % 2 == 1) {
           minutes.push_back(8 * 24 * 60);
         }
-        vector<td_api::object_ptr<td_api::businessOpeningHoursInterval>> intervals;
+        std::vector<td_api::object_ptr<td_api::businessOpeningHoursInterval>> intervals;
         for (size_t i = 0; i < minutes.size(); i += 2) {
           intervals.push_back(td_api::make_object<td_api::businessOpeningHoursInterval>(minutes[i], minutes[i + 1]));
         }

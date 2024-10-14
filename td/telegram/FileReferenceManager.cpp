@@ -238,7 +238,7 @@ vector<FileSourceId> FileReferenceManager::get_some_file_sources(NodeId node_id)
 vector<MessageFullId> FileReferenceManager::get_some_message_file_sources(NodeId node_id) {
   auto file_source_ids = get_some_file_sources(node_id);
 
-  vector<MessageFullId> result;
+  std::vector<MessageFullId> result;
   for (auto file_source_id : file_source_ids) {
     auto index = static_cast<size_t>(file_source_id.get()) - 1;
     CHECK(index < file_sources_.size());

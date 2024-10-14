@@ -46,7 +46,7 @@ static bool is_ascii_host(Slice host) {
 
 #if !TD_WINDOWS
 static void punycode(string &result, Slice part) {
-  vector<uint32> codes;
+  std::vector<uint32> codes;
   codes.reserve(utf8_length(part));
   uint32 processed = 0;
   auto begin = part.ubegin();

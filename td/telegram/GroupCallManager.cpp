@@ -325,8 +325,8 @@ class GetGroupCallParticipantQuery final : public Td::ResultHandler {
   explicit GetGroupCallParticipantQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(InputGroupCallId input_group_call_id, vector<tl_object_ptr<telegram_api::InputPeer>> &&input_peers,
-            vector<int32> &&source_ids) {
+  void send(InputGroupCallId input_group_call_id, std::vector<tl_object_ptr<telegram_api::InputPeer>> &&input_peers,
+            std::vector<int32> &&source_ids) {
     input_group_call_id_ = input_group_call_id;
     auto limit = narrow_cast<int32>(max(input_peers.size(), source_ids.size()));
     send_query(G()->net_query_creator().create(telegram_api::phone_getGroupParticipants(
@@ -363,7 +363,7 @@ class GetGroupCallParticipantsQuery final : public Td::ResultHandler {
     input_group_call_id_ = input_group_call_id;
     offset_ = std::move(offset);
     send_query(G()->net_query_creator().create(telegram_api::phone_getGroupParticipants(
-        input_group_call_id.get_input_group_call(), vector<tl_object_ptr<telegram_api::InputPeer>>(), vector<int32>(),
+        input_group_call_id.get_input_group_call(), std::vector<tl_object_ptr<telegram_api::InputPeer>>(), std::vector<int32>(),
         offset_, limit)));
   }
 
@@ -645,7 +645,7 @@ class InviteToGroupCallQuery final : public Td::ResultHandler {
   explicit InviteToGroupCallQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(InputGroupCallId input_group_call_id, vector<tl_object_ptr<telegram_api::InputUser>> input_users) {
+  void send(InputGroupCallId input_group_call_id, std::vector<tl_object_ptr<telegram_api::InputUser>> input_users) {
     send_query(G()->net_query_creator().create(
         telegram_api::phone_inviteToGroupCall(input_group_call_id.get_input_group_call(), std::move(input_users))));
   }
@@ -800,7 +800,7 @@ class CheckGroupCallQuery final : public Td::ResultHandler {
   explicit CheckGroupCallQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(InputGroupCallId input_group_call_id, vector<int32> &&audio_sources) {
+  void send(InputGroupCallId input_group_call_id, std::vector<int32> &&audio_sources) {
     for (auto &audio_source : audio_sources) {
       CHECK(audio_source != 0);
     }
@@ -814,7 +814,7 @@ class CheckGroupCallQuery final : public Td::ResultHandler {
       return on_error(result_ptr.move_as_error());
     }
 
-    vector<int32> active_audio_sources = result_ptr.move_as_ok();
+    std::vector<int32> active_audio_sources = result_ptr.move_as_ok();
     LOG(INFO) << "Receive result for CheckGroupCallQuery: " << active_audio_sources;
 
     if (!active_audio_sources.empty()) {
@@ -931,7 +931,7 @@ struct GroupCallManager::GroupCall {
   int32 record_start_date_version = -1;
   int32 scheduled_start_date_version = -1;
 
-  vector<Promise<Unit>> after_join;
+  std::vector<Promise<Unit>> after_join;
   bool have_pending_start_subscribed = false;
   bool pending_start_subscribed = false;
   bool have_pending_is_my_video_paused = false;
@@ -952,14 +952,14 @@ struct GroupCallManager::GroupCall {
 };
 
 struct GroupCallManager::GroupCallParticipants {
-  vector<GroupCallParticipant> participants;
+  std::vector<GroupCallParticipant> participants;
   string next_offset;
   GroupCallParticipantOrder min_order = GroupCallParticipantOrder::max();
   bool joined_date_asc = false;
   int32 local_unmuted_video_count = 0;
 
   bool are_administrators_loaded = false;
-  vector<DialogId> administrator_dialog_ids;
+  std::vector<DialogId> administrator_dialog_ids;
 
   struct PendingUpdates {
     FlatHashMap<DialogId, unique_ptr<GroupCallParticipant>, DialogIdHash> updates;
@@ -969,9 +969,9 @@ struct GroupCallManager::GroupCallParticipants {
 };
 
 struct GroupCallManager::GroupCallRecentSpeakers {
-  vector<std::pair<DialogId, int32>> users;  // participant + time; sorted by time
+  std::vector<std::pair<DialogId, int32>> users;  // participant + time; sorted by time
   bool is_changed = false;
-  vector<std::pair<DialogId, bool>> last_sent_users;
+  std::vector<std::pair<DialogId, bool>> last_sent_users;
 };
 
 struct GroupCallManager::PendingJoinRequest {
@@ -1719,7 +1719,7 @@ GroupCallParticipant *GroupCallManager::get_group_call_participant(GroupCallPart
 }
 
 void GroupCallManager::on_update_group_call_participants(
-    InputGroupCallId input_group_call_id, vector<tl_object_ptr<telegram_api::groupCallParticipant>> &&participants,
+    InputGroupCallId input_group_call_id, std::vector<tl_object_ptr<telegram_api::groupCallParticipant>> &&participants,
     int32 version, bool is_recursive) {
   if (G()->close_flag()) {
     return;
@@ -1778,7 +1778,7 @@ void GroupCallManager::on_update_group_call_participants(
 
   auto *group_call_participants = add_group_call_participants(input_group_call_id);
   if (!is_recursive) {
-    vector<DialogId> missing_participants;
+    std::vector<DialogId> missing_participants;
     for (auto &group_call_participant : participants) {
       GroupCallParticipant participant(group_call_participant, version);
       if (participant.is_valid() && participant.is_min && participant.joined_date != 0 &&
@@ -2049,7 +2049,7 @@ GroupCallParticipantOrder GroupCallManager::get_real_participant_order(bool can_
 }
 
 void GroupCallManager::process_group_call_participants(
-    InputGroupCallId input_group_call_id, vector<tl_object_ptr<telegram_api::groupCallParticipant>> &&participants,
+    InputGroupCallId input_group_call_id, std::vector<tl_object_ptr<telegram_api::groupCallParticipant>> &&participants,
     int32 version, const string &offset, bool is_load, bool is_sync) {
   // if receive exactly one participant, then the current user is the only participant
   // there are no reasons to process it independently
@@ -2816,7 +2816,7 @@ void GroupCallManager::finish_load_group_call_administrators(InputGroupCallId in
     return;
   }
 
-  vector<DialogId> administrator_dialog_ids;
+  std::vector<DialogId> administrator_dialog_ids;
   auto participants = result.move_as_ok();
   for (auto &administrator : participants.participants_) {
     if (administrator.status_.can_manage_calls() &&
@@ -3489,11 +3489,11 @@ void GroupCallManager::revoke_group_call_invite_link(GroupCallId group_call_id, 
   td_->create_handler<ToggleGroupCallSettingsQuery>(std::move(promise))->send(flags, input_group_call_id, false);
 }
 
-void GroupCallManager::invite_group_call_participants(GroupCallId group_call_id, vector<UserId> &&user_ids,
+void GroupCallManager::invite_group_call_participants(GroupCallId group_call_id, std::vector<UserId> &&user_ids,
                                                       Promise<Unit> &&promise) {
   TRY_RESULT_PROMISE(promise, input_group_call_id, get_input_group_call_id(group_call_id));
 
-  vector<tl_object_ptr<telegram_api::InputUser>> input_users;
+  std::vector<tl_object_ptr<telegram_api::InputUser>> input_users;
   auto my_user_id = td_->user_manager_->get_my_id();
   for (auto user_id : user_ids) {
     TRY_RESULT_PROMISE(promise, input_user, td_->user_manager_->get_input_user(user_id));
@@ -4536,7 +4536,7 @@ void GroupCallManager::on_user_speaking_in_group_call(GroupCallId group_call_id,
                            is_muted_by_admin, date, true);
             }
           });
-      vector<tl_object_ptr<telegram_api::InputPeer>> input_peers;
+      std::vector<tl_object_ptr<telegram_api::InputPeer>> input_peers;
       input_peers.push_back(DialogManager::get_input_peer_force(dialog_id));
       td_->create_handler<GetGroupCallParticipantQuery>(std::move(query_promise))
           ->send(input_group_call_id, std::move(input_peers), {});
@@ -4775,7 +4775,7 @@ vector<td_api::object_ptr<td_api::groupCallRecentSpeaker>> GroupCallManager::get
     recent_speakers->users.pop_back();
   }
 
-  vector<std::pair<DialogId, bool>> recent_speaker_users;
+  std::vector<std::pair<DialogId, bool>> recent_speaker_users;
   for (auto &recent_speaker : recent_speakers->users) {
     recent_speaker_users.emplace_back(recent_speaker.first, recent_speaker.second > now - 8);
   }
@@ -4811,7 +4811,7 @@ vector<td_api::object_ptr<td_api::groupCallRecentSpeaker>> GroupCallManager::get
 }
 
 tl_object_ptr<td_api::groupCall> GroupCallManager::get_group_call_object(
-    const GroupCall *group_call, vector<td_api::object_ptr<td_api::groupCallRecentSpeaker>> recent_speakers) {
+    const GroupCall *group_call, std::vector<td_api::object_ptr<td_api::groupCallRecentSpeaker>> recent_speakers) {
   CHECK(group_call != nullptr);
   CHECK(group_call->is_inited);
 
@@ -4837,7 +4837,7 @@ tl_object_ptr<td_api::groupCall> GroupCallManager::get_group_call_object(
 }
 
 tl_object_ptr<td_api::updateGroupCall> GroupCallManager::get_update_group_call_object(
-    const GroupCall *group_call, vector<td_api::object_ptr<td_api::groupCallRecentSpeaker>> recent_speakers) {
+    const GroupCall *group_call, std::vector<td_api::object_ptr<td_api::groupCallRecentSpeaker>> recent_speakers) {
   return td_api::make_object<td_api::updateGroupCall>(get_group_call_object(group_call, std::move(recent_speakers)));
 }
 

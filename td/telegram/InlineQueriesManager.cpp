@@ -129,7 +129,7 @@ class SetInlineBotResultsQuery final : public Td::ResultHandler {
   void send(int64 inline_query_id, bool is_gallery, bool is_personal,
             telegram_api::object_ptr<telegram_api::inlineBotSwitchPM> switch_pm,
             telegram_api::object_ptr<telegram_api::inlineBotWebView> web_view,
-            vector<tl_object_ptr<telegram_api::InputBotInlineResult>> &&results, int32 cache_time,
+            std::vector<tl_object_ptr<telegram_api::InputBotInlineResult>> &&results, int32 cache_time,
             const string &next_offset) {
     int32 flags = 0;
     if (is_gallery) {
@@ -489,7 +489,7 @@ UserId InlineQueriesManager::get_inline_bot_user_id(int64 query_id) const {
 
 void InlineQueriesManager::answer_inline_query(
     int64 inline_query_id, bool is_personal, td_api::object_ptr<td_api::inlineQueryResultsButton> &&button,
-    vector<td_api::object_ptr<td_api::InputInlineQueryResult>> &&input_results, int32 cache_time,
+    std::vector<td_api::object_ptr<td_api::InputInlineQueryResult>> &&input_results, int32 cache_time,
     const string &next_offset, Promise<Unit> &&promise) const {
   CHECK(td_->auth_manager_->is_bot());
 
@@ -536,7 +536,7 @@ void InlineQueriesManager::answer_inline_query(
     }
   }
 
-  vector<tl_object_ptr<telegram_api::InputBotInlineResult>> results;
+  std::vector<tl_object_ptr<telegram_api::InputBotInlineResult>> results;
   bool is_gallery = false;
   bool force_vertical = false;
   for (auto &input_result : input_results) {
@@ -947,7 +947,7 @@ Result<tl_object_ptr<telegram_api::InputBotInlineResult>> InlineQueriesManager::
     if (!clean_input_string(thumbnail_url)) {
       return Status::Error(400, "Strings must be encoded in UTF-8");
     }
-    vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
+    std::vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
     if (thumbnail_width > 0 && thumbnail_height > 0) {
       attributes.push_back(make_tl_object<telegram_api::documentAttributeImageSize>(thumbnail_width, thumbnail_height));
     }
@@ -963,7 +963,7 @@ Result<tl_object_ptr<telegram_api::InputBotInlineResult>> InlineQueriesManager::
       return Status::Error(400, "Strings must be encoded in UTF-8");
     }
 
-    vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
+    std::vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
     if (width > 0 && height > 0) {
       if ((duration > 0 || type == "video" || content_type == "video/mp4") && !begins_with(content_type, "image/")) {
         attributes.push_back(make_tl_object<telegram_api::documentAttributeVideo>(
@@ -1191,7 +1191,7 @@ tl_object_ptr<td_api::minithumbnail> copy(const td_api::minithumbnail &obj) {
 template <>
 tl_object_ptr<td_api::photoSize> copy(const td_api::photoSize &obj) {
   return td_api::make_object<td_api::photoSize>(obj.type_, copy(obj.photo_), obj.width_, obj.height_,
-                                                vector<int32>(obj.progressive_sizes_));
+                                                std::vector<int32>(obj.progressive_sizes_));
 }
 
 static tl_object_ptr<td_api::photoSize> copy_photo_size(const tl_object_ptr<td_api::photoSize> &obj) {
@@ -1409,7 +1409,7 @@ tl_object_ptr<td_api::venue> copy(const td_api::venue &obj) {
 template <>
 tl_object_ptr<td_api::formattedText> copy(const td_api::formattedText &obj) {
   // there are no entities in the game text
-  return td_api::make_object<td_api::formattedText>(obj.text_, vector<tl_object_ptr<td_api::textEntity>>());
+  return td_api::make_object<td_api::formattedText>(obj.text_, std::vector<tl_object_ptr<td_api::textEntity>>());
 }
 
 template <>
@@ -1610,7 +1610,7 @@ void InlineQueriesManager::on_get_inline_query_results(
 
   auto dialog_type = dialog_id.get_type();
   bool allow_invoice = dialog_type != DialogType::SecretChat;
-  vector<tl_object_ptr<td_api::InlineQueryResult>> output_results;
+  std::vector<tl_object_ptr<td_api::InlineQueryResult>> output_results;
   for (auto &result_ptr : results->results_) {
     tl_object_ptr<td_api::InlineQueryResult> output_result;
     switch (result_ptr->get_id()) {
@@ -1925,7 +1925,7 @@ void InlineQueriesManager::on_get_inline_query_results(
                 return std::move(static_cast<telegram_api::webDocumentNoProxy *>(content)->attributes_);
               default:
                 UNREACHABLE();
-                return vector<telegram_api::object_ptr<telegram_api::DocumentAttribute>>();
+                return std::vector<telegram_api::object_ptr<telegram_api::DocumentAttribute>>();
             }
           }();
 
@@ -2066,7 +2066,7 @@ void InlineQueriesManager::on_get_inline_query_results(
 
 vector<UserId> InlineQueriesManager::get_recent_inline_bots(Promise<Unit> &&promise) {
   if (!load_recently_used_bots(promise)) {
-    return vector<UserId>();
+    return std::vector<UserId>();
   }
 
   promise.set_value(Unit());

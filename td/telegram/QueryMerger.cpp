@@ -60,7 +60,7 @@ void QueryMerger::loop() {
     return;
   }
 
-  vector<int64> query_ids;
+  std::vector<int64> query_ids;
   while (!pending_queries_.empty()) {
     auto query_id = pending_queries_.front();
     pending_queries_.pop();

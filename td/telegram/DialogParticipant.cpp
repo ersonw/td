@@ -829,7 +829,7 @@ StringBuilder &operator<<(StringBuilder &string_builder, const DialogParticipant
 }
 
 td_api::object_ptr<td_api::chatMembers> DialogParticipants::get_chat_members_object(Td *td, const char *source) const {
-  vector<tl_object_ptr<td_api::chatMember>> chat_members;
+  std::vector<tl_object_ptr<td_api::chatMember>> chat_members;
   chat_members.reserve(participants_.size());
   for (auto &participant : participants_) {
     chat_members.push_back(td->chat_manager_->get_chat_member_object(participant, source));

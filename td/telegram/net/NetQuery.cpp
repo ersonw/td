@@ -35,7 +35,7 @@ void NetQuery::debug(string state, bool may_be_lost) {
 }
 
 NetQuery::NetQuery(uint64 id, BufferSlice &&query, DcId dc_id, Type type, AuthFlag auth_flag, GzipFlag gzip_flag,
-                   int32 tl_constructor, int32 total_timeout_limit, NetQueryStats *stats, vector<ChainId> chain_ids)
+                   int32 tl_constructor, int32 total_timeout_limit, NetQueryStats *stats, std::vector<ChainId> chain_ids)
     : state_(State::Query)
     , type_(type)
     , auth_flag_(auth_flag)

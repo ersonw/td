@@ -291,8 +291,8 @@ class MessageThreadDbAsync final : public MessageThreadDbAsyncInterface {
     static constexpr double MAX_PENDING_QUERIES_DELAY{0.01};
 
     //NB: order is important, destructor of pending_writes_ will change finished_writes_
-    vector<Promise<Unit>> finished_writes_;
-    vector<Promise<Unit>> pending_writes_;  // TODO use Action
+    std::vector<Promise<Unit>> finished_writes_;
+    std::vector<Promise<Unit>> pending_writes_;  // TODO use Action
     double wakeup_at_ = 0;
 
     template <class F>

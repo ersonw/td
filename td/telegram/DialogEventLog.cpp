@@ -493,7 +493,7 @@ class GetChannelAdminLogQuery final : public Td::ResultHandler {
 
   void send(ChannelId channel_id, const string &query, int64 from_event_id, int32 limit,
             tl_object_ptr<telegram_api::channelAdminLogEventsFilter> filter,
-            vector<tl_object_ptr<telegram_api::InputUser>> input_users) {
+            std::vector<tl_object_ptr<telegram_api::InputUser>> input_users) {
     channel_id_ = channel_id;
 
     auto input_channel = td_->chat_manager_->get_input_channel(channel_id);
@@ -627,7 +627,7 @@ static telegram_api::object_ptr<telegram_api::channelAdminLogEventsFilter> get_i
 
 void get_dialog_event_log(Td *td, DialogId dialog_id, const string &query, int64 from_event_id, int32 limit,
                           const td_api::object_ptr<td_api::chatEventLogFilters> &filters,
-                          const vector<UserId> &user_ids, Promise<td_api::object_ptr<td_api::chatEvents>> &&promise) {
+                          const std::vector<UserId> &user_ids, Promise<td_api::object_ptr<td_api::chatEvents>> &&promise) {
   if (!td->dialog_manager_->have_dialog_force(dialog_id, "get_dialog_event_log")) {
     return promise.set_error(Status::Error(400, "Chat not found"));
   }
@@ -645,7 +645,7 @@ void get_dialog_event_log(Td *td, DialogId dialog_id, const string &query, int64
     return promise.set_error(Status::Error(400, "Not enough rights to get event log"));
   }
 
-  vector<tl_object_ptr<telegram_api::InputUser>> input_users;
+  std::vector<tl_object_ptr<telegram_api::InputUser>> input_users;
   for (auto user_id : user_ids) {
     TRY_RESULT_PROMISE(promise, input_user, td->user_manager_->get_input_user(user_id));
     input_users.push_back(std::move(input_user));

@@ -674,7 +674,7 @@ class AccountManager::UnconfirmedAuthorization {
 };
 
 class AccountManager::UnconfirmedAuthorizations {
-  vector<UnconfirmedAuthorization> authorizations_;
+  std::vector<UnconfirmedAuthorization> authorizations_;
 
   static int32 get_authorization_autoconfirm_period() {
     return narrow_cast<int32>(G()->get_option_integer("authorization_autoconfirm_period", 604800));
@@ -1143,7 +1143,7 @@ void AccountManager::import_contact_token(const string &token, Promise<td_api::o
 
 class AccountManager::InvalidateSignInCodesOnServerLogEvent {
  public:
-  vector<string> authentication_codes_;
+  std::vector<string> authentication_codes_;
 
   template <class StorerT>
   void store(StorerT &storer) const {

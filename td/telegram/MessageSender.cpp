@@ -86,8 +86,8 @@ td_api::object_ptr<td_api::MessageSender> get_min_message_sender_object(Td *td, 
 }
 
 vector<DialogId> get_message_sender_dialog_ids(Td *td,
-                                               const vector<telegram_api::object_ptr<telegram_api::Peer>> &peers) {
-  vector<DialogId> message_sender_dialog_ids;
+                                               const std::vector<telegram_api::object_ptr<telegram_api::Peer>> &peers) {
+  std::vector<DialogId> message_sender_dialog_ids;
   message_sender_dialog_ids.reserve(peers.size());
   for (auto &peer : peers) {
     DialogId dialog_id(peer);
@@ -115,7 +115,7 @@ vector<DialogId> get_message_sender_dialog_ids(Td *td,
 }
 
 td_api::object_ptr<td_api::messageSenders> convert_message_senders_object(
-    Td *td, const vector<telegram_api::object_ptr<telegram_api::Peer>> &peers) {
+    Td *td, const std::vector<telegram_api::object_ptr<telegram_api::Peer>> &peers) {
   auto dialog_ids = get_message_sender_dialog_ids(td, peers);
   auto message_senders = transform(dialog_ids, [td](DialogId dialog_id) {
     return get_message_sender_object(td, dialog_id, "convert_message_senders_object");

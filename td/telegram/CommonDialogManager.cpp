@@ -92,7 +92,7 @@ void CommonDialogManager::drop_common_dialogs_cache(UserId user_id) {
   }
 }
 
-std::pair<int32, vector<DialogId>> CommonDialogManager::get_common_dialogs(UserId user_id, DialogId offset_dialog_id,
+std::pair<int32, std::vector<DialogId>> CommonDialogManager::get_common_dialogs(UserId user_id, DialogId offset_dialog_id,
                                                                            int32 limit, bool force,
                                                                            Promise<Unit> &&promise) {
   auto r_input_user = td_->user_manager_->get_input_user(user_id);
@@ -138,7 +138,7 @@ std::pair<int32, vector<DialogId>> CommonDialogManager::get_common_dialogs(UserI
   auto it = found_common_dialogs_.find(user_id);
   if (it != found_common_dialogs_.end() && !it->second.dialog_ids.empty()) {
     int32 total_count = it->second.total_count;
-    vector<DialogId> &common_dialog_ids = it->second.dialog_ids;
+    std::vector<DialogId> &common_dialog_ids = it->second.dialog_ids;
     bool use_cache = (!it->second.is_outdated && it->second.receive_time >= Time::now() - 3600) || force ||
                      offset_chat_id != 0 || common_dialog_ids.size() >= static_cast<size_t>(MAX_GET_DIALOGS);
     // use cache if it is up-to-date, or we required to use it or we can't update it
@@ -152,7 +152,7 @@ std::pair<int32, vector<DialogId>> CommonDialogManager::get_common_dialogs(UserI
         }
         ++offset_it;
       }
-      vector<DialogId> result;
+      std::vector<DialogId> result;
       while (result.size() < static_cast<size_t>(limit)) {
         if (offset_it == common_dialog_ids.end()) {
           break;
@@ -177,7 +177,7 @@ std::pair<int32, vector<DialogId>> CommonDialogManager::get_common_dialogs(UserI
 }
 
 void CommonDialogManager::on_get_common_dialogs(UserId user_id, int64 offset_chat_id,
-                                                vector<tl_object_ptr<telegram_api::Chat>> &&chats, int32 total_count) {
+                                                std::vector<tl_object_ptr<telegram_api::Chat>> &&chats, int32 total_count) {
   CHECK(user_id.is_valid());
   td_->user_manager_->on_update_user_common_chat_count(user_id, total_count);
 

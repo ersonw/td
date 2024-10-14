@@ -336,7 +336,7 @@ PhotoSize get_web_document_photo_size(FileManager *file_manager, FileType file_t
   }
 
   FileId file_id;
-  vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
+  std::vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
   int32 size = 0;
   string mime_type;
   switch (web_document_ptr->get_id()) {

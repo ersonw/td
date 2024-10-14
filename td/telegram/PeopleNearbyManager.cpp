@@ -139,7 +139,7 @@ void PeopleNearbyManager::search_dialogs_nearby(const Location &location,
 }
 
 vector<td_api::object_ptr<td_api::chatNearby>> PeopleNearbyManager::get_chats_nearby_object(
-    const vector<DialogNearby> &dialogs_nearby) const {
+    const std::vector<DialogNearby> &dialogs_nearby) const {
   return transform(dialogs_nearby, [td = td_](const DialogNearby &dialog_nearby) {
     return td_api::make_object<td_api::chatNearby>(
         td->dialog_manager_->get_chat_id_object(dialog_nearby.dialog_id, "chatNearby"), dialog_nearby.distance);

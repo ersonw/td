@@ -511,7 +511,7 @@ vector<FileId> get_story_content_file_ids(const Td *td, const StoryContent *cont
     case StoryContentType::Photo:
       return photo_get_file_ids(static_cast<const StoryContentPhoto *>(content)->photo_);
     case StoryContentType::Video: {
-      vector<FileId> result;
+      std::vector<FileId> result;
       const auto *s = static_cast<const StoryContentVideo *>(content);
       Document(Document::Type::Video, s->file_id_).append_file_ids(td, result);
       Document(Document::Type::Video, s->alt_file_id_).append_file_ids(td, result);

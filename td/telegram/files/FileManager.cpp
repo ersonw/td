@@ -992,7 +992,7 @@ bool FileManager::is_remotely_generated_file(Slice conversion) {
 }
 
 vector<int> FileManager::get_missing_file_parts(const Status &error) {
-  vector<int> result;
+  std::vector<int> result;
   auto error_message = error.message();
   if (begins_with(error_message, "FILE_PART_") && ends_with(error_message, "_MISSING")) {
     auto r_file_part = to_integer_safe<int>(error_message.substr(10, error_message.size() - 18));
@@ -1386,7 +1386,7 @@ Result<FileId> FileManager::register_file(FileData &&data, FileLocationSource fi
 
   FileView file_view(get_file_node(file_id));
 
-  vector<FileId> to_merge;
+  std::vector<FileId> to_merge;
   auto register_location = [&](const auto &location, auto &mp) -> FileId * {
     auto &other_id = mp[location];
     if (other_id.empty()) {
@@ -1881,7 +1881,7 @@ Status FileManager::merge(FileId x_file_id, FileId y_file_id, bool no_sync) {
   }
 
   // Check if some download/upload queries are ready
-  for (auto file_id : vector<FileId>(node->file_ids_)) {
+  for (auto file_id : std::vector<FileId>(node->file_ids_)) {
     auto *info = get_file_id_info(file_id);
     if (info->download_priority_ != 0 && file_view.has_local_location()) {
       info->download_priority_ = 0;
@@ -1965,8 +1965,8 @@ void FileManager::remove_file_source(FileId file_id, FileSourceId file_source_id
   }
 }
 
-void FileManager::change_files_source(FileSourceId file_source_id, const vector<FileId> &old_file_ids,
-                                      const vector<FileId> &new_file_ids) {
+void FileManager::change_files_source(FileSourceId file_source_id, const std::vector<FileId> &old_file_ids,
+                                      const std::vector<FileId> &new_file_ids) {
   if (old_file_ids == new_file_ids) {
     return;
   }
@@ -2004,7 +2004,7 @@ void FileManager::on_file_reference_repaired(FileId file_id, FileSourceId file_s
   promise.set_result(std::move(result));
 }
 
-FlatHashSet<FileId, FileIdHash> FileManager::get_main_file_ids(const vector<FileId> &file_ids) {
+FlatHashSet<FileId, FileIdHash> FileManager::get_main_file_ids(const std::vector<FileId> &file_ids) {
   FlatHashSet<FileId, FileIdHash> result;
   for (auto file_id : file_ids) {
     auto node = get_file_node(file_id);
@@ -2048,7 +2048,7 @@ void FileManager::try_flush_node_pmc(FileNodePtr node, const char *source) {
 
 void FileManager::try_flush_node_info(FileNodePtr node, const char *source) {
   if (node->need_info_flush()) {
-    for (auto file_id : vector<FileId>(node->file_ids_)) {
+    for (auto file_id : std::vector<FileId>(node->file_ids_)) {
       auto *info = get_file_id_info(file_id);
       if (info->send_updates_flag_) {
         VLOG(update_file) << "Send UpdateFile about file " << file_id << " from " << source;
@@ -2746,7 +2746,7 @@ class FileManager::ForceUploadActor final : public Actor {
 
     is_active_ = true;
     attempt_++;
-    send_closure(G()->file_manager(), &FileManager::resume_upload, file_id_, vector<int>(), create_callback(),
+    send_closure(G()->file_manager(), &FileManager::resume_upload, file_id_, std::vector<int>(), create_callback(),
                  new_priority_, upload_order_, attempt_ == 2, prefer_small_);
   }
 
@@ -2765,7 +2765,7 @@ void FileManager::on_force_reupload_success(FileId file_id) {
   }
 }
 
-void FileManager::resume_upload(FileId file_id, vector<int> bad_parts, std::shared_ptr<UploadCallback> callback,
+void FileManager::resume_upload(FileId file_id, std::vector<int> bad_parts, std::shared_ptr<UploadCallback> callback,
                                 int32 new_priority, uint64 upload_order, bool force, bool prefer_small) {
   auto node = get_sync_file_node(file_id);
   if (!node) {
@@ -2897,7 +2897,7 @@ bool FileManager::delete_partial_remote_location(FileId file_id) {
     return false;
   }
 
-  run_upload(node, vector<int>());
+  run_upload(node, std::vector<int>());
   return true;
 }
 
@@ -3031,7 +3031,7 @@ void FileManager::run_generate(FileNodePtr node) {
   LOG(INFO) << "File " << file_id << " generate request has sent to FileGenerateManager";
 }
 
-void FileManager::run_upload(FileNodePtr node, vector<int> bad_parts) {
+void FileManager::run_upload(FileNodePtr node, std::vector<int> bad_parts) {
   int8 priority = 0;
   FileId file_id = node->main_file_id_;
   for (auto id : node->file_ids_) {
@@ -3151,11 +3151,11 @@ void FileManager::run_upload(FileNodePtr node, vector<int> bad_parts) {
 
 void FileManager::upload(FileId file_id, std::shared_ptr<UploadCallback> callback, int32 new_priority,
                          uint64 upload_order) {
-  return resume_upload(file_id, vector<int>(), std::move(callback), new_priority, upload_order);
+  return resume_upload(file_id, std::vector<int>(), std::move(callback), new_priority, upload_order);
 }
 
 void FileManager::cancel_upload(FileId file_id) {
-  return resume_upload(file_id, vector<int>(), nullptr, 0, 0);
+  return resume_upload(file_id, std::vector<int>(), nullptr, 0, 0);
 }
 
 static bool is_background_type(FileType type) {
@@ -3324,7 +3324,7 @@ td_api::object_ptr<td_api::file> FileManager::get_file_object(FileId file_id, bo
                                               file_node->is_uploading(), is_uploading_completed, remote_size));
 }
 
-vector<int32> FileManager::get_file_ids_object(const vector<FileId> &file_ids, bool with_main_file_id) {
+vector<int32> FileManager::get_file_ids_object(const std::vector<FileId> &file_ids, bool with_main_file_id) {
   return transform(file_ids, [this, with_main_file_id](FileId file_id) {
     auto file_view = get_sync_file_view(file_id);
     auto result_file_id = file_id;
@@ -3611,8 +3611,8 @@ FileType FileManager::guess_file_type(const tl_object_ptr<td_api::InputFile> &fi
   }
 }
 
-vector<tl_object_ptr<telegram_api::InputDocument>> FileManager::get_input_documents(const vector<FileId> &file_ids) {
-  vector<tl_object_ptr<telegram_api::InputDocument>> result;
+vector<tl_object_ptr<telegram_api::InputDocument>> FileManager::get_input_documents(const std::vector<FileId> &file_ids) {
+  std::vector<tl_object_ptr<telegram_api::InputDocument>> result;
   result.reserve(file_ids.size());
   for (auto file_id : file_ids) {
     auto file_view = get_file_view(file_id);
@@ -4286,7 +4286,7 @@ void FileManager::on_file_load_error(FileNodePtr node, Status status) {
   do_cancel_download(node);
   do_cancel_upload(node);
 
-  for (auto file_id : vector<FileId>(node->file_ids_)) {
+  for (auto file_id : std::vector<FileId>(node->file_ids_)) {
     auto *info = get_file_id_info(file_id);
     if (info->download_priority_ != 0) {
       info->download_priority_ = 0;

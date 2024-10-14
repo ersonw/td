@@ -433,7 +433,7 @@ Status SessionConnection::on_packet(const MsgInfo &info, const mtproto_api::pong
 }
 
 Status SessionConnection::on_packet(const MsgInfo &info, const mtproto_api::future_salts &salts) {
-  vector<ServerSalt> new_salts;
+  std::vector<ServerSalt> new_salts;
   for (auto &it : salts.salts_) {
     new_salts.push_back(
         ServerSalt{it->salt_, static_cast<double>(it->valid_since_), static_cast<double>(it->valid_until_)});
@@ -448,7 +448,7 @@ Status SessionConnection::on_packet(const MsgInfo &info, const mtproto_api::futu
   return Status::OK();
 }
 
-Status SessionConnection::on_msgs_state_info(const vector<int64> &msg_ids, Slice info) {
+Status SessionConnection::on_msgs_state_info(const std::vector<int64> &msg_ids, Slice info) {
   if (msg_ids.size() != info.size()) {
     return Status::Error(PSLICE() << tag("message count", msg_ids.size()) << " != " << tag("info.size()", info.size()));
   }
@@ -810,7 +810,7 @@ void SessionConnection::send_crypto(const Storer &storer, uint64 quick_ack_token
 }
 
 Result<MessageId> SessionConnection::send_query(BufferSlice buffer, bool gzip_flag, MessageId message_id,
-                                                vector<MessageId> invoke_after_message_ids, bool use_quick_ack) {
+                                                std::vector<MessageId> invoke_after_message_ids, bool use_quick_ack) {
   CHECK(mode_ != Mode::HttpLongPoll);  // "LongPoll connection is only for http_wait"
   if (message_id == MessageId()) {
     message_id = auth_data_->next_message_id(Time::now_cached());
@@ -955,7 +955,7 @@ void SessionConnection::flush_packet() {
       send_till++;
     }
   }
-  vector<MtprotoQuery> queries;
+  std::vector<MtprotoQuery> queries;
   if (send_till == to_send_.size()) {
     queries = std::move(to_send_);
   } else if (send_till != 0) {
@@ -994,7 +994,7 @@ void SessionConnection::flush_packet() {
     LOG(WARNING) << "Too many message identifiers in container " << name << ": " << message_ids.size() << " instead of "
                  << size;
     auto new_size = message_ids.size() - size;
-    vector<int64> result(size);
+    std::vector<int64> result(size);
     for (size_t i = 0; i < size; i++) {
       result[i] = static_cast<int64>(message_ids[i + new_size].get());
     }

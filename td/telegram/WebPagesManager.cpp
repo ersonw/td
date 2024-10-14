@@ -76,7 +76,7 @@ class GetWebPagePreviewQuery final : public Td::ResultHandler {
       : promise_(std::move(promise)) {
   }
 
-  void send(const string &text, vector<tl_object_ptr<telegram_api::MessageEntity>> &&entities,
+  void send(const string &text, std::vector<tl_object_ptr<telegram_api::MessageEntity>> &&entities,
             unique_ptr<WebPagesManager::GetWebPagePreviewOptions> &&options) {
     options_ = std::move(options);
 
@@ -158,7 +158,7 @@ class GetWebPageQuery final : public Td::ResultHandler {
 
 class WebPagesManager::WebPageInstantView {
  public:
-  vector<unique_ptr<WebPageBlock>> page_blocks_;
+  std::vector<unique_ptr<WebPageBlock>> page_blocks_;
   string url_;
   int32 view_count_ = 0;
   int32 hash_ = 0;
@@ -249,10 +249,10 @@ class WebPagesManager::WebPage {
   mutable bool is_album_ = false;
   mutable bool is_album_checked_ = false;
   Document document_;
-  vector<Document> documents_;
+  std::vector<Document> documents_;
   ThemeSettings theme_settings_;
-  vector<StoryFullId> story_full_ids_;
-  vector<FileId> sticker_ids_;
+  std::vector<StoryFullId> story_full_ids_;
+  std::vector<FileId> sticker_ids_;
   WebPageInstantView instant_view_;
 
   FileSourceId file_source_id_;
@@ -534,7 +534,7 @@ WebPageId WebPagesManager::on_get_web_page(tl_object_ptr<telegram_api::WebPage> 
         }
         if (web_page_to_delete->file_source_id_.is_valid()) {
           td_->file_manager_->change_files_source(web_page_to_delete->file_source_id_,
-                                                  get_web_page_file_ids(web_page_to_delete), vector<FileId>());
+                                                  get_web_page_file_ids(web_page_to_delete), std::vector<FileId>());
         }
         web_pages_.erase(web_page_id);
       }
@@ -1171,7 +1171,7 @@ void WebPagesManager::update_web_page_instant_view_load_requests(WebPageId web_p
   if (it == load_web_page_instant_view_queries_.end()) {
     return;
   }
-  vector<Promise<WebPageId>> promises[2];
+  std::vector<Promise<WebPageId>> promises[2];
   promises[0] = std::move(it->second.partial);
   promises[1] = std::move(it->second.full);
   reset_to_empty(it->second.partial);
@@ -1380,7 +1380,7 @@ td_api::object_ptr<td_api::LinkPreviewType> WebPagesManager::get_link_preview_ty
     LOG(ERROR) << "Have no instant view in Telegram album for " << instant_view.url_;
     return td_api::make_object<td_api::linkPreviewTypeUnsupported>();
   }
-  vector<td_api::object_ptr<td_api::LinkPreviewAlbumMedia>> media;
+  std::vector<td_api::object_ptr<td_api::LinkPreviewAlbumMedia>> media;
   string caption_text;
   auto process_album = [&media, &caption_text](vector<td_api::object_ptr<td_api::PageBlock>> page_blocks,
                                                td_api::object_ptr<td_api::pageBlockCaption> caption) {
@@ -1563,7 +1563,7 @@ td_api::object_ptr<td_api::LinkPreviewType> WebPagesManager::get_link_preview_ty
     }
     if (type == "theme") {
       LOG_IF(ERROR, !web_page->photo_.is_empty()) << "Receive photo for " << web_page->url_;
-      vector<td_api::object_ptr<td_api::document>> documents;
+      std::vector<td_api::object_ptr<td_api::document>> documents;
       for (auto &document : web_page->documents_) {
         if (document.type == Document::Type::General) {
           documents.push_back(td_->documents_manager_->get_document_object(document.file_id, PhotoFormat::Jpeg));
@@ -1791,7 +1791,7 @@ td_api::object_ptr<td_api::linkPreview> WebPagesManager::get_link_preview_object
       host.truncate(host.size() - 1);
     }
 
-    auto replace_entities = [](Slice text, vector<MessageEntity> &entities, auto replace_url) {
+    auto replace_entities = [](Slice text, std::vector<MessageEntity> &entities, auto replace_url) {
       int32 current_offset = 0;
       for (auto &entity : entities) {
         CHECK(entity.offset >= current_offset);
@@ -1943,7 +1943,7 @@ void WebPagesManager::on_web_page_changed(WebPageId web_page_id, bool have_web_p
   {
     auto it = web_page_messages_.find(web_page_id);
     if (it != web_page_messages_.end()) {
-      vector<MessageFullId> message_full_ids;
+      std::vector<MessageFullId> message_full_ids;
       for (const auto &message_full_id : it->second) {
         message_full_ids.push_back(message_full_id);
       }
@@ -1958,7 +1958,7 @@ void WebPagesManager::on_web_page_changed(WebPageId web_page_id, bool have_web_p
 
       // don't check that on_external_update_message_content doesn't load new messages
       if (!have_web_page && web_page_messages_.count(web_page_id) != 0) {
-        vector<MessageFullId> new_message_full_ids;
+        std::vector<MessageFullId> new_message_full_ids;
         for (const auto &message_full_id : web_page_messages_[web_page_id]) {
           new_message_full_ids.push_back(message_full_id);
         }
@@ -1969,7 +1969,7 @@ void WebPagesManager::on_web_page_changed(WebPageId web_page_id, bool have_web_p
   {
     auto it = web_page_quick_reply_messages_.find(web_page_id);
     if (it != web_page_quick_reply_messages_.end()) {
-      vector<QuickReplyMessageFullId> message_full_ids;
+      std::vector<QuickReplyMessageFullId> message_full_ids;
       for (const auto &message_full_id : it->second) {
         message_full_ids.push_back(message_full_id);
       }
@@ -1984,7 +1984,7 @@ void WebPagesManager::on_web_page_changed(WebPageId web_page_id, bool have_web_p
 
       // don't check that on_external_update_message_content doesn't load new messages
       if (!have_web_page && web_page_quick_reply_messages_.count(web_page_id) != 0) {
-        vector<QuickReplyMessageFullId> new_message_full_ids;
+        std::vector<QuickReplyMessageFullId> new_message_full_ids;
         for (const auto &message_full_id : web_page_quick_reply_messages_[web_page_id]) {
           new_message_full_ids.push_back(message_full_id);
         }
@@ -2011,7 +2011,7 @@ void WebPagesManager::on_story_changed(StoryFullId story_full_id) {
   if (story_it == story_web_pages_.end()) {
     return;
   }
-  vector<WebPageId> web_page_ids;
+  std::vector<WebPageId> web_page_ids;
   for (auto web_page_id : story_it->second) {
     web_page_ids.push_back(web_page_id);
   }
@@ -2052,7 +2052,7 @@ void WebPagesManager::on_pending_web_page_timeout(WebPageId web_page_id) {
   {
     auto it = web_page_messages_.find(web_page_id);
     if (it != web_page_messages_.end()) {
-      vector<MessageFullId> message_full_ids;
+      std::vector<MessageFullId> message_full_ids;
       for (const auto &message_full_id : it->second) {
         if (message_full_id.get_dialog_id().get_type() != DialogType::SecretChat) {
           message_full_ids.push_back(message_full_id);
@@ -2318,7 +2318,7 @@ void WebPagesManager::on_load_web_page_from_database(WebPageId web_page_id, stri
   }
 
   auto it = load_web_page_from_database_queries_.find(web_page_id);
-  vector<Promise<Unit>> promises;
+  std::vector<Promise<Unit>> promises;
   if (it != load_web_page_from_database_queries_.end()) {
     promises = std::move(it->second);
     CHECK(!promises.empty());
@@ -2459,7 +2459,7 @@ StoryFullId WebPagesManager::get_web_page_story_full_id(WebPageId web_page_id) c
 
 vector<UserId> WebPagesManager::get_web_page_user_ids(WebPageId web_page_id) const {
   const WebPage *web_page = get_web_page(web_page_id);
-  vector<UserId> user_ids;
+  std::vector<UserId> user_ids;
   if (web_page != nullptr && !web_page->story_full_ids_.empty()) {
     for (auto story_full_id : web_page->story_full_ids_) {
       auto dialog_id = story_full_id.get_dialog_id();
@@ -2473,7 +2473,7 @@ vector<UserId> WebPagesManager::get_web_page_user_ids(WebPageId web_page_id) con
 
 vector<ChannelId> WebPagesManager::get_web_page_channel_ids(WebPageId web_page_id) const {
   const WebPage *web_page = get_web_page(web_page_id);
-  vector<ChannelId> channel_ids;
+  std::vector<ChannelId> channel_ids;
   if (web_page != nullptr && !web_page->story_full_ids_.empty()) {
     for (auto story_full_id : web_page->story_full_ids_) {
       auto dialog_id = story_full_id.get_dialog_id();
@@ -2487,10 +2487,10 @@ vector<ChannelId> WebPagesManager::get_web_page_channel_ids(WebPageId web_page_i
 
 vector<FileId> WebPagesManager::get_web_page_file_ids(const WebPage *web_page) const {
   if (web_page == nullptr) {
-    return vector<FileId>();
+    return std::vector<FileId>();
   }
 
-  vector<FileId> result = photo_get_file_ids(web_page->photo_);
+  std::vector<FileId> result = photo_get_file_ids(web_page->photo_);
   if (!web_page->document_.empty()) {
     web_page->document_.append_file_ids(td_, result);
   }

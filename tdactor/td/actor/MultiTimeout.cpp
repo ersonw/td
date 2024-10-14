@@ -87,7 +87,7 @@ void MultiTimeout::update_timeout(const char *source) {
 }
 
 vector<int64> MultiTimeout::get_expired_keys(double now) {
-  vector<int64> expired_keys;
+  std::vector<int64> expired_keys;
   while (!timeout_queue_.empty() && timeout_queue_.top_key() < now) {
     int64 key = static_cast<Item *>(timeout_queue_.pop())->key;
     items_.erase(Item(key));
@@ -97,7 +97,7 @@ vector<int64> MultiTimeout::get_expired_keys(double now) {
 }
 
 void MultiTimeout::timeout_expired() {
-  vector<int64> expired_keys = get_expired_keys(Time::now_cached());
+  std::vector<int64> expired_keys = get_expired_keys(Time::now_cached());
   if (!items_.empty()) {
     update_timeout("timeout_expired");
   }
@@ -107,7 +107,7 @@ void MultiTimeout::timeout_expired() {
 }
 
 void MultiTimeout::run_all() {
-  vector<int64> expired_keys = get_expired_keys(Time::now_cached() + 1e10);
+  std::vector<int64> expired_keys = get_expired_keys(Time::now_cached() + 1e10);
   if (!expired_keys.empty()) {
     update_timeout("run_all");
   }

@@ -153,12 +153,12 @@ vector<SecureValueType> unique_secure_value_types(vector<SecureValueType> types)
 }
 
 vector<SecureValueType> get_secure_value_types(
-    const vector<tl_object_ptr<telegram_api::SecureValueType>> &secure_value_types) {
+    const std::vector<tl_object_ptr<telegram_api::SecureValueType>> &secure_value_types) {
   return unique_secure_value_types(transform(secure_value_types, get_secure_value_type));
 }
 
 vector<SecureValueType> get_secure_value_types_td_api(
-    const vector<tl_object_ptr<td_api::PassportElementType>> &secure_value_types) {
+    const std::vector<tl_object_ptr<td_api::PassportElementType>> &secure_value_types) {
   return unique_secure_value_types(transform(secure_value_types, get_secure_value_type_td_api));
 }
 
@@ -233,7 +233,7 @@ td_api::object_ptr<telegram_api::SecureValueType> get_input_secure_value_type(Se
 }
 
 vector<td_api::object_ptr<td_api::PassportElementType>> get_passport_element_types_object(
-    const vector<SecureValueType> &types) {
+    const std::vector<SecureValueType> &types) {
   return transform(types, get_passport_element_type_object);
 }
 
@@ -255,13 +255,13 @@ td_api::object_ptr<td_api::passportSuitableElement> get_passport_suitable_elemen
 }
 
 td_api::object_ptr<td_api::passportRequiredElement> get_passport_required_element_object(
-    const vector<SuitableSecureValue> &required_element) {
+    const std::vector<SuitableSecureValue> &required_element) {
   return td_api::make_object<td_api::passportRequiredElement>(
       transform(required_element, get_passport_suitable_element_object));
 }
 
 vector<td_api::object_ptr<td_api::passportRequiredElement>> get_passport_required_elements_object(
-    const vector<vector<SuitableSecureValue>> &required_elements) {
+    const std::vector<vector<SuitableSecureValue>> &required_elements) {
   return transform(required_elements, get_passport_required_element_object);
 }
 
@@ -372,8 +372,8 @@ EncryptedSecureFile get_encrypted_secure_file(FileManager *file_manager,
 }
 
 vector<EncryptedSecureFile> get_encrypted_secure_files(FileManager *file_manager,
-                                                       vector<tl_object_ptr<telegram_api::SecureFile>> &&secure_files) {
-  vector<EncryptedSecureFile> results;
+                                                       std::vector<tl_object_ptr<telegram_api::SecureFile>> &&secure_files) {
+  std::vector<EncryptedSecureFile> results;
   results.reserve(secure_files.size());
   for (auto &secure_file : secure_files) {
     auto result = get_encrypted_secure_file(file_manager, std::move(secure_file));
@@ -409,8 +409,8 @@ static td_api::object_ptr<td_api::datedFile> get_dated_file_object(FileManager *
   return td_api::make_object<td_api::datedFile>(file_manager->get_file_object(file.file_id), file.date);
 }
 
-static vector<td_api::object_ptr<td_api::datedFile>> get_dated_files_object(FileManager *file_manager,
-                                                                            const vector<DatedFile> &files) {
+static std::vector<td_api::object_ptr<td_api::datedFile>> get_dated_files_object(FileManager *file_manager,
+                                                                            const std::vector<DatedFile> &files) {
   return transform(files, [file_manager](const DatedFile &file) { return get_dated_file_object(file_manager, file); });
 }
 
@@ -437,16 +437,16 @@ static td_api::object_ptr<td_api::datedFile> get_dated_file_object(FileManager *
   return get_dated_file_object(file_manager, dated_file);
 }
 
-static vector<td_api::object_ptr<td_api::datedFile>> get_dated_files_object(FileManager *file_manager,
-                                                                            const vector<EncryptedSecureFile> &files) {
+static std::vector<td_api::object_ptr<td_api::datedFile>> get_dated_files_object(FileManager *file_manager,
+                                                                            const std::vector<EncryptedSecureFile> &files) {
   return transform(
       files, [file_manager](const EncryptedSecureFile &file) { return get_dated_file_object(file_manager, file); });
 }
 
 vector<telegram_api::object_ptr<telegram_api::InputSecureFile>> get_input_secure_files_object(
-    FileManager *file_manager, const vector<EncryptedSecureFile> &files, vector<SecureInputFile> &input_files) {
+    FileManager *file_manager, const std::vector<EncryptedSecureFile> &files, std::vector<SecureInputFile> &input_files) {
   CHECK(files.size() == input_files.size());
-  vector<telegram_api::object_ptr<telegram_api::InputSecureFile>> results;
+  std::vector<telegram_api::object_ptr<telegram_api::InputSecureFile>> results;
   results.reserve(files.size());
   for (size_t i = 0; i < files.size(); i++) {
     auto result = get_input_secure_file_object(file_manager, files[i], input_files[i]);
@@ -566,8 +566,8 @@ EncryptedSecureValue get_encrypted_secure_value(FileManager *file_manager,
 }
 
 vector<EncryptedSecureValue> get_encrypted_secure_values(
-    FileManager *file_manager, vector<tl_object_ptr<telegram_api::secureValue>> &&secure_values) {
-  vector<EncryptedSecureValue> results;
+    FileManager *file_manager, std::vector<tl_object_ptr<telegram_api::secureValue>> &&secure_values) {
+  std::vector<EncryptedSecureValue> results;
   results.reserve(secure_values.size());
   for (auto &secure_value : secure_values) {
     auto result = get_encrypted_secure_value(file_manager, std::move(secure_value));
@@ -638,7 +638,7 @@ telegram_api::object_ptr<telegram_api::inputSecureValue> get_input_secure_value_
 }
 
 vector<td_api::object_ptr<td_api::encryptedPassportElement>> get_encrypted_passport_element_object(
-    FileManager *file_manager, const vector<EncryptedSecureValue> &values) {
+    FileManager *file_manager, const std::vector<EncryptedSecureValue> &values) {
   return transform(values, [file_manager](const EncryptedSecureValue &value) {
     return get_encrypted_passport_element_object(file_manager, value);
   });
@@ -853,8 +853,8 @@ static Result<DatedFile> get_secure_file(FileManager *file_manager, td_api::obje
 }
 
 static Result<vector<DatedFile>> get_secure_files(FileManager *file_manager,
-                                                  vector<td_api::object_ptr<td_api::InputFile>> &&files) {
-  vector<DatedFile> result;
+                                                  std::vector<td_api::object_ptr<td_api::InputFile>> &&files) {
+  std::vector<DatedFile> result;
   for (auto &file : files) {
     TRY_RESULT(dated_file, get_secure_file(file_manager, std::move(file)));
     result.push_back(std::move(dated_file));
@@ -1128,8 +1128,8 @@ Result<td_api::object_ptr<td_api::PassportElement>> get_passport_element_object(
 }
 
 td_api::object_ptr<td_api::passportElements> get_passport_elements_object(FileManager *file_manager,
-                                                                          const vector<SecureValue> &values) {
-  vector<td_api::object_ptr<td_api::PassportElement>> result;
+                                                                          const std::vector<SecureValue> &values) {
+  std::vector<td_api::object_ptr<td_api::PassportElement>> result;
   result.reserve(values.size());
   for (auto &value : values) {
     auto r_obj = get_passport_element_object(file_manager, value);
@@ -1159,10 +1159,10 @@ static Result<std::pair<DatedFile, SecureFileCredentials>> decrypt_secure_file(
   return std::make_pair(secure_file.file, SecureFileCredentials{secret.as_slice().str(), hash.as_slice().str()});
 }
 
-static Result<std::pair<vector<DatedFile>, vector<SecureFileCredentials>>> decrypt_secure_files(
-    FileManager *file_manager, const secure_storage::Secret &secret, const vector<EncryptedSecureFile> &secure_files) {
-  vector<DatedFile> result;
-  vector<SecureFileCredentials> credentials;
+static Result<std::pair<vector<DatedFile>, std::vector<SecureFileCredentials>>> decrypt_secure_files(
+    FileManager *file_manager, const secure_storage::Secret &secret, const std::vector<EncryptedSecureFile> &secure_files) {
+  std::vector<DatedFile> result;
+  std::vector<SecureFileCredentials> credentials;
   result.reserve(secure_files.size());
   credentials.reserve(secure_files.size());
   for (auto &file : secure_files) {
@@ -1244,8 +1244,8 @@ Result<SecureValueWithCredentials> decrypt_secure_value(FileManager *file_manage
 
 Result<vector<SecureValueWithCredentials>> decrypt_secure_values(
     FileManager *file_manager, const secure_storage::Secret &secret,
-    const vector<EncryptedSecureValue> &encrypted_secure_values) {
-  vector<SecureValueWithCredentials> result;
+    const std::vector<EncryptedSecureValue> &encrypted_secure_values) {
+  std::vector<SecureValueWithCredentials> result;
   result.reserve(encrypted_secure_values.size());
   for (auto &encrypted_secure_value : encrypted_secure_values) {
     auto r_secure_value_with_credentials = decrypt_secure_value(file_manager, secret, encrypted_secure_value);
@@ -1288,13 +1288,13 @@ static EncryptedSecureFile encrypt_secure_file(FileManager *file_manager, const 
   return res;
 }
 
-static vector<EncryptedSecureFile> encrypt_secure_files(FileManager *file_manager,
+static std::vector<EncryptedSecureFile> encrypt_secure_files(FileManager *file_manager,
                                                         const secure_storage::Secret &master_secret,
-                                                        const vector<DatedFile> &files, string &to_hash) {
+                                                        const std::vector<DatedFile> &files, string &to_hash) {
   return transform(
       files, [&](auto dated_file) { return encrypt_secure_file(file_manager, master_secret, dated_file, to_hash); });
   /*
-  vector<EncryptedSecureFile> result;
+  std::vector<EncryptedSecureFile> result;
   result.reserve(files.size());
   for (auto &file : files) {
     auto encrypted_secure_file = encrypt_secure_file(file_manager, master_secret, file, to_hash);
@@ -1373,7 +1373,7 @@ static auto as_jsonable_file(const SecureFileCredentials &credentials) {
   });
 }
 
-static auto as_jsonable_files(const vector<SecureFileCredentials> &files) {
+static auto as_jsonable_files(const std::vector<SecureFileCredentials> &files) {
   return json_array(files, as_jsonable_file);
 }
 

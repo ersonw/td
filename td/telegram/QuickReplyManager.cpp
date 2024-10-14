@@ -173,7 +173,7 @@ class GetQuickReplyMessagesQuery final : public Td::ResultHandler {
       : promise_(std::move(promise)) {
   }
 
-  void send(QuickReplyShortcutId shortcut_id, const vector<MessageId> &message_ids, int64 hash) {
+  void send(QuickReplyShortcutId shortcut_id, const std::vector<MessageId> &message_ids, int64 hash) {
     int32 flags = 0;
     if (!message_ids.empty()) {
       flags |= telegram_api::messages_getQuickReplyMessages::ID_MASK;
@@ -209,7 +209,7 @@ class DeleteQuickReplyMessagesQuery final : public Td::ResultHandler {
   explicit DeleteQuickReplyMessagesQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(QuickReplyShortcutId shortcut_id, const vector<MessageId> &message_ids) {
+  void send(QuickReplyShortcutId shortcut_id, const std::vector<MessageId> &message_ids) {
     shortcut_id_ = shortcut_id;
     CHECK(shortcut_id.is_server());
     send_query(G()->net_query_creator().create(telegram_api::messages_deleteQuickReplyMessages(
@@ -370,7 +370,7 @@ class QuickReplyManager::SendQuickReplyMediaQuery final : public Td::ResultHandl
       flags |= telegram_api::messages_sendMedia::REPLY_TO_MASK;
     }
     CHECK(m->edited_content == nullptr);
-    vector<telegram_api::object_ptr<telegram_api::MessageEntity>> entities;
+    std::vector<telegram_api::object_ptr<telegram_api::MessageEntity>> entities;
     const FormattedText *message_text = get_message_content_text(m->content.get());
     if (message_text != nullptr) {
       entities = get_input_message_entities(td_->user_manager_.get(), message_text, "SendQuickReplyMediaQuery");
@@ -517,15 +517,15 @@ class QuickReplyManager::UploadQuickReplyMediaQuery final : public Td::ResultHan
 };
 
 class QuickReplyManager::SendQuickReplyMultiMediaQuery final : public Td::ResultHandler {
-  vector<FileId> file_ids_;
-  vector<string> file_references_;
-  vector<int64> random_ids_;
+  std::vector<FileId> file_ids_;
+  std::vector<string> file_references_;
+  std::vector<int64> random_ids_;
   QuickReplyShortcutId shortcut_id_;
 
  public:
   void send(QuickReplyShortcutId shortcut_id, MessageId reply_to_message_id, bool invert_media,
-            vector<int64> &&random_ids, vector<FileId> &&file_ids,
-            vector<tl_object_ptr<telegram_api::inputSingleMedia>> &&input_single_media) {
+            std::vector<int64> &&random_ids, std::vector<FileId> &&file_ids,
+            std::vector<tl_object_ptr<telegram_api::inputSingleMedia>> &&input_single_media) {
     for (auto &single_media : input_single_media) {
       CHECK(FileManager::extract_was_uploaded(single_media->media_) == false);
       file_references_.push_back(FileManager::extract_file_reference(single_media->media_));
@@ -615,7 +615,7 @@ class QuickReplyManager::EditQuickReplyMessageQuery final : public Td::ResultHan
 
     auto *content = m->edited_content.get();
     const auto *text = get_message_content_text(content);
-    vector<telegram_api::object_ptr<telegram_api::MessageEntity>> entities;
+    std::vector<telegram_api::object_ptr<telegram_api::MessageEntity>> entities;
     int32 flags = telegram_api::messages_editMessage::QUICK_REPLY_SHORTCUT_ID_MASK;
     if (text != nullptr) {
       entities = get_input_message_entities(td_->user_manager_.get(), text, "EditQuickReplyMessageQuery");
@@ -953,7 +953,7 @@ void QuickReplyManager::Shortcut::parse(ParserT &parser) {
   if (parser.get_left_len() < size) {
     return parser.set_error("Wrong message count");
   }
-  messages_ = vector<unique_ptr<QuickReplyMessage>>(size);
+  messages_ = std::vector<unique_ptr<QuickReplyMessage>>(size);
   for (auto &message : messages_) {
     td::parse(message, parser);
   }
@@ -1283,10 +1283,10 @@ void QuickReplyManager::on_reload_quick_reply_shortcuts(
       }
       FlatHashSet<QuickReplyShortcutId, QuickReplyShortcutIdHash> added_shortcut_ids;
       FlatHashSet<string> added_shortcut_names;
-      vector<unique_ptr<Shortcut>> new_shortcuts;
-      vector<QuickReplyShortcutId> changed_shortcut_ids;
-      vector<QuickReplyShortcutId> changed_message_shortcut_ids;
-      vector<QuickReplyShortcutId> deleted_shortcut_ids;
+      std::vector<unique_ptr<Shortcut>> new_shortcuts;
+      std::vector<QuickReplyShortcutId> changed_shortcut_ids;
+      std::vector<QuickReplyShortcutId> changed_message_shortcut_ids;
+      std::vector<QuickReplyShortcutId> deleted_shortcut_ids;
       for (auto &quick_reply : shortcuts->quick_replies_) {
         auto shortcut_id = QuickReplyShortcutId(quick_reply->shortcut_id_);
         if (!shortcut_id.is_server() || quick_reply->shortcut_.empty() || quick_reply->count_ <= 0 ||
@@ -1424,7 +1424,7 @@ void QuickReplyManager::on_reload_quick_reply_shortcuts(
   on_load_quick_reply_success();
 }
 
-bool QuickReplyManager::is_shortcut_list_changed(const vector<unique_ptr<Shortcut>> &new_shortcuts) const {
+bool QuickReplyManager::is_shortcut_list_changed(const std::vector<unique_ptr<Shortcut>> &new_shortcuts) const {
   if (!shortcuts_.are_inited_ || shortcuts_.shortcuts_.size() != new_shortcuts.size()) {
     return true;
   }
@@ -1448,7 +1448,7 @@ void QuickReplyManager::on_load_quick_reply_fail(Status error) {
 }
 
 int64 QuickReplyManager::get_shortcuts_hash() const {
-  vector<uint64> numbers;
+  std::vector<uint64> numbers;
   for (auto &shortcut : shortcuts_.shortcuts_) {
     for (auto &message : shortcut->messages_) {
       if (message->message_id.is_server()) {
@@ -1533,7 +1533,7 @@ void QuickReplyManager::delete_quick_reply_shortcut_from_server(QuickReplyShortc
   td_->create_handler<DeleteQuickReplyShortcutQuery>(std::move(promise))->send(shortcut_id);
 }
 
-void QuickReplyManager::reorder_quick_reply_shortcuts(const vector<QuickReplyShortcutId> &shortcut_ids,
+void QuickReplyManager::reorder_quick_reply_shortcuts(const std::vector<QuickReplyShortcutId> &shortcut_ids,
                                                       Promise<Unit> &&promise) {
   load_quick_reply_shortcuts();
   FlatHashSet<QuickReplyShortcutId, QuickReplyShortcutIdHash> unique_shortcut_ids;
@@ -1552,7 +1552,7 @@ void QuickReplyManager::reorder_quick_reply_shortcuts(const vector<QuickReplySho
   }
   auto old_shortcut_ids = get_shortcut_ids();
   auto old_server_shortcut_ids = get_server_shortcut_ids();
-  vector<unique_ptr<Shortcut>> shortcuts;
+  std::vector<unique_ptr<Shortcut>> shortcuts;
   for (const auto &shortcut_id : shortcut_ids) {
     auto it = get_shortcut_it(shortcut_id);
     CHECK(it != shortcuts_.shortcuts_.end() && *it != nullptr);
@@ -1676,7 +1676,7 @@ void QuickReplyManager::delete_pending_message_web_page(QuickReplyMessageFullId 
 }
 
 void QuickReplyManager::delete_quick_reply_messages_from_updates(QuickReplyShortcutId shortcut_id,
-                                                                 const vector<MessageId> &message_ids) {
+                                                                 const std::vector<MessageId> &message_ids) {
   if (td_->auth_manager_->is_bot()) {
     return;
   }
@@ -1695,7 +1695,7 @@ void QuickReplyManager::delete_quick_reply_messages_from_updates(QuickReplyShort
   delete_quick_reply_messages(s, message_ids, "delete_quick_reply_messages_from_updates");
 }
 
-void QuickReplyManager::delete_quick_reply_messages(Shortcut *s, const vector<MessageId> &message_ids,
+void QuickReplyManager::delete_quick_reply_messages(Shortcut *s, const std::vector<MessageId> &message_ids,
                                                     const char *source) {
   LOG(INFO) << "Delete " << message_ids << " from " << s->shortcut_id_ << " from " << source;
   bool is_changed = false;
@@ -1734,7 +1734,7 @@ void QuickReplyManager::delete_quick_reply_messages(Shortcut *s, const vector<Me
 }
 
 void QuickReplyManager::delete_quick_reply_shortcut_messages(QuickReplyShortcutId shortcut_id,
-                                                             const vector<MessageId> &message_ids,
+                                                             const std::vector<MessageId> &message_ids,
                                                              Promise<Unit> &&promise) {
   load_quick_reply_shortcuts();
   auto *s = get_shortcut(shortcut_id);
@@ -1745,7 +1745,7 @@ void QuickReplyManager::delete_quick_reply_shortcut_messages(QuickReplyShortcutI
     return promise.set_value(Unit());
   }
 
-  vector<MessageId> deleted_server_message_ids;
+  std::vector<MessageId> deleted_server_message_ids;
   for (auto &message_id : message_ids) {
     if (!message_id.is_valid()) {
       return promise.set_error(Status::Error(400, "Invalid message identifier"));
@@ -1763,7 +1763,7 @@ void QuickReplyManager::delete_quick_reply_shortcut_messages(QuickReplyShortcutI
 }
 
 void QuickReplyManager::delete_quick_reply_messages_on_server(QuickReplyShortcutId shortcut_id,
-                                                              const vector<MessageId> &message_ids,
+                                                              const std::vector<MessageId> &message_ids,
                                                               Promise<Unit> &&promise) {
   if (message_ids.empty()) {
     return promise.set_value(Unit());
@@ -1783,7 +1783,7 @@ telegram_api::object_ptr<telegram_api::InputQuickReplyShortcut> QuickReplyManage
 
 Status QuickReplyManager::check_send_quick_reply_messages_response(
     QuickReplyShortcutId shortcut_id, const telegram_api::object_ptr<telegram_api::Updates> &updates_ptr,
-    const vector<int64> &random_ids) {
+    const std::vector<int64> &random_ids) {
   if (updates_ptr->get_id() != telegram_api::updates::ID) {
     return Status::Error("Receive unexpected updates class");
   }
@@ -1828,7 +1828,7 @@ Status QuickReplyManager::check_send_quick_reply_messages_response(
 
 void QuickReplyManager::process_send_quick_reply_updates(QuickReplyShortcutId shortcut_id,
                                                          telegram_api::object_ptr<telegram_api::Updates> updates_ptr,
-                                                         vector<int64> random_ids) {
+                                                         std::vector<int64> random_ids) {
   auto check_status = check_send_quick_reply_messages_response(shortcut_id, updates_ptr, random_ids);
   if (check_status.is_error()) {
     LOG(ERROR) << check_status << " for sending messages " << random_ids << ": " << to_string(updates_ptr);
@@ -1996,7 +1996,7 @@ void QuickReplyManager::update_sent_message_content_from_temporary_message(
   }
 }
 
-void QuickReplyManager::on_failed_send_quick_reply_messages(QuickReplyShortcutId shortcut_id, vector<int64> random_ids,
+void QuickReplyManager::on_failed_send_quick_reply_messages(QuickReplyShortcutId shortcut_id, std::vector<int64> random_ids,
                                                             Status error) {
   auto *s = get_shortcut(shortcut_id);
   if (s == nullptr) {
@@ -2106,8 +2106,8 @@ Result<td_api::object_ptr<td_api::quickReplyMessage>> QuickReplyManager::send_in
 
 Result<td_api::object_ptr<td_api::quickReplyMessages>> QuickReplyManager::send_message_group(
     const string &shortcut_name, MessageId reply_to_message_id,
-    vector<td_api::object_ptr<td_api::InputMessageContent>> &&input_message_contents) {
-  vector<InputMessageContent> message_contents;
+    std::vector<td_api::object_ptr<td_api::InputMessageContent>> &&input_message_contents) {
+  std::vector<InputMessageContent> message_contents;
   for (auto &input_message_content : input_message_contents) {
     TRY_RESULT(message_content, process_input_message_content(std::move(input_message_content)));
     message_contents.push_back(std::move(message_content));
@@ -2123,7 +2123,7 @@ Result<td_api::object_ptr<td_api::quickReplyMessages>> QuickReplyManager::send_m
     media_album_id = generate_new_media_album_id();
   }
 
-  vector<td_api::object_ptr<td_api::quickReplyMessage>> messages;
+  std::vector<td_api::object_ptr<td_api::quickReplyMessage>> messages;
   for (auto &message_content : message_contents) {
     auto content = dup_message_content(td_, td_->dialog_manager_->get_my_dialog_id(), message_content.content.get(),
                                        MessageContentDupType::Send, MessageCopyOptions());
@@ -2147,7 +2147,7 @@ Result<td_api::object_ptr<td_api::quickReplyMessages>> QuickReplyManager::send_m
   return td_api::make_object<td_api::quickReplyMessages>(std::move(messages));
 }
 
-void QuickReplyManager::do_send_message(const QuickReplyMessage *m, vector<int> bad_parts) {
+void QuickReplyManager::do_send_message(const QuickReplyMessage *m, std::vector<int> bad_parts) {
   CHECK(m != nullptr);
   bool is_edit = m->message_id.is_server();
   auto message_full_id = QuickReplyMessageFullId(m->shortcut_id, m->message_id);
@@ -2219,7 +2219,7 @@ void QuickReplyManager::do_send_message(const QuickReplyMessage *m, vector<int> 
 }
 
 void QuickReplyManager::on_send_message_file_parts_missing(QuickReplyShortcutId shortcut_id, int64 random_id,
-                                                           vector<int> &&bad_parts) {
+                                                           std::vector<int> &&bad_parts) {
   auto *s = get_shortcut(shortcut_id);
   if (s != nullptr) {
     for (auto &message : s->messages_) {
@@ -2468,11 +2468,11 @@ void QuickReplyManager::do_send_message_group(QuickReplyShortcutId shortcut_id, 
     return;
   }
 
-  vector<FileId> file_ids;
-  vector<int64> random_ids;
+  std::vector<FileId> file_ids;
+  std::vector<int64> random_ids;
   MessageId reply_to_message_id;
   bool invert_media = false;
-  vector<telegram_api::object_ptr<telegram_api::inputSingleMedia>> input_single_media;
+  std::vector<telegram_api::object_ptr<telegram_api::inputSingleMedia>> input_single_media;
   Status error = Status::OK();
   for (size_t i = 0; i < request.message_ids.size(); i++) {
     CHECK(request.is_finished[i]);
@@ -2525,14 +2525,14 @@ void QuickReplyManager::do_send_message_group(QuickReplyShortcutId shortcut_id, 
 }
 
 void QuickReplyManager::on_send_media_group_file_reference_error(QuickReplyShortcutId shortcut_id,
-                                                                 vector<int64> random_ids) {
+                                                                 std::vector<int64> random_ids) {
   auto *s = get_shortcut(shortcut_id);
   if (s == nullptr) {
     return;
   }
 
   int64 media_album_id = 0;
-  vector<MessageId> message_ids;
+  std::vector<MessageId> message_ids;
   for (auto &random_id : random_ids) {
     for (auto it = s->messages_.begin(); it != s->messages_.end(); ++it) {
       const auto *m = it->get();
@@ -2574,7 +2574,7 @@ int64 QuickReplyManager::generate_new_media_album_id() const {
 }
 
 Result<td_api::object_ptr<td_api::quickReplyMessages>> QuickReplyManager::resend_messages(
-    const string &shortcut_name, vector<MessageId> message_ids) {
+    const string &shortcut_name, std::vector<MessageId> message_ids) {
   if (message_ids.empty()) {
     return Status::Error(400, "There are no messages to resend");
   }
@@ -2607,7 +2607,7 @@ Result<td_api::object_ptr<td_api::quickReplyMessages>> QuickReplyManager::resend
     last_message_id = m->message_id;
   }
 
-  vector<unique_ptr<MessageContent>> new_contents(message_ids.size());
+  std::vector<unique_ptr<MessageContent>> new_contents(message_ids.size());
   std::unordered_map<int64, std::pair<int64, int32>, Hash<int64>> new_media_album_ids;
   for (size_t i = 0; i < message_ids.size(); i++) {
     MessageId message_id = message_ids[i];
@@ -2933,7 +2933,7 @@ void QuickReplyManager::reload_quick_reply_messages(QuickReplyShortcutId shortcu
         send_closure(actor_id, &QuickReplyManager::on_reload_quick_reply_messages, shortcut_id, std::move(r_messages));
       });
   td_->create_handler<GetQuickReplyMessagesQuery>(std::move(query_promise))
-      ->send(shortcut_id, vector<MessageId>(), get_quick_reply_messages_hash(get_shortcut(shortcut_id)));
+      ->send(shortcut_id, std::vector<MessageId>(), get_quick_reply_messages_hash(get_shortcut(shortcut_id)));
 }
 
 void QuickReplyManager::on_reload_quick_reply_messages(
@@ -2960,7 +2960,7 @@ void QuickReplyManager::on_reload_quick_reply_messages(
       td_->user_manager_->on_get_users(std::move(messages->users_), "on_reload_quick_reply_messages");
       td_->chat_manager_->on_get_chats(std::move(messages->chats_), "on_reload_quick_reply_messages");
 
-      vector<unique_ptr<QuickReplyMessage>> quick_reply_messages;
+      std::vector<unique_ptr<QuickReplyMessage>> quick_reply_messages;
       for (auto &server_message : messages->messages_) {
         auto message = create_message(std::move(server_message), "on_reload_quick_reply_messages");
         if (message == nullptr) {
@@ -3030,7 +3030,7 @@ int64 QuickReplyManager::get_quick_reply_messages_hash(const Shortcut *s) {
   if (s == nullptr) {
     return 0;
   }
-  vector<uint64> numbers;
+  std::vector<uint64> numbers;
   for (const auto &message : s->messages_) {
     if (message->message_id.is_server()) {
       numbers.push_back(message->message_id.get_server_message_id().get());
@@ -3061,7 +3061,7 @@ void QuickReplyManager::reload_quick_reply_message(QuickReplyShortcutId shortcut
                      std::move(r_messages), std::move(promise));
       });
   td_->create_handler<GetQuickReplyMessagesQuery>(std::move(query_promise))
-      ->send(shortcut_id, vector<MessageId>{message_id}, 0);
+      ->send(shortcut_id, std::vector<MessageId>{message_id}, 0);
 }
 
 void QuickReplyManager::on_reload_quick_reply_message(
@@ -3131,7 +3131,7 @@ Result<vector<QuickReplyManager::QuickReplyMessageContent>> QuickReplyManager::g
     return Status::Error(400, "Can't use quick replies in the chat");
   }
 
-  vector<QuickReplyMessageContent> result;
+  std::vector<QuickReplyMessageContent> result;
   for (const auto &message : shortcut->messages_) {
     if (!message->message_id.is_server()) {
       continue;
@@ -3395,7 +3395,7 @@ vector<QuickReplyShortcutId> QuickReplyManager::get_shortcut_ids() const {
 }
 
 vector<QuickReplyShortcutId> QuickReplyManager::get_server_shortcut_ids() const {
-  vector<QuickReplyShortcutId> shortcut_ids;
+  std::vector<QuickReplyShortcutId> shortcut_ids;
   for (auto &shortcut : shortcuts_.shortcuts_) {
     if (shortcut->shortcut_id_.is_server()) {
       shortcut_ids.push_back(shortcut->shortcut_id_);
@@ -3416,13 +3416,13 @@ QuickReplyManager::QuickReplyMessageUniqueId QuickReplyManager::get_quick_reply_
 }
 
 vector<QuickReplyManager::QuickReplyMessageUniqueId> QuickReplyManager::get_quick_reply_unique_ids(
-    const vector<unique_ptr<QuickReplyMessage>> &messages) {
+    const std::vector<unique_ptr<QuickReplyMessage>> &messages) {
   return transform(
       messages, [](const unique_ptr<QuickReplyMessage> &message) { return get_quick_reply_unique_id(message.get()); });
 }
 
 vector<QuickReplyManager::QuickReplyMessageUniqueId> QuickReplyManager::get_server_quick_reply_unique_ids(
-    const vector<unique_ptr<QuickReplyMessage>> &messages) {
+    const std::vector<unique_ptr<QuickReplyMessage>> &messages) {
   auto message_ids = get_quick_reply_unique_ids(messages);
   td::remove_if(message_ids, [](const QuickReplyMessageUniqueId &message_id) { return !message_id.first.is_server(); });
   return message_ids;
@@ -3663,7 +3663,7 @@ void QuickReplyManager::delete_message_files(const QuickReplyMessage *m) const {
   }
 }
 
-void QuickReplyManager::change_message_files(const QuickReplyMessage *m, const vector<FileId> &old_file_ids) {
+void QuickReplyManager::change_message_files(const QuickReplyMessage *m, const std::vector<FileId> &old_file_ids) {
   CHECK(m != nullptr);
   auto new_file_ids = get_message_file_ids(m);
   if (new_file_ids == old_file_ids) {

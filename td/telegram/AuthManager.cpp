@@ -70,7 +70,7 @@ struct AuthManager::DbState {
   SendCodeHelper send_code_helper_;
 
   // WaitQrCodeConfirmation
-  vector<UserId> other_user_ids_;
+  std::vector<UserId> other_user_ids_;
   string login_token_;
   double login_token_expires_at_ = 0;
 
@@ -111,7 +111,7 @@ struct AuthManager::DbState {
     return state;
   }
 
-  static DbState wait_qr_code_confirmation(int32 api_id, string api_hash, vector<UserId> other_user_ids,
+  static DbState wait_qr_code_confirmation(int32 api_id, string api_hash, std::vector<UserId> other_user_ids,
                                            string login_token, double login_token_expires_at) {
     DbState state(State::WaitQrCodeConfirmation, api_id, std::move(api_hash));
     state.other_user_ids_ = std::move(other_user_ids);
@@ -426,7 +426,7 @@ void AuthManager::check_bot_token(uint64 query_id, string bot_token) {
                       telegram_api::auth_importBotAuthorization(0, api_id_, api_hash_, bot_token_)));
 }
 
-void AuthManager::request_qr_code_authentication(uint64 query_id, vector<UserId> other_user_ids) {
+void AuthManager::request_qr_code_authentication(uint64 query_id, std::vector<UserId> other_user_ids) {
   if (state_ != State::WaitPhoneNumber) {
     if ((state_ == State::WaitEmailAddress || state_ == State::WaitEmailCode || state_ == State::WaitCode ||
          state_ == State::WaitPassword || state_ == State::WaitRegistration) &&

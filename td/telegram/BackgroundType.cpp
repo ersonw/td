@@ -158,7 +158,7 @@ Result<BackgroundFill> BackgroundFill::get_background_fill(Slice name) {
 
   size_t hyphen_pos = name.find('-');
   if (name.find('~') < name.size()) {
-    vector<Slice> color_strings = full_split(name, '~');
+    std::vector<Slice> color_strings = full_split(name, '~');
     CHECK(color_strings.size() >= 2);
     if (color_strings.size() == 2) {
       hyphen_pos = color_strings[0].size();
@@ -440,7 +440,7 @@ td_api::object_ptr<td_api::BackgroundFill> BackgroundFill::get_background_fill_o
     case Type::Gradient:
       return td_api::make_object<td_api::backgroundFillGradient>(top_color_, bottom_color_, rotation_angle_);
     case Type::FreeformGradient: {
-      vector<int32> colors{top_color_, bottom_color_, third_color_, fourth_color_};
+      std::vector<int32> colors{top_color_, bottom_color_, third_color_, fourth_color_};
       if (colors.back() == -1) {
         colors.pop_back();
       }

@@ -40,14 +40,14 @@ vector<string> Hints::get_words(Slice name) {
   return fix_words(utf8_get_search_words(name));
 }
 
-void Hints::add_word(const string &word, KeyT key, std::map<string, vector<KeyT>> &word_to_keys) {
-  vector<KeyT> &keys = word_to_keys[word];
+void Hints::add_word(const string &word, KeyT key, std::map<string, std::vector<KeyT>> &word_to_keys) {
+  std::vector<KeyT> &keys = word_to_keys[word];
   CHECK(!td::contains(keys, key));
   keys.push_back(key);
 }
 
-void Hints::delete_word(const string &word, KeyT key, std::map<string, vector<KeyT>> &word_to_keys) {
-  vector<KeyT> &keys = word_to_keys[word];
+void Hints::delete_word(const string &word, KeyT key, std::map<string, std::vector<KeyT>> &word_to_keys) {
+  std::vector<KeyT> &keys = word_to_keys[word];
   auto key_it = std::find(keys.begin(), keys.end(), key);
   CHECK(key_it != keys.end());
   if (keys.size() == 1) {
@@ -66,7 +66,7 @@ void Hints::add(KeyT key, Slice name) {
     if (it->second == name) {
       return;
     }
-    vector<string> old_transliterations;
+    std::vector<string> old_transliterations;
     for (auto &old_word : get_words(it->second)) {
       delete_word(old_word, key, word_to_keys_);
 
@@ -88,7 +88,7 @@ void Hints::add(KeyT key, Slice name) {
     return;
   }
 
-  vector<string> transliterations;
+  std::vector<string> transliterations;
   for (auto &word : get_words(name)) {
     add_word(word, key, word_to_keys_);
 
@@ -111,7 +111,7 @@ void Hints::set_rating(KeyT key, RatingT rating) {
 }
 
 void Hints::add_search_results(vector<KeyT> &results, const string &word,
-                               const std::map<string, vector<KeyT>> &word_to_keys) {
+                               const std::map<string, std::vector<KeyT>> &word_to_keys) {
   LOG(DEBUG) << "Search for word " << word;
   auto it = word_to_keys.lower_bound(word);
   while (it != word_to_keys.end() && begins_with(it->first, word)) {
@@ -121,7 +121,7 @@ void Hints::add_search_results(vector<KeyT> &results, const string &word,
 }
 
 vector<Hints::KeyT> Hints::search_word(const string &word) const {
-  vector<KeyT> results;
+  std::vector<KeyT> results;
   add_search_results(results, word, translit_word_to_keys_);
   for (const auto &w : get_word_transliterations(word, true)) {
     add_search_results(results, w, word_to_keys_);
@@ -131,9 +131,9 @@ vector<Hints::KeyT> Hints::search_word(const string &word) const {
   return results;
 }
 
-std::pair<size_t, vector<Hints::KeyT>> Hints::search(Slice query, int32 limit, bool return_all_for_empty_query) const {
+std::pair<size_t, std::vector<Hints::KeyT>> Hints::search(Slice query, int32 limit, bool return_all_for_empty_query) const {
   // LOG(ERROR) << "Search " << query;
-  vector<KeyT> results;
+  std::vector<KeyT> results;
 
   if (limit < 0) {
     return {key_to_name_.size(), std::move(results)};
@@ -148,7 +148,7 @@ std::pair<size_t, vector<Hints::KeyT>> Hints::search(Slice query, int32 limit, b
   }
 
   for (size_t i = 0; i < words.size(); i++) {
-    vector<KeyT> keys = search_word(words[i]);
+    std::vector<KeyT> keys = search_word(words[i]);
     if (i == 0) {
       results = std::move(keys);
       continue;
@@ -195,7 +195,7 @@ string Hints::key_to_string(KeyT key) const {
   return it->second;
 }
 
-std::pair<size_t, vector<Hints::KeyT>> Hints::search_empty(int32 limit) const {
+std::pair<size_t, std::vector<Hints::KeyT>> Hints::search_empty(int32 limit) const {
   return search(Slice(), limit, true);
 }
 

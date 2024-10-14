@@ -253,8 +253,8 @@ class GetNotifySettingsExceptionsQuery final : public Td::ResultHandler {
 
     auto updates_ptr = result_ptr.move_as_ok();
     auto dialog_ids = UpdatesManager::get_update_notify_settings_dialog_ids(updates_ptr.get());
-    vector<tl_object_ptr<telegram_api::User>> users;
-    vector<tl_object_ptr<telegram_api::Chat>> chats;
+    std::vector<tl_object_ptr<telegram_api::User>> users;
+    std::vector<tl_object_ptr<telegram_api::Chat>> chats;
     switch (updates_ptr->get_id()) {
       case telegram_api::updatesCombined::ID: {
         auto updates = static_cast<telegram_api::updatesCombined *>(updates_ptr.get());
@@ -308,8 +308,8 @@ class GetStoryNotifySettingsExceptionsQuery final : public Td::ResultHandler {
 
     auto updates_ptr = result_ptr.move_as_ok();
     auto dialog_ids = UpdatesManager::get_update_notify_settings_dialog_ids(updates_ptr.get());
-    vector<tl_object_ptr<telegram_api::User>> users;
-    vector<tl_object_ptr<telegram_api::Chat>> chats;
+    std::vector<tl_object_ptr<telegram_api::User>> users;
+    std::vector<tl_object_ptr<telegram_api::Chat>> chats;
     switch (updates_ptr->get_id()) {
       case telegram_api::updatesCombined::ID: {
         auto updates = static_cast<telegram_api::updatesCombined *>(updates_ptr.get());
@@ -588,11 +588,11 @@ class NotificationSettingsManager::UploadRingtoneCallback final : public FileMan
 class NotificationSettingsManager::RingtoneListLogEvent {
  public:
   int64 hash_;
-  vector<FileId> ringtone_file_ids_;
+  std::vector<FileId> ringtone_file_ids_;
 
   RingtoneListLogEvent() = default;
 
-  RingtoneListLogEvent(int64 hash, vector<FileId> ringtone_file_ids)
+  RingtoneListLogEvent(int64 hash, std::vector<FileId> ringtone_file_ids)
       : hash_(hash), ringtone_file_ids_(std::move(ringtone_file_ids)) {
   }
 
@@ -1130,7 +1130,7 @@ void NotificationSettingsManager::add_saved_ringtone(td_api::object_ptr<td_api::
 
 void NotificationSettingsManager::upload_ringtone(FileId file_id, bool is_reupload,
                                                   Promise<td_api::object_ptr<td_api::notificationSound>> &&promise,
-                                                  vector<int> bad_parts) {
+                                                  std::vector<int> bad_parts) {
   CHECK(file_id.is_valid());
   LOG(INFO) << "Ask to upload ringtone " << file_id;
   bool is_inserted =
@@ -1447,7 +1447,7 @@ void NotificationSettingsManager::on_reload_saved_ringtones(
   auto saved_ringtones = move_tl_object_as<telegram_api::account_savedRingtones>(saved_ringtones_ptr);
 
   auto new_hash = saved_ringtones->hash_;
-  vector<FileId> new_saved_ringtone_file_ids;
+  std::vector<FileId> new_saved_ringtone_file_ids;
 
   for (auto &ringtone : saved_ringtones->ringtones_) {
     auto r_ringtone = get_ringtone(std::move(ringtone));
@@ -1501,7 +1501,7 @@ void NotificationSettingsManager::save_saved_ringtones_to_database() const {
 
 void NotificationSettingsManager::on_saved_ringtones_updated(bool from_database) {
   CHECK(are_saved_ringtones_loaded_);
-  vector<FileId> new_sorted_saved_ringtone_file_ids = saved_ringtone_file_ids_;
+  std::vector<FileId> new_sorted_saved_ringtone_file_ids = saved_ringtone_file_ids_;
   std::sort(new_sorted_saved_ringtone_file_ids.begin(), new_sorted_saved_ringtone_file_ids.end());
   if (new_sorted_saved_ringtone_file_ids != sorted_saved_ringtone_file_ids_) {
     td_->file_manager_->change_files_source(get_saved_ringtones_file_source_id(), sorted_saved_ringtone_file_ids_,

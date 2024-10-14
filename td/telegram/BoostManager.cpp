@@ -75,7 +75,7 @@ static td_api::object_ptr<td_api::chatBoostSlots> get_chat_boost_slots_object(
     Td *td, telegram_api::object_ptr<telegram_api::premium_myBoosts> &&my_boosts) {
   td->user_manager_->on_get_users(std::move(my_boosts->users_), "GetMyBoostsQuery");
   td->chat_manager_->on_get_chats(std::move(my_boosts->chats_), "GetMyBoostsQuery");
-  vector<td_api::object_ptr<td_api::chatBoostSlot>> slots;
+  std::vector<td_api::object_ptr<td_api::chatBoostSlot>> slots;
   for (auto &my_boost : my_boosts->my_boosts_) {
     auto expiration_date = my_boost->expires_;
     if (expiration_date <= G()->unix_time()) {
@@ -215,7 +215,7 @@ class ApplyBoostQuery final : public Td::ResultHandler {
       : promise_(std::move(promise)) {
   }
 
-  void send(DialogId dialog_id, vector<int32> slot_ids) {
+  void send(DialogId dialog_id, std::vector<int32> slot_ids) {
     dialog_id_ = dialog_id;
     auto input_peer = td_->dialog_manager_->get_input_peer(dialog_id_, AccessRights::Read);
     CHECK(input_peer != nullptr);
@@ -274,7 +274,7 @@ class GetBoostsListQuery final : public Td::ResultHandler {
     td_->user_manager_->on_get_users(std::move(result->users_), "GetBoostsListQuery");
 
     auto total_count = result->count_;
-    vector<td_api::object_ptr<td_api::chatBoost>> boosts;
+    std::vector<td_api::object_ptr<td_api::chatBoost>> boosts;
     for (auto &boost : result->boosts_) {
       auto chat_boost_object = get_chat_boost_object(td_, boost);
       if (chat_boost_object == nullptr || chat_boost_object->expiration_date_ <= G()->unix_time()) {
@@ -322,7 +322,7 @@ class GetUserBoostsQuery final : public Td::ResultHandler {
     td_->user_manager_->on_get_users(std::move(result->users_), "GetUserBoostsQuery");
 
     auto total_count = result->count_;
-    vector<td_api::object_ptr<td_api::chatBoost>> boosts;
+    std::vector<td_api::object_ptr<td_api::chatBoost>> boosts;
     for (auto &boost : result->boosts_) {
       auto chat_boost_object = get_chat_boost_object(td_, boost);
       if (chat_boost_object == nullptr || chat_boost_object->expiration_date_ <= G()->unix_time()) {
@@ -373,7 +373,7 @@ td_api::object_ptr<td_api::chatBoostLevelFeatures> BoostManager::get_chat_boost_
 }
 
 td_api::object_ptr<td_api::chatBoostFeatures> BoostManager::get_chat_boost_features_object(bool for_megagroup) const {
-  vector<int32> big_levels;
+  std::vector<int32> big_levels;
   auto get_min_boost_level = [&](Slice name) {
     auto min_level = narrow_cast<int32>(td_->option_manager_->get_option_integer(
         PSLICE() << (for_megagroup ? "group" : "channel") << '_' << name << "_level_min", 1000000000));
@@ -408,7 +408,7 @@ void BoostManager::get_dialog_boost_status(DialogId dialog_id,
   td_->create_handler<GetBoostsStatusQuery>(std::move(promise))->send(dialog_id);
 }
 
-void BoostManager::boost_dialog(DialogId dialog_id, vector<int32> slot_ids,
+void BoostManager::boost_dialog(DialogId dialog_id, std::vector<int32> slot_ids,
                                 Promise<td_api::object_ptr<td_api::chatBoostSlots>> &&promise) {
   TRY_STATUS_PROMISE(promise,
                      td_->dialog_manager_->check_dialog_access(dialog_id, false, AccessRights::Read, "boost_dialog"));

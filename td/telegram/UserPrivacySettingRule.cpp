@@ -21,7 +21,7 @@
 
 namespace td {
 
-void UserPrivacySettingRule::set_dialog_ids(Td *td, const vector<int64> &chat_ids) {
+void UserPrivacySettingRule::set_dialog_ids(Td *td, const std::vector<int64> &chat_ids) {
   dialog_ids_.clear();
   for (auto chat_id : chat_ids) {
     DialogId dialog_id(chat_id);
@@ -140,7 +140,7 @@ UserPrivacySettingRule::UserPrivacySettingRule(Td *td,
   });
 }
 
-void UserPrivacySettingRule::set_dialog_ids_from_server(Td *td, const vector<int64> &server_chat_ids) {
+void UserPrivacySettingRule::set_dialog_ids_from_server(Td *td, const std::vector<int64> &server_chat_ids) {
   dialog_ids_.clear();
   for (auto server_chat_id : server_chat_ids) {
     ChatId chat_id(server_chat_id);
@@ -220,7 +220,7 @@ telegram_api::object_ptr<telegram_api::InputPrivacyRule> UserPrivacySettingRule:
 }
 
 vector<telegram_api::object_ptr<telegram_api::InputUser>> UserPrivacySettingRule::get_input_users(Td *td) const {
-  vector<telegram_api::object_ptr<telegram_api::InputUser>> result;
+  std::vector<telegram_api::object_ptr<telegram_api::InputUser>> result;
   for (auto user_id : user_ids_) {
     auto r_input_user = td->user_manager_->get_input_user(user_id);
     if (r_input_user.is_ok()) {
@@ -233,7 +233,7 @@ vector<telegram_api::object_ptr<telegram_api::InputUser>> UserPrivacySettingRule
 }
 
 vector<int64> UserPrivacySettingRule::get_input_chat_ids(Td *td) const {
-  vector<int64> result;
+  std::vector<int64> result;
   for (auto dialog_id : dialog_ids_) {
     switch (dialog_id.get_type()) {
       case DialogType::Chat:
@@ -273,7 +273,7 @@ UserPrivacySettingRules UserPrivacySettingRules::get_user_privacy_setting_rules(
 }
 
 UserPrivacySettingRules UserPrivacySettingRules::get_user_privacy_setting_rules(
-    Td *td, vector<telegram_api::object_ptr<telegram_api::PrivacyRule>> rules) {
+    Td *td, std::vector<telegram_api::object_ptr<telegram_api::PrivacyRule>> rules) {
   UserPrivacySettingRules result;
   for (auto &rule : rules) {
     result.rules_.push_back(UserPrivacySettingRule(td, std::move(rule)));
@@ -386,7 +386,7 @@ vector<telegram_api::object_ptr<telegram_api::InputPrivacyRule>> UserPrivacySett
 }
 
 vector<UserId> UserPrivacySettingRules::get_restricted_user_ids() const {
-  vector<UserId> result;
+  std::vector<UserId> result;
   for (auto &rule : rules_) {
     combine(result, rule.get_restricted_user_ids());
   }

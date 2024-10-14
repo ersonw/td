@@ -98,7 +98,7 @@ class SetBotBroadcastDefaultAdminRightsQuery final : public Td::ResultHandler {
 
 static td_api::object_ptr<td_api::botMediaPreview> convert_bot_media_preview(
     Td *td, telegram_api::object_ptr<telegram_api::botPreviewMedia> media, UserId bot_user_id,
-    vector<FileId> &file_ids) {
+    std::vector<FileId> &file_ids) {
   auto content = get_story_content(td, std::move(media->media_), DialogId(bot_user_id));
   if (content == nullptr) {
     LOG(ERROR) << "Receive invalid media preview for " << bot_user_id;
@@ -132,8 +132,8 @@ class GetPreviewMediasQuery final : public Td::ResultHandler {
 
     auto ptr = result_ptr.move_as_ok();
     LOG(INFO) << "Receive result for GetPreviewMediasQuery: " << to_string(ptr);
-    vector<td_api::object_ptr<td_api::botMediaPreview>> previews;
-    vector<FileId> file_ids;
+    std::vector<td_api::object_ptr<td_api::botMediaPreview>> previews;
+    std::vector<FileId> file_ids;
     for (auto &media : ptr) {
       auto preview = convert_bot_media_preview(td_, std::move(media), bot_user_id_, file_ids);
       if (preview != nullptr) {
@@ -181,8 +181,8 @@ class GetPreviewInfoQuery final : public Td::ResultHandler {
 
     auto ptr = result_ptr.move_as_ok();
     LOG(INFO) << "Receive result for GetPreviewInfoQuery: " << to_string(ptr);
-    vector<td_api::object_ptr<td_api::botMediaPreview>> previews;
-    vector<FileId> file_ids;
+    std::vector<td_api::object_ptr<td_api::botMediaPreview>> previews;
+    std::vector<FileId> file_ids;
     for (auto &media : ptr->media_) {
       auto preview = convert_bot_media_preview(td_, std::move(media), bot_user_id_, file_ids);
       if (preview != nullptr) {
@@ -254,7 +254,7 @@ class BotInfoManager::AddPreviewMediaQuery final : public Td::ResultHandler {
     auto ptr = result_ptr.move_as_ok();
     LOG(INFO) << "Receive result for AddPreviewMediaQuery: " << to_string(ptr);
     auto bot_user_id = pending_preview_->bot_user_id_;
-    vector<FileId> file_ids;
+    std::vector<FileId> file_ids;
     auto preview = convert_bot_media_preview(td_, std::move(ptr), bot_user_id, file_ids);
     if (preview == nullptr) {
       LOG(ERROR) << "Receive invalid sent media preview";
@@ -297,7 +297,7 @@ class ReorderPreviewMediasQuery final : public Td::ResultHandler {
   }
 
   void send(UserId bot_user_id, telegram_api::object_ptr<telegram_api::InputUser> input_user,
-            const string &language_code, vector<telegram_api::object_ptr<telegram_api::InputMedia>> input_media) {
+            const string &language_code, std::vector<telegram_api::object_ptr<telegram_api::InputMedia>> input_media) {
     bot_user_id_ = bot_user_id;
     send_query(G()->net_query_creator().create(
         telegram_api::bots_reorderPreviewMedias(std::move(input_user), language_code, std::move(input_media)),
@@ -328,7 +328,7 @@ class DeletePreviewMediaQuery final : public Td::ResultHandler {
   }
 
   void send(UserId bot_user_id, telegram_api::object_ptr<telegram_api::InputUser> input_user,
-            const string &language_code, vector<telegram_api::object_ptr<telegram_api::InputMedia>> input_media) {
+            const string &language_code, std::vector<telegram_api::object_ptr<telegram_api::InputMedia>> input_media) {
     bot_user_id_ = bot_user_id;
     send_query(G()->net_query_creator().create(
         telegram_api::bots_deletePreviewMedia(std::move(input_user), language_code, std::move(input_media)),
@@ -504,13 +504,13 @@ class SetBotInfoQuery final : public Td::ResultHandler {
 };
 
 class GetBotInfoQuery final : public Td::ResultHandler {
-  vector<Promise<string>> name_promises_;
-  vector<Promise<string>> description_promises_;
-  vector<Promise<string>> about_promises_;
+  std::vector<Promise<string>> name_promises_;
+  std::vector<Promise<string>> description_promises_;
+  std::vector<Promise<string>> about_promises_;
 
  public:
-  GetBotInfoQuery(vector<Promise<string>> name_promises, vector<Promise<string>> description_promises,
-                  vector<Promise<string>> about_promises)
+  GetBotInfoQuery(vector<Promise<string>> name_promises, std::vector<Promise<string>> description_promises,
+                  std::vector<Promise<string>> about_promises)
       : name_promises_(std::move(name_promises))
       , description_promises_(std::move(description_promises))
       , about_promises_(std::move(about_promises)) {
@@ -615,7 +615,7 @@ void BotInfoManager::timeout_expired() {
   for (size_t i = 0; i < set_queries.size();) {
     bool has_value[3] = {false, false, false};
     string values[3];
-    vector<Promise<Unit>> promises;
+    std::vector<Promise<Unit>> promises;
     size_t j = i;
     while (j < set_queries.size() && set_queries[i].bot_user_id_ == set_queries[j].bot_user_id_ &&
            set_queries[i].language_code_ == set_queries[j].language_code_) {
@@ -643,7 +643,7 @@ void BotInfoManager::timeout_expired() {
                             (lhs.bot_user_id_ == rhs.bot_user_id_ && lhs.language_code_ < rhs.language_code_);
                    });
   for (size_t i = 0; i < get_queries.size();) {
-    vector<Promise<string>> promises[3];
+    std::vector<Promise<string>> promises[3];
     size_t j = i;
     while (j < get_queries.size() && get_queries[i].bot_user_id_ == get_queries[j].bot_user_id_ &&
            get_queries[i].language_code_ == get_queries[j].language_code_) {
@@ -808,7 +808,7 @@ void BotInfoManager::edit_bot_media_preview(UserId bot_user_id, const string &la
 }
 
 void BotInfoManager::do_add_bot_media_preview(unique_ptr<PendingBotMediaPreview> &&pending_preview,
-                                              vector<int> bad_parts) {
+                                              std::vector<int> bad_parts) {
   auto content = pending_preview->content_.get();
   auto upload_order = pending_preview->upload_order_;
 
@@ -824,7 +824,7 @@ void BotInfoManager::do_add_bot_media_preview(unique_ptr<PendingBotMediaPreview>
 }
 
 void BotInfoManager::on_add_bot_media_preview_file_parts_missing(unique_ptr<PendingBotMediaPreview> &&pending_preview,
-                                                                 vector<int> &&bad_parts) {
+                                                                 std::vector<int> &&bad_parts) {
   do_add_bot_media_preview(std::move(pending_preview), std::move(bad_parts));
 }
 
@@ -907,10 +907,10 @@ telegram_api::object_ptr<telegram_api::InputMedia> BotInfoManager::get_fake_inpu
 }
 
 void BotInfoManager::reorder_bot_media_previews(UserId bot_user_id, const string &language_code,
-                                                const vector<int32> &file_ids, Promise<Unit> &&promise) {
+                                                const std::vector<int32> &file_ids, Promise<Unit> &&promise) {
   TRY_RESULT_PROMISE(promise, input_user, get_media_preview_bot_input_user(bot_user_id, true));
   TRY_STATUS_PROMISE(promise, validate_bot_media_preview_language_code(language_code));
-  vector<telegram_api::object_ptr<telegram_api::InputMedia>> input_medias;
+  std::vector<telegram_api::object_ptr<telegram_api::InputMedia>> input_medias;
   for (auto file_id : file_ids) {
     auto input_media = get_fake_input_media(FileId(file_id, 0));
     if (input_media == nullptr) {
@@ -926,10 +926,10 @@ void BotInfoManager::reorder_bot_media_previews(UserId bot_user_id, const string
 }
 
 void BotInfoManager::delete_bot_media_previews(UserId bot_user_id, const string &language_code,
-                                               const vector<int32> &file_ids, Promise<Unit> &&promise) {
+                                               const std::vector<int32> &file_ids, Promise<Unit> &&promise) {
   TRY_RESULT_PROMISE(promise, input_user, get_media_preview_bot_input_user(bot_user_id, true));
   TRY_STATUS_PROMISE(promise, validate_bot_media_preview_language_code(language_code));
-  vector<telegram_api::object_ptr<telegram_api::InputMedia>> input_medias;
+  std::vector<telegram_api::object_ptr<telegram_api::InputMedia>> input_medias;
   for (auto file_id : file_ids) {
     auto input_media = get_fake_input_media(FileId(file_id, 0));
     if (input_media == nullptr) {

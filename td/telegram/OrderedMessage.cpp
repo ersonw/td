@@ -204,7 +204,7 @@ void OrderedMessages::auto_attach_message(OrderedMessage *message, MessageId las
 }
 
 void OrderedMessages::do_find_older_messages(const OrderedMessage *ordered_message, MessageId max_message_id,
-                                             vector<MessageId> &message_ids) {
+                                             std::vector<MessageId> &message_ids) {
   if (ordered_message == nullptr) {
     return;
   }
@@ -219,13 +219,13 @@ void OrderedMessages::do_find_older_messages(const OrderedMessage *ordered_messa
 }
 
 vector<MessageId> OrderedMessages::find_older_messages(MessageId max_message_id) const {
-  vector<MessageId> message_ids;
+  std::vector<MessageId> message_ids;
   do_find_older_messages(messages_.get(), max_message_id, message_ids);
   return message_ids;
 }
 
 void OrderedMessages::do_find_newer_messages(const OrderedMessage *ordered_message, MessageId min_message_id,
-                                             vector<MessageId> &message_ids) {
+                                             std::vector<MessageId> &message_ids) {
   if (ordered_message == nullptr) {
     return;
   }
@@ -240,7 +240,7 @@ void OrderedMessages::do_find_newer_messages(const OrderedMessage *ordered_messa
 }
 
 vector<MessageId> OrderedMessages::find_newer_messages(MessageId min_message_id) const {
-  vector<MessageId> message_ids;
+  std::vector<MessageId> message_ids;
   do_find_newer_messages(messages_.get(), min_message_id, message_ids);
   return message_ids;
 }
@@ -271,7 +271,7 @@ MessageId OrderedMessages::find_message_by_date(int32 date,
 
 void OrderedMessages::do_find_messages_by_date(const OrderedMessage *ordered_message, int32 min_date, int32 max_date,
                                                const std::function<int32(MessageId)> &get_message_date,
-                                               vector<MessageId> &message_ids) {
+                                               std::vector<MessageId> &message_ids) {
   if (ordered_message == nullptr) {
     return;
   }
@@ -290,7 +290,7 @@ void OrderedMessages::do_find_messages_by_date(const OrderedMessage *ordered_mes
 
 vector<MessageId> OrderedMessages::find_messages_by_date(
     int32 min_date, int32 max_date, const std::function<int32(MessageId)> &get_message_date) const {
-  vector<MessageId> message_ids;
+  std::vector<MessageId> message_ids;
   do_find_messages_by_date(messages_.get(), min_date, max_date, get_message_date, message_ids);
   return message_ids;
 }
@@ -398,7 +398,7 @@ vector<MessageId> OrderedMessages::get_history(MessageId last_message_id, Messag
 
   LOG(INFO) << "Iterator after applying offset points to " << (*it ? (*it)->message_id_ : MessageId())
             << ", offset = " << offset << ", limit = " << limit << ", from_the_end = " << from_the_end;
-  vector<MessageId> message_ids;
+  std::vector<MessageId> message_ids;
   if (*it != nullptr && offset == 0) {
     while (*it != nullptr && message_ids.size() < static_cast<size_t>(limit)) {
       from_message_id = (*it)->message_id_;

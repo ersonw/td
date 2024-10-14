@@ -188,7 +188,7 @@ static AdministratorRights get_administrator_rights(Slice rights, bool for_chann
 }
 
 static string get_admin_string(AdministratorRights rights) {
-  vector<string> admin_rights;
+  std::vector<string> admin_rights;
   if (rights.can_change_info_and_settings()) {
     admin_rights.emplace_back("change_info");
   }
@@ -1275,7 +1275,7 @@ LinkManager::LinkInfo LinkManager::get_link_info(Slice link) {
     }
 
     string cur_t_me_url;
-    vector<Slice> t_me_urls{Slice("t.me"), Slice("telegram.me"), Slice("telegram.dog")};
+    std::vector<Slice> t_me_urls{Slice("t.me"), Slice("telegram.me"), Slice("telegram.dog")};
 #if TD_EMSCRIPTEN
     t_me_urls.push_back(Slice("web.t.me"));
     t_me_urls.push_back(Slice("a.t.me"));
@@ -1975,7 +1975,7 @@ unique_ptr<LinkManager::InternalLink> LinkManager::get_internal_link_message_dra
 }
 
 unique_ptr<LinkManager::InternalLink> LinkManager::get_internal_link_passport(
-    Slice query, const vector<std::pair<string, string>> &args, bool allow_unknown) {
+    Slice query, const std::vector<std::pair<string, string>> &args, bool allow_unknown) {
   auto get_arg = [&args](Slice key) {
     for (auto &arg : args) {
       if (arg.first == key) {
@@ -2045,7 +2045,7 @@ Result<string> LinkManager::get_internal_link_impl(const td_api::InternalLinkTyp
               !target->allow_channel_chats_) {
             return Status::Error(400, "At least one target chat type must be allowed");
           }
-          vector<string> types;
+          std::vector<string> types;
           if (target->allow_user_chats_) {
             types.push_back("users");
           }
@@ -2622,8 +2622,8 @@ void LinkManager::update_autologin_token(string autologin_token) {
   autologin_token_ = std::move(autologin_token);
 }
 
-void LinkManager::update_autologin_domains(vector<string> autologin_domains, vector<string> url_auth_domains,
-                                           vector<string> whitelisted_domains) {
+void LinkManager::update_autologin_domains(vector<string> autologin_domains, std::vector<string> url_auth_domains,
+                                           std::vector<string> whitelisted_domains) {
   if (autologin_domains_ != autologin_domains) {
     autologin_domains_ = std::move(autologin_domains);
     G()->td_db()->get_binlog_pmc()->set("autologin_domains", implode(autologin_domains_, '\xFF'));

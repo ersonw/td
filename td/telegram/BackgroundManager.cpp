@@ -397,7 +397,7 @@ class BackgroundManager::BackgroundLogEvent {
 
 class BackgroundManager::BackgroundsLogEvent {
  public:
-  vector<Background> backgrounds_;
+  std::vector<Background> backgrounds_;
 
   template <class StorerT>
   void store(StorerT &storer) const {

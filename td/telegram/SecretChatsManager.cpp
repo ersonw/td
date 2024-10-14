@@ -137,7 +137,7 @@ void SecretChatsManager::send_open_message(SecretChatId secret_chat_id, int64 ra
   send_closure(actor, &SecretChatActor::send_open_message, random_id, std::move(safe_promise));
 }
 
-void SecretChatsManager::delete_messages(SecretChatId secret_chat_id, vector<int64> random_ids, Promise<> promise) {
+void SecretChatsManager::delete_messages(SecretChatId secret_chat_id, std::vector<int64> random_ids, Promise<> promise) {
   auto actor = get_chat_actor(secret_chat_id.get());
   auto safe_promise = SafePromise<>(std::move(promise), Unit());
   send_closure(actor, &SecretChatActor::delete_messages, std::move(random_ids), std::move(safe_promise));

@@ -31,7 +31,7 @@ string rand_string(int from, int to, size_t len) {
 }
 
 vector<string> rand_split(Slice str) {
-  vector<string> res;
+  std::vector<string> res;
   size_t pos = 0;
   while (pos < str.size()) {
     size_t len;

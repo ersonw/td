@@ -280,7 +280,7 @@ class ReorderPinnedSavedDialogsQuery final : public Td::ResultHandler {
   explicit ReorderPinnedSavedDialogsQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(const vector<SavedMessagesTopicId> &saved_messages_topic_ids) {
+  void send(const std::vector<SavedMessagesTopicId> &saved_messages_topic_ids) {
     auto order = transform(saved_messages_topic_ids, [td = td_](SavedMessagesTopicId saved_messages_topic_id) {
       auto saved_input_peer = saved_messages_topic_id.get_input_dialog_peer(td);
       CHECK(saved_input_peer != nullptr);
@@ -328,7 +328,7 @@ SavedMessagesTopicId SavedMessagesManager::get_topic_id(int64 topic_id) const {
   return saved_messages_topic_id;
 }
 
-vector<SavedMessagesTopicId> SavedMessagesManager::get_topic_ids(const vector<int64> &topic_ids) const {
+vector<SavedMessagesTopicId> SavedMessagesManager::get_topic_ids(const std::vector<int64> &topic_ids) const {
   return transform(topic_ids, [this](int64 topic_id) { return get_topic_id(topic_id); });
 }
 
@@ -548,10 +548,10 @@ void SavedMessagesManager::on_get_saved_messages_topics(
     Promise<Unit> &&promise) {
   CHECK(saved_dialogs_ptr != nullptr);
   int32 total_count = -1;
-  vector<telegram_api::object_ptr<telegram_api::savedDialog>> dialogs;
-  vector<telegram_api::object_ptr<telegram_api::Message>> messages;
-  vector<telegram_api::object_ptr<telegram_api::Chat>> chats;
-  vector<telegram_api::object_ptr<telegram_api::User>> users;
+  std::vector<telegram_api::object_ptr<telegram_api::savedDialog>> dialogs;
+  std::vector<telegram_api::object_ptr<telegram_api::Message>> messages;
+  std::vector<telegram_api::object_ptr<telegram_api::Chat>> chats;
+  std::vector<telegram_api::object_ptr<telegram_api::User>> users;
   bool is_last = false;
   switch (saved_dialogs_ptr->get_id()) {
     case telegram_api::messages_savedDialogsNotModified::ID:
@@ -600,7 +600,7 @@ void SavedMessagesManager::on_get_saved_messages_topics(
   int32 last_message_date = 0;
   MessageId last_message_id;
   DialogId last_dialog_id;
-  vector<SavedMessagesTopicId> added_saved_messages_topic_ids;
+  std::vector<SavedMessagesTopicId> added_saved_messages_topic_ids;
   for (auto &dialog : dialogs) {
     auto peer_dialog_id = DialogId(dialog->peer_);
     if (!peer_dialog_id.is_valid()) {
@@ -894,7 +894,7 @@ void SavedMessagesManager::on_get_saved_messages_topic_history(
   auto info = r_info.move_as_ok();
 
   auto my_dialog_id = td_->dialog_manager_->get_my_dialog_id();
-  vector<td_api::object_ptr<td_api::message>> messages;
+  std::vector<td_api::object_ptr<td_api::message>> messages;
   MessageId last_message_id;
   int32 last_message_date = 0;
   for (auto &message : info.messages) {

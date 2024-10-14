@@ -157,7 +157,7 @@ SecretInputMedia VoiceNotesManager::get_secret_input_media(FileId voice_note_fil
 
   auto *voice_note = get_voice_note(voice_note_file_id);
   CHECK(voice_note != nullptr);
-  vector<tl_object_ptr<secret_api::DocumentAttribute>> attributes;
+  std::vector<tl_object_ptr<secret_api::DocumentAttribute>> attributes;
   attributes.push_back(make_tl_object<secret_api::documentAttributeAudio>(
       secret_api::documentAttributeAudio::VOICE_MASK | secret_api::documentAttributeAudio::WAVEFORM_MASK,
       false /*ignored*/, voice_note->duration, "", "", BufferSlice(voice_note->waveform)));
@@ -192,7 +192,7 @@ tl_object_ptr<telegram_api::InputMedia> VoiceNotesManager::get_input_media(
     const VoiceNote *voice_note = get_voice_note(file_id);
     CHECK(voice_note != nullptr);
 
-    vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
+    std::vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
     {
       int32 flags = telegram_api::documentAttributeAudio::VOICE_MASK;
       if (!voice_note->waveform.empty()) {
@@ -211,7 +211,7 @@ tl_object_ptr<telegram_api::InputMedia> VoiceNotesManager::get_input_media(
     }
     return make_tl_object<telegram_api::inputMediaUploadedDocument>(
         flags, false /*ignored*/, false /*ignored*/, false /*ignored*/, std::move(input_file), nullptr, mime_type,
-        std::move(attributes), vector<tl_object_ptr<telegram_api::InputDocument>>(), ttl);
+        std::move(attributes), std::vector<tl_object_ptr<telegram_api::InputDocument>>(), ttl);
   } else {
     CHECK(!file_view.has_remote_location());
   }

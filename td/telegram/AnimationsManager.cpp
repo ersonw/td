@@ -287,7 +287,7 @@ void AnimationsManager::merge_animations(FileId new_id, FileId old_id) {
 
 void AnimationsManager::create_animation(FileId file_id, string minithumbnail, PhotoSize thumbnail,
                                          AnimationSize animated_thumbnail, bool has_stickers,
-                                         vector<FileId> &&sticker_file_ids, string file_name, string mime_type,
+                                         std::vector<FileId> &&sticker_file_ids, string file_name, string mime_type,
                                          int32 duration, Dimensions dimensions, bool replace) {
   auto a = make_unique<Animation>();
   a->file_id = file_id;
@@ -332,7 +332,7 @@ tl_object_ptr<telegram_api::InputMedia> AnimationsManager::get_input_media(
     const Animation *animation = get_animation(file_id);
     CHECK(animation != nullptr);
 
-    vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
+    std::vector<tl_object_ptr<telegram_api::DocumentAttribute>> attributes;
     if (!animation->file_name.empty()) {
       attributes.push_back(make_tl_object<telegram_api::documentAttributeFilename>(animation->file_name));
     }
@@ -349,7 +349,7 @@ tl_object_ptr<telegram_api::InputMedia> AnimationsManager::get_input_media(
                                                                                     animation->dimensions.height));
     }
     int32 flags = 0;
-    vector<tl_object_ptr<telegram_api::InputDocument>> added_stickers;
+    std::vector<tl_object_ptr<telegram_api::InputDocument>> added_stickers;
     if (animation->has_stickers) {
       flags |= telegram_api::inputMediaUploadedDocument::STICKERS_MASK;
       added_stickers = td_->file_manager_->get_input_documents(animation->sticker_file_ids);
@@ -389,7 +389,7 @@ SecretInputMedia AnimationsManager::get_secret_input_media(FileId animation_file
   if (animation->thumbnail.file_id.is_valid() && thumbnail.empty()) {
     return SecretInputMedia{};
   }
-  vector<tl_object_ptr<secret_api::DocumentAttribute>> attributes;
+  std::vector<tl_object_ptr<secret_api::DocumentAttribute>> attributes;
   if (!animation->file_name.empty()) {
     attributes.push_back(make_tl_object<secret_api::documentAttributeFilename>(animation->file_name));
   }
@@ -474,7 +474,7 @@ void AnimationsManager::on_update_saved_animations_limit() {
 
 class AnimationsManager::AnimationListLogEvent {
  public:
-  vector<FileId> animation_ids;
+  std::vector<FileId> animation_ids;
 
   AnimationListLogEvent() = default;
 
@@ -609,7 +609,7 @@ void AnimationsManager::on_get_saved_animations(
   auto saved_animations = move_tl_object_as<telegram_api::messages_savedGifs>(saved_animations_ptr);
   LOG(INFO) << "Receive " << saved_animations->gifs_.size() << " saved animations from server";
 
-  vector<FileId> saved_animation_ids;
+  std::vector<FileId> saved_animation_ids;
   saved_animation_ids.reserve(saved_animations->gifs_.size());
   for (auto &document_ptr : saved_animations->gifs_) {
     int32 document_constructor_id = document_ptr->get_id();
@@ -650,7 +650,7 @@ void AnimationsManager::on_get_saved_animations_failed(bool is_repair, Status er
 }
 
 int64 AnimationsManager::get_saved_animations_hash(const char *source) const {
-  vector<uint64> numbers;
+  std::vector<uint64> numbers;
   numbers.reserve(saved_animation_ids_.size());
   for (auto animation_id : saved_animation_ids_) {
     auto animation = get_animation(animation_id);
@@ -821,7 +821,7 @@ td_api::object_ptr<td_api::updateSavedAnimations> AnimationsManager::get_update_
 
 void AnimationsManager::send_update_saved_animations(bool from_database) {
   if (are_saved_animations_loaded_) {
-    vector<FileId> new_saved_animation_file_ids = saved_animation_ids_;
+    std::vector<FileId> new_saved_animation_file_ids = saved_animation_ids_;
     for (auto &animation_id : saved_animation_ids_) {
       auto animation = get_animation(animation_id);
       CHECK(animation != nullptr);

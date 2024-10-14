@@ -322,7 +322,7 @@ Result<JsonValue> do_json_decode(Parser &parser, int32 max_depth) {
     case '[': {
       parser.skip('[');
       parser.skip_whitespaces();
-      vector<JsonValue> res;
+      std::vector<JsonValue> res;
       if (parser.try_skip(']')) {
         return JsonValue::create_array(std::move(res));
       }
@@ -354,7 +354,7 @@ Result<JsonValue> do_json_decode(Parser &parser, int32 max_depth) {
       if (parser.try_skip('}')) {
         return JsonValue::make_object(JsonObject());
       }
-      vector<std::pair<Slice, JsonValue>> field_values;
+      std::vector<std::pair<Slice, JsonValue>> field_values;
       while (true) {
         if (parser.empty()) {
           return Status::Error("Unexpected string end");

@@ -484,7 +484,7 @@ Status PartsManager::init_common(const std::vector<int> &ready_parts) {
   pending_count_ = 0;
   first_empty_part_ = 0;
   first_not_ready_part_ = 0;
-  part_status_ = vector<PartStatus>(part_count_);
+  part_status_ = std::vector<PartStatus>(part_count_);
 
   for (auto i : ready_parts) {
     if (known_prefix_flag_ && i >= static_cast<int>(known_prefix_size_ / part_size_)) {

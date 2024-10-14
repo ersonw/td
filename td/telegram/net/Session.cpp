@@ -234,7 +234,7 @@ bool Session::PriorityQueue::empty() const {
 Session::Session(unique_ptr<Callback> callback, std::shared_ptr<AuthDataShared> shared_auth_data, int32 raw_dc_id,
                  int32 dc_id, bool is_primary, bool is_main, bool use_pfs, bool persist_tmp_auth_key, bool is_cdn,
                  bool need_destroy_auth_key, const mtproto::AuthKey &tmp_auth_key,
-                 const vector<mtproto::ServerSalt> &server_salts)
+                 const std::vector<mtproto::ServerSalt> &server_salts)
     : raw_dc_id_(raw_dc_id)
     , dc_id_(dc_id)
     , is_primary_(is_primary)
@@ -749,7 +749,7 @@ void Session::on_session_failed(Status status) {
   callback_->on_failed();
 }
 
-void Session::on_container_sent(mtproto::MessageId container_message_id, vector<mtproto::MessageId> message_ids) {
+void Session::on_container_sent(mtproto::MessageId container_message_id, std::vector<mtproto::MessageId> message_ids) {
   CHECK(container_message_id != mtproto::MessageId());
 
   td::remove_if(message_ids, [&](mtproto::MessageId message_id) {
@@ -1134,7 +1134,7 @@ void Session::connection_send_query(ConnectionInfo *info, NetQueryPtr &&net_quer
   }
 
   Span<NetQueryRef> invoke_after = net_query->invoke_after();
-  vector<mtproto::MessageId> invoke_after_message_ids;
+  std::vector<mtproto::MessageId> invoke_after_message_ids;
   for (auto &ref : invoke_after) {
     auto invoke_after_message_id = mtproto::MessageId(ref->message_id());
     if (ref->session_id() != auth_data_.get_session_id() || invoke_after_message_id == mtproto::MessageId()) {

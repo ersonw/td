@@ -29,7 +29,7 @@ void PublicRsaKeySharedCdn::add_rsa(mtproto::RSA rsa) {
   keys_.push_back(RsaKey{std::move(rsa), fingerprint});
 }
 
-Result<mtproto::PublicRsaKeyInterface::RsaKey> PublicRsaKeySharedCdn::get_rsa_key(const vector<int64> &fingerprints) {
+Result<mtproto::PublicRsaKeyInterface::RsaKey> PublicRsaKeySharedCdn::get_rsa_key(const std::vector<int64> &fingerprints) {
   auto lock = rw_mutex_.lock_read();
   for (auto fingerprint : fingerprints) {
     auto *rsa_key = get_rsa_key_unsafe(fingerprint);

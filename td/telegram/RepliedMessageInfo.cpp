@@ -238,7 +238,7 @@ vector<FileId> RepliedMessageInfo::get_file_ids(Td *td) const {
 }
 
 vector<UserId> RepliedMessageInfo::get_min_user_ids(Td *td) const {
-  vector<UserId> user_ids;
+  std::vector<UserId> user_ids;
   if (dialog_id_.get_type() == DialogType::User) {
     user_ids.push_back(dialog_id_.get_user_id());
   }
@@ -251,7 +251,7 @@ vector<UserId> RepliedMessageInfo::get_min_user_ids(Td *td) const {
 }
 
 vector<ChannelId> RepliedMessageInfo::get_min_channel_ids(Td *td) const {
-  vector<ChannelId> channel_ids;
+  std::vector<ChannelId> channel_ids;
   if (dialog_id_.get_type() == DialogType::Channel) {
     channel_ids.push_back(dialog_id_.get_channel_id());
   }

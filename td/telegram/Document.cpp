@@ -19,12 +19,12 @@
 namespace td {
 
 vector<FileId> Document::get_file_ids(const Td *td) const {
-  vector<FileId> result;
+  std::vector<FileId> result;
   append_file_ids(td, result);
   return result;
 }
 
-void Document::append_file_ids(const Td *td, vector<FileId> &file_ids) const {
+void Document::append_file_ids(const Td *td, std::vector<FileId> &file_ids) const {
   if (!file_id.is_valid() || empty()) {
     return;
   }

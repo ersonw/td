@@ -62,7 +62,7 @@ class RangeSet {
   }
 
   string encode(int64 prefix_size = -1) const {
-    vector<uint32> sizes;
+    std::vector<uint32> sizes;
     uint32 all_end = 0;
 
     if (prefix_size != -1) {
@@ -173,8 +173,8 @@ class RangeSet {
     }
   }
 
-  vector<int32> as_vector(int32 part_size) const {
-    vector<int32> res;
+  std::vector<int32> as_vector(int32 part_size) const {
+    std::vector<int32> res;
     for (const auto &it : ranges_) {
       auto begin = narrow_cast<int32>((it.begin + part_size - 1) / part_size);
       auto end = narrow_cast<int32>(it.end / part_size);
@@ -186,7 +186,7 @@ class RangeSet {
   }
 
  private:
-  vector<Range> ranges_;
+  std::vector<Range> ranges_;
 };
 
 TEST(Bitmask, simple) {

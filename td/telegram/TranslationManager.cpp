@@ -32,7 +32,7 @@ class TranslateTextQuery final : public Td::ResultHandler {
       return get_input_text_with_entities(user_manager, std::move(text), "TranslateTextQuery");
     });
     send_query(G()->net_query_creator().create(telegram_api::messages_translateText(
-        flags, nullptr, vector<int32>{}, std::move(input_texts), to_language_code)));
+        flags, nullptr, std::vector<int32>{}, std::move(input_texts), to_language_code)));
   }
 
   void on_result(BufferSlice packet) final {
@@ -48,7 +48,7 @@ class TranslateTextQuery final : public Td::ResultHandler {
 
   void on_error(Status status) final {
     if (status.message() == "INPUT_TEXT_EMPTY") {
-      vector<telegram_api::object_ptr<telegram_api::textWithEntities>> result;
+      std::vector<telegram_api::object_ptr<telegram_api::textWithEntities>> result;
       result.push_back(telegram_api::make_object<telegram_api::textWithEntities>(string(), Auto()));
       return promise_.set_value(std::move(result));
     }
@@ -101,7 +101,7 @@ void TranslationManager::translate_text(td_api::object_ptr<td_api::formattedText
 void TranslationManager::translate_text(FormattedText text, bool skip_bot_commands, int32 max_media_timestamp,
                                         const string &to_language_code,
                                         Promise<td_api::object_ptr<td_api::formattedText>> &&promise) {
-  vector<FormattedText> texts;
+  std::vector<FormattedText> texts;
   texts.push_back(std::move(text));
 
   auto query_promise = PromiseCreator::lambda(

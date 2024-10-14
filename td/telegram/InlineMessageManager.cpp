@@ -85,7 +85,7 @@ class EditInlineMessageQuery final : public Td::ResultHandler {
 
   void send(telegram_api::object_ptr<telegram_api::InputBotInlineMessageID> input_bot_inline_message_id,
             bool force_edit_text, const string &text,
-            vector<telegram_api::object_ptr<telegram_api::MessageEntity>> &&entities, bool disable_web_page_preview,
+            std::vector<telegram_api::object_ptr<telegram_api::MessageEntity>> &&entities, bool disable_web_page_preview,
             telegram_api::object_ptr<telegram_api::InputMedia> &&input_media, bool invert_media,
             telegram_api::object_ptr<telegram_api::ReplyMarkup> &&reply_markup) {
     CHECK(input_bot_inline_message_id != nullptr);
@@ -282,7 +282,7 @@ void InlineMessageManager::edit_inline_message_live_location(const string &inlin
       flags, false /*ignored*/, location.get_input_geo_point(), heading, live_period, proximity_alert_radius);
   td_->create_handler<EditInlineMessageQuery>(std::move(promise))
       ->send(std::move(input_bot_inline_message_id), false, string(),
-             vector<telegram_api::object_ptr<telegram_api::MessageEntity>>(), false, std::move(input_media),
+             std::vector<telegram_api::object_ptr<telegram_api::MessageEntity>>(), false, std::move(input_media),
              false /*ignored*/, get_input_reply_markup(td_->user_manager_.get(), new_reply_markup));
 }
 
@@ -358,7 +358,7 @@ void InlineMessageManager::edit_inline_message_reply_markup(const string &inline
 
   td_->create_handler<EditInlineMessageQuery>(std::move(promise))
       ->send(std::move(input_bot_inline_message_id), false, string(),
-             vector<telegram_api::object_ptr<telegram_api::MessageEntity>>(), false, nullptr, false /*ignored*/,
+             std::vector<telegram_api::object_ptr<telegram_api::MessageEntity>>(), false, nullptr, false /*ignored*/,
              get_input_reply_markup(td_->user_manager_.get(), new_reply_markup));
 }
 

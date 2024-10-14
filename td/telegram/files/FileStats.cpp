@@ -107,7 +107,7 @@ void FileStats::apply_dialog_limit(int32 limit) {
   apply_dialog_ids(transform(dialogs, [](const auto &dialog) { return dialog.second; }));
 }
 
-void FileStats::apply_dialog_ids(const vector<DialogId> &dialog_ids) {
+void FileStats::apply_dialog_ids(const std::vector<DialogId> &dialog_ids) {
   FlatHashSet<DialogId, DialogIdHash> all_dialog_ids;
   for (auto &dialog_id : dialog_ids) {
     CHECK(dialog_id.is_valid());
@@ -185,7 +185,7 @@ tl_object_ptr<td_api::storageStatistics> FileStats::get_storage_statistics_objec
 }
 
 vector<DialogId> FileStats::get_dialog_ids() const {
-  vector<DialogId> res;
+  std::vector<DialogId> res;
   if (!split_by_owner_dialog_id_) {
     return res;
   }

@@ -274,7 +274,7 @@ class BusinessConnectionManager::SendBusinessMediaQuery final : public Td::Resul
 
 class BusinessConnectionManager::SendBusinessMultiMediaQuery final : public Td::ResultHandler {
   Promise<td_api::object_ptr<td_api::businessMessages>> promise_;
-  vector<unique_ptr<PendingMessage>> messages_;
+  std::vector<unique_ptr<PendingMessage>> messages_;
 
  public:
   explicit SendBusinessMultiMediaQuery(Promise<td_api::object_ptr<td_api::businessMessages>> &&promise)
@@ -282,7 +282,7 @@ class BusinessConnectionManager::SendBusinessMultiMediaQuery final : public Td::
   }
 
   void send(vector<unique_ptr<PendingMessage>> &&messages,
-            vector<telegram_api::object_ptr<telegram_api::inputSingleMedia>> &&input_single_media) {
+            std::vector<telegram_api::object_ptr<telegram_api::inputSingleMedia>> &&input_single_media) {
     CHECK(!messages.empty());
     messages_ = std::move(messages);
 
@@ -417,7 +417,7 @@ class BusinessConnectionManager::EditBusinessMessageQuery final : public Td::Res
   }
 
   void send(int32 flags, BusinessConnectionId business_connection_id, DialogId dialog_id, MessageId message_id,
-            const string &text, vector<telegram_api::object_ptr<telegram_api::MessageEntity>> &&entities,
+            const string &text, std::vector<telegram_api::object_ptr<telegram_api::MessageEntity>> &&entities,
             telegram_api::object_ptr<telegram_api::InputMedia> &&input_media, bool invert_media,
             telegram_api::object_ptr<telegram_api::ReplyMarkup> &&reply_markup) {
     auto input_peer = td_->dialog_manager_->get_input_peer(dialog_id, AccessRights::Know);
@@ -492,14 +492,14 @@ class BusinessConnectionManager::StopBusinessPollQuery final : public Td::Result
         0, telegram_api::poll::CLOSED_MASK, false /*ignored*/, false /*ignored*/, false /*ignored*/, false /*ignored*/,
         telegram_api::make_object<telegram_api::textWithEntities>(string(), Auto()), Auto(), 0, 0);
     auto input_media = telegram_api::make_object<telegram_api::inputMediaPoll>(0, std::move(poll),
-                                                                               vector<BufferSlice>(), string(), Auto());
+                                                                               std::vector<BufferSlice>(), string(), Auto());
     int32 server_message_id = message_id.get_server_message_id().get();
     send_query(G()->net_query_creator().create_with_prefix(
         business_connection_id.get_invoke_prefix(),
         telegram_api::messages_editMessage(flags, false /*ignored*/, false /*ignored*/, std::move(input_peer),
                                            server_message_id, string(), std::move(input_media),
                                            std::move(input_reply_markup),
-                                           vector<telegram_api::object_ptr<telegram_api::MessageEntity>>(), 0, 0),
+                                           std::vector<telegram_api::object_ptr<telegram_api::MessageEntity>>(), 0, 0),
         td_->business_connection_manager_->get_business_connection_dc_id(business_connection_id), {{dialog_id}}));
   }
 
@@ -659,12 +659,12 @@ void BusinessConnectionManager::on_update_bot_edit_business_message(
 }
 
 void BusinessConnectionManager::on_update_bot_delete_business_messages(const BusinessConnectionId &connection_id,
-                                                                       DialogId dialog_id, vector<int32> &&messages) {
+                                                                       DialogId dialog_id, std::vector<int32> &&messages) {
   if (!td_->auth_manager_->is_bot() || !connection_id.is_valid() || dialog_id.get_type() != DialogType::User) {
     LOG(ERROR) << "Receive deletion of messages " << messages << " in " << dialog_id;
     return;
   }
-  vector<int64> message_ids;
+  std::vector<int64> message_ids;
   for (auto message : messages) {
     message_ids.push_back(MessageId(ServerMessageId(message)).get());
   }
@@ -943,7 +943,7 @@ FileId BusinessConnectionManager::get_message_thumbnail_file_id(const unique_ptr
 }
 
 void BusinessConnectionManager::upload_media(unique_ptr<PendingMessage> &&message, Promise<UploadMediaResult> &&promise,
-                                             vector<int> bad_parts) {
+                                             std::vector<int> bad_parts) {
   auto file_id = get_message_file_id(message);
   CHECK(file_id.is_valid());
   FileView file_view = td_->file_manager_->get_file_view(file_id);
@@ -1101,11 +1101,11 @@ void BusinessConnectionManager::complete_upload_media(unique_ptr<PendingMessage>
 void BusinessConnectionManager::send_message_album(
     BusinessConnectionId business_connection_id, DialogId dialog_id,
     td_api::object_ptr<td_api::InputMessageReplyTo> &&reply_to, bool disable_notification, bool protect_content,
-    MessageEffectId effect_id, vector<td_api::object_ptr<td_api::InputMessageContent>> &&input_message_contents,
+    MessageEffectId effect_id, std::vector<td_api::object_ptr<td_api::InputMessageContent>> &&input_message_contents,
     Promise<td_api::object_ptr<td_api::businessMessages>> &&promise) {
   TRY_STATUS_PROMISE(promise, check_business_connection(business_connection_id, dialog_id));
 
-  vector<InputMessageContent> message_contents;
+  std::vector<InputMessageContent> message_contents;
   for (auto &input_message_content : input_message_contents) {
     TRY_RESULT_PROMISE(promise, message_content, process_input_message_content(std::move(input_message_content)));
     message_contents.push_back(std::move(message_content));
@@ -1171,8 +1171,8 @@ void BusinessConnectionManager::on_upload_message_album_media(int64 request_id, 
       return promise.set_error(r_upload_result.move_as_error());
     }
   }
-  vector<unique_ptr<PendingMessage>> messages;
-  vector<telegram_api::object_ptr<telegram_api::inputSingleMedia>> input_single_media;
+  std::vector<unique_ptr<PendingMessage>> messages;
+  std::vector<telegram_api::object_ptr<telegram_api::inputSingleMedia>> input_single_media;
   for (auto &r_upload_result : upload_results) {
     auto upload_result = r_upload_result.move_as_ok();
     auto message = std::move(upload_result.message_);
@@ -1244,7 +1244,7 @@ void BusinessConnectionManager::on_upload_message_paid_media(int64 request_id, s
       return promise.set_error(r_upload_result.move_as_error());
     }
   }
-  vector<telegram_api::object_ptr<telegram_api::InputMedia>> input_media;
+  std::vector<telegram_api::object_ptr<telegram_api::InputMedia>> input_media;
   for (auto &r_upload_result : upload_results) {
     auto upload_result = r_upload_result.move_as_ok();
     input_media.push_back(std::move(upload_result.input_media_));
@@ -1322,7 +1322,7 @@ void BusinessConnectionManager::edit_business_message_live_location(
       flags, false /*ignored*/, location.get_input_geo_point(), heading, live_period, proximity_alert_radius);
   td_->create_handler<EditBusinessMessageQuery>(std::move(promise))
       ->send(0, business_connection_id, dialog_id, message_id, string(),
-             vector<telegram_api::object_ptr<telegram_api::MessageEntity>>(), std::move(input_media), false /*ignored*/,
+             std::vector<telegram_api::object_ptr<telegram_api::MessageEntity>>(), std::move(input_media), false /*ignored*/,
              std::move(input_reply_markup));
 }
 
@@ -1430,7 +1430,7 @@ void BusinessConnectionManager::edit_business_message_reply_markup(
 
   td_->create_handler<EditBusinessMessageQuery>(std::move(promise))
       ->send(0, business_connection_id, dialog_id, message_id, string(),
-             vector<telegram_api::object_ptr<telegram_api::MessageEntity>>(), nullptr, false /*ignored*/,
+             std::vector<telegram_api::object_ptr<telegram_api::MessageEntity>>(), nullptr, false /*ignored*/,
              get_input_reply_markup(td_->user_manager_.get(), new_reply_markup));
 }
 

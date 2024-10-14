@@ -37,7 +37,7 @@ GroupCallVideoPayload::get_group_call_participant_video_info_object() const {
   }
 
   auto get_group_call_video_source_group_object = [](const GroupCallVideoSourceGroup &group) {
-    return td_api::make_object<td_api::groupCallVideoSourceGroup>(group.semantics_, vector<int32>(group.source_ids_));
+    return td_api::make_object<td_api::groupCallVideoSourceGroup>(group.semantics_, std::vector<int32>(group.source_ids_));
   };
   return td_api::make_object<td_api::groupCallParticipantVideoInfo>(
       transform(source_groups_, get_group_call_video_source_group_object), endpoint_, is_paused_);

@@ -14,7 +14,7 @@
 
 namespace td {
 
-Usernames::Usernames(string &&first_username, vector<telegram_api::object_ptr<telegram_api::username>> &&usernames) {
+Usernames::Usernames(string &&first_username, std::vector<telegram_api::object_ptr<telegram_api::username>> &&usernames) {
   if (usernames.empty()) {
     if (!first_username.empty()) {
       active_usernames_.push_back(std::move(first_username));
@@ -64,7 +64,7 @@ tl_object_ptr<td_api::usernames> Usernames::get_usernames_object() const {
     return nullptr;
   }
   return make_tl_object<td_api::usernames>(
-      vector<string>(active_usernames_), vector<string>(disabled_usernames_),
+      std::vector<string>(active_usernames_), std::vector<string>(disabled_usernames_),
       has_editable_username() ? active_usernames_[editable_username_pos_] : string());
 }
 
@@ -143,7 +143,7 @@ Usernames Usernames::deactivate_all() const {
   return result;
 }
 
-bool Usernames::can_reorder_to(const vector<string> &new_username_order) const {
+bool Usernames::can_reorder_to(const std::vector<string> &new_username_order) const {
   if (new_username_order.size() != active_usernames_.size()) {
     return false;
   }

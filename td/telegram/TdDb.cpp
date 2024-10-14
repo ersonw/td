@@ -722,7 +722,7 @@ Result<string> TdDb::get_stats() {
   TRY_STATUS(run_kv_query("ss%"));
   TRY_STATUS(run_kv_query("gr%"));
 
-  vector<int32> prev(1);
+  std::vector<int32> prev(1);
   size_t count = 0;
   int32 max_bad_to = 0;
   size_t bad_count = 0;

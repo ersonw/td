@@ -164,7 +164,7 @@ class ReportSponsoredMessageQuery final : public Td::ResultHandler {
         if (options->options_.empty()) {
           return promise_.set_value(td_api::make_object<td_api::reportChatSponsoredMessageResultFailed>());
         }
-        vector<td_api::object_ptr<td_api::reportChatSponsoredMessageOption>> report_options;
+        std::vector<td_api::object_ptr<td_api::reportChatSponsoredMessageOption>> report_options;
         for (auto &option : options->options_) {
           report_options.push_back(td_api::make_object<td_api::reportChatSponsoredMessageOption>(
               option->option_.as_slice().str(), option->text_));
@@ -226,8 +226,8 @@ struct SponsoredMessageManager::SponsoredMessageInfo {
 };
 
 struct SponsoredMessageManager::DialogSponsoredMessages {
-  vector<Promise<td_api::object_ptr<td_api::sponsoredMessages>>> promises;
-  vector<SponsoredMessage> messages;
+  std::vector<Promise<td_api::object_ptr<td_api::sponsoredMessages>>> promises;
+  std::vector<SponsoredMessage> messages;
   FlatHashMap<int64, SponsoredMessageInfo> message_infos;
   int32 messages_between = 0;
   bool is_premium = false;

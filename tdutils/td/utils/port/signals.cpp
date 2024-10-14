@@ -93,7 +93,7 @@ static Status set_signal_handler_impl(vector<int> &&signals, F func) {
   return Status::OK();
 }
 
-static vector<int> get_native_signals(SignalType type) {
+static std::vector<int> get_native_signals(SignalType type) {
   switch (type) {
     case SignalType::Abort:
       return {SIGABRT, SIGXCPU, SIGXFSZ};
@@ -137,7 +137,7 @@ static Status set_signal_handler_impl(vector<int> &&signals, void (*func)(int si
   return Status::OK();
 }
 
-static vector<int> get_native_signals(SignalType type) {
+static std::vector<int> get_native_signals(SignalType type) {
   switch (type) {
     case SignalType::Abort:
       return {SIGABRT};

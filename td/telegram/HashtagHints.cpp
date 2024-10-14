@@ -103,7 +103,7 @@ void HashtagHints::from_db(Result<string> data, bool dummy) {
   if (data.is_error() || data.ok().empty()) {
     return;
   }
-  vector<string> hashtags;
+  std::vector<string> hashtags;
   auto status = unserialize(hashtags, data.ok());
   if (status.is_error()) {
     LOG(ERROR) << "Failed to unserialize hashtag hints: " << status;
@@ -115,8 +115,8 @@ void HashtagHints::from_db(Result<string> data, bool dummy) {
   }
 }
 
-vector<string> HashtagHints::keys_to_strings(const vector<int64> &keys) {
-  vector<string> result;
+vector<string> HashtagHints::keys_to_strings(const std::vector<int64> &keys) {
+  std::vector<string> result;
   result.reserve(keys.size());
   for (auto &it : keys) {
     result.push_back(hints_.key_to_string(it));

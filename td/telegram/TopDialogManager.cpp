@@ -300,7 +300,7 @@ int TopDialogManager::is_top_dialog(TopDialogCategory category, size_t limit, Di
     return 0;
   }
 
-  vector<DialogId> dialog_ids;
+  std::vector<DialogId> dialog_ids;
   auto pos = static_cast<size_t>(category);
   CHECK(pos < by_category_.size());
   const auto &dialogs = by_category_[pos].dialogs;
@@ -369,7 +369,7 @@ void TopDialogManager::normalize_rating() {
 }
 
 void TopDialogManager::do_get_top_dialogs(GetTopDialogsQuery &&query) {
-  vector<DialogId> dialog_ids;
+  std::vector<DialogId> dialog_ids;
   if (query.category != TopDialogCategory::ForwardUsers) {
     auto pos = static_cast<size_t>(query.category);
     CHECK(pos < by_category_.size());
@@ -400,9 +400,9 @@ void TopDialogManager::do_get_top_dialogs(GetTopDialogsQuery &&query) {
   send_closure(td_->messages_manager_actor_, &MessagesManager::load_dialogs, std::move(dialog_ids), std::move(promise));
 }
 
-void TopDialogManager::on_load_dialogs(GetTopDialogsQuery &&query, vector<DialogId> &&dialog_ids) {
+void TopDialogManager::on_load_dialogs(GetTopDialogsQuery &&query, std::vector<DialogId> &&dialog_ids) {
   auto limit = std::min({query.limit, MAX_TOP_DIALOGS_LIMIT, dialog_ids.size()});
-  vector<DialogId> result;
+  std::vector<DialogId> result;
   result.reserve(limit);
   for (auto dialog_id : dialog_ids) {
     if (dialog_id.get_type() == DialogType::User) {

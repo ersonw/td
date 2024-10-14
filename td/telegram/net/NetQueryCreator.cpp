@@ -28,19 +28,19 @@ NetQueryCreator::NetQueryCreator(std::shared_ptr<NetQueryStats> net_query_stats)
   object_pool_.set_check_empty(true);
 }
 
-NetQueryPtr NetQueryCreator::create(const telegram_api::Function &function, vector<ChainId> chain_ids, DcId dc_id,
+NetQueryPtr NetQueryCreator::create(const telegram_api::Function &function, std::vector<ChainId> chain_ids, DcId dc_id,
                                     NetQuery::Type type) {
   return create(UniqueId::next(), nullptr, function, std::move(chain_ids), dc_id, type, NetQuery::AuthFlag::On);
 }
 
 NetQueryPtr NetQueryCreator::create_with_prefix(const telegram_api::object_ptr<telegram_api::Function> &prefix,
                                                 const telegram_api::Function &function, DcId dc_id,
-                                                vector<ChainId> chain_ids, NetQuery::Type type) {
+                                                std::vector<ChainId> chain_ids, NetQuery::Type type) {
   return create(UniqueId::next(), prefix, function, std::move(chain_ids), dc_id, type, NetQuery::AuthFlag::On);
 }
 
 NetQueryPtr NetQueryCreator::create(uint64 id, const telegram_api::object_ptr<telegram_api::Function> &prefix,
-                                    const telegram_api::Function &function, vector<ChainId> &&chain_ids, DcId dc_id,
+                                    const telegram_api::Function &function, std::vector<ChainId> &&chain_ids, DcId dc_id,
                                     NetQuery::Type type, NetQuery::AuthFlag auth_flag) {
   LOG(INFO) << "Create query " << to_string(function);
   string prefix_str;

@@ -1334,7 +1334,7 @@ void ConnectionCreator::hangup() {
 DcOptions ConnectionCreator::get_default_dc_options(bool is_test) {
   DcOptions res;
   enum class HostType : int32 { IPv4, IPv6, Url };
-  auto add_ip_ports = [&res](int32 dc_id, vector<string> ip_address_strings, const vector<int> &ports,
+  auto add_ip_ports = [&res](int32 dc_id, std::vector<string> ip_address_strings, const std::vector<int> &ports,
                              HostType type = HostType::IPv4) {
     IPAddress ip_address;
     Random::shuffle(ip_address_strings);
@@ -1355,7 +1355,7 @@ DcOptions ConnectionCreator::get_default_dc_options(bool is_test) {
       }
     }
   };
-  vector<int> ports = {443, 80, 5222};
+  std::vector<int> ports = {443, 80, 5222};
 #if TD_EMSCRIPTEN
   if (is_test) {
     add_ip_ports(1, {"pluto.web.telegram.org/apiws_test"}, {443}, HostType::Url);

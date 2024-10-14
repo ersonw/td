@@ -317,7 +317,7 @@ class GetExportedChatInvitesQuery final : public Td::ResultHandler {
       LOG(ERROR) << "Receive wrong total count of invite links " << total_count << " in " << dialog_id_;
       total_count = static_cast<int32>(result->invites_.size());
     }
-    vector<td_api::object_ptr<td_api::chatInviteLink>> invite_links;
+    std::vector<td_api::object_ptr<td_api::chatInviteLink>> invite_links;
     for (auto &invite : result->invites_) {
       DialogInviteLink invite_link(std::move(invite), false, false, "GetExportedChatInvitesQuery");
       if (!invite_link.is_valid()) {
@@ -364,7 +364,7 @@ class GetChatAdminWithInvitesQuery final : public Td::ResultHandler {
 
     td_->user_manager_->on_get_users(std::move(result->users_), "GetChatAdminWithInvitesQuery");
 
-    vector<td_api::object_ptr<td_api::chatInviteLinkCount>> invite_link_counts;
+    std::vector<td_api::object_ptr<td_api::chatInviteLinkCount>> invite_link_counts;
     for (auto &admin : result->admins_) {
       UserId user_id(admin->admin_id_);
       if (!user_id.is_valid()) {
@@ -429,7 +429,7 @@ class GetChatInviteImportersQuery final : public Td::ResultHandler {
       LOG(ERROR) << "Receive wrong total count of invite link users " << total_count << " in " << dialog_id_;
       total_count = static_cast<int32>(result->importers_.size());
     }
-    vector<td_api::object_ptr<td_api::chatInviteLinkMember>> invite_link_members;
+    std::vector<td_api::object_ptr<td_api::chatInviteLinkMember>> invite_link_members;
     for (auto &importer : result->importers_) {
       UserId user_id(importer->user_id_);
       UserId approver_user_id(importer->approved_by_);
@@ -480,7 +480,7 @@ class RevokeChatInviteLinkQuery final : public Td::ResultHandler {
     auto result = result_ptr.move_as_ok();
     LOG(INFO) << "Receive result for RevokeChatInviteLinkQuery: " << to_string(result);
 
-    vector<td_api::object_ptr<td_api::chatInviteLink>> links;
+    std::vector<td_api::object_ptr<td_api::chatInviteLink>> links;
     switch (result->get_id()) {
       case telegram_api::messages_exportedChatInvite::ID: {
         auto invite = move_tl_object_as<telegram_api::messages_exportedChatInvite>(result);
@@ -717,7 +717,7 @@ void DialogInviteLinkManager::on_get_dialog_invite_link_info(
     }
     case telegram_api::chatInvite::ID: {
       auto chat_invite = telegram_api::move_object_as<telegram_api::chatInvite>(chat_invite_ptr);
-      vector<UserId> participant_user_ids;
+      std::vector<UserId> participant_user_ids;
       for (auto &user : chat_invite->participants_) {
         auto user_id = UserManager::get_user_id(user);
         if (!user_id.is_valid()) {
@@ -797,7 +797,7 @@ td_api::object_ptr<td_api::chatInviteLinkInfo> DialogInviteLinkManager::get_chat
   int32 accent_color_id_object;
   string description;
   int32 participant_count = 0;
-  vector<int64> member_user_ids;
+  std::vector<int64> member_user_ids;
   td_api::object_ptr<td_api::chatInviteLinkSubscriptionInfo> subscription_info;
   bool creates_join_request = false;
   bool is_public = false;

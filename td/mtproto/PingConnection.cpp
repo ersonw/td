@@ -131,7 +131,7 @@ class PingConnectionPingPong final
   void on_session_failed(Status status) final {
   }
 
-  void on_container_sent(MessageId container_message_id, vector<MessageId> message_ids) final {
+  void on_container_sent(MessageId container_message_id, std::vector<MessageId> message_ids) final {
   }
 
   Status on_pong(double ping_time, double pong_time, double current_time) final {

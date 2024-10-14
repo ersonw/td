@@ -23,7 +23,7 @@
 namespace td {
 
 void DcOptionsSet::add_dc_options(DcOptions dc_options) {
-  vector<DcOptionId> new_ordered_options;
+  std::vector<DcOptionId> new_ordered_options;
   for (auto &option : dc_options.dc_options) {
     auto *info = register_dc_option(std::move(option));
     new_ordered_options.push_back(DcOptionId{info->pos});
@@ -55,8 +55,8 @@ vector<DcOptionsSet::ConnectionInfo> DcOptionsSet::find_all_connections(DcId dc_
                                                                         bool only_http) {
   LOG(DEBUG) << "Find all " << (allow_media_only ? "media " : "") << "connections in " << dc_id
              << ". use_static = " << use_static << ", prefer_ipv6 = " << prefer_ipv6 << ", only_http = " << only_http;
-  vector<ConnectionInfo> options;
-  vector<ConnectionInfo> static_options;
+  std::vector<ConnectionInfo> options;
+  std::vector<ConnectionInfo> static_options;
 
   if (prefer_ipv6) {
     use_static = false;

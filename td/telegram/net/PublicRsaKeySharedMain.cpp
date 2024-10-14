@@ -21,7 +21,7 @@ std::shared_ptr<PublicRsaKeySharedMain> PublicRsaKeySharedMain::create(bool is_t
 
   if (is_test) {
     static auto test_public_rsa_key = [&] {
-      vector<RsaKey> keys;
+      std::vector<RsaKey> keys;
       add_pem(keys,
               "-----BEGIN RSA PUBLIC KEY-----\n"
               "MIIBCgKCAQEAyMEdY1aR+sCR3ZSJrtztKTKqigvO/vBfqACJLZtS7QMgCGXJ6XIR\n"
@@ -36,7 +36,7 @@ std::shared_ptr<PublicRsaKeySharedMain> PublicRsaKeySharedMain::create(bool is_t
     return test_public_rsa_key;
   } else {
     static auto main_public_rsa_key = [&] {
-      vector<RsaKey> keys;
+      std::vector<RsaKey> keys;
       add_pem(keys,
               "-----BEGIN RSA PUBLIC KEY-----\n"
               "MIIBCgKCAQEA6LszBcC1LGzyr992NzE0ieY+BSaOW622Aa9Bd4ZHLl+TuFQ4lo4g\n"
@@ -52,7 +52,7 @@ std::shared_ptr<PublicRsaKeySharedMain> PublicRsaKeySharedMain::create(bool is_t
   }
 }
 
-Result<mtproto::PublicRsaKeyInterface::RsaKey> PublicRsaKeySharedMain::get_rsa_key(const vector<int64> &fingerprints) {
+Result<mtproto::PublicRsaKeyInterface::RsaKey> PublicRsaKeySharedMain::get_rsa_key(const std::vector<int64> &fingerprints) {
   for (auto fingerprint : fingerprints) {
     for (const auto &key : keys_) {
       if (key.fingerprint == fingerprint) {

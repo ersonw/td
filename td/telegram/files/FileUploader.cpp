@@ -69,13 +69,13 @@ void FileUploader::start_up() {
     big_flag_ = is_file_big(file_type_, expected_size_);
   }
 
-  vector<bool> ok(offset, true);
+  std::vector<bool> ok(offset, true);
   for (auto bad_id : bad_parts_) {
     if (bad_id >= 0 && bad_id < offset) {
       ok[bad_id] = false;
     }
   }
-  vector<int> ready_parts;
+  std::vector<int> ready_parts;
   for (int i = 0; i < offset; i++) {
     if (ok[i]) {
       ready_parts.push_back(i);

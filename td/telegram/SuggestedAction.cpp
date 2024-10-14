@@ -192,7 +192,7 @@ td_api::object_ptr<td_api::SuggestedAction> SuggestedAction::get_suggested_actio
 }
 
 td_api::object_ptr<td_api::updateSuggestedActions> get_update_suggested_actions_object(
-    const vector<SuggestedAction> &added_actions, const vector<SuggestedAction> &removed_actions, const char *source) {
+    const std::vector<SuggestedAction> &added_actions, const std::vector<SuggestedAction> &removed_actions, const char *source) {
   LOG(INFO) << "Get updateSuggestedActions from " << source;
   auto get_object = [](const SuggestedAction &action) {
     return action.get_suggested_action_object();
@@ -202,14 +202,14 @@ td_api::object_ptr<td_api::updateSuggestedActions> get_update_suggested_actions_
 }
 
 bool update_suggested_actions(vector<SuggestedAction> &suggested_actions,
-                              vector<SuggestedAction> &&new_suggested_actions) {
+                              std::vector<SuggestedAction> &&new_suggested_actions) {
   td::unique(new_suggested_actions);
   if (new_suggested_actions == suggested_actions) {
     return false;
   }
 
-  vector<SuggestedAction> added_actions;
-  vector<SuggestedAction> removed_actions;
+  std::vector<SuggestedAction> added_actions;
+  std::vector<SuggestedAction> removed_actions;
   auto old_it = suggested_actions.begin();
   auto new_it = new_suggested_actions.begin();
   while (old_it != suggested_actions.end() || new_it != new_suggested_actions.end()) {
@@ -268,7 +268,7 @@ void dismiss_suggested_action(SuggestedAction action, Promise<Unit> &&promise) {
       }
       auto days = narrow_cast<int32>(G()->get_option_integer("otherwise_relogin_days"));
       if (days == action.otherwise_relogin_days_) {
-        vector<SuggestedAction> removed_actions{SuggestedAction{SuggestedAction::Type::SetPassword, DialogId(), days}};
+        std::vector<SuggestedAction> removed_actions{SuggestedAction{SuggestedAction::Type::SetPassword, DialogId(), days}};
         send_closure(G()->td(), &Td::send_update,
                      get_update_suggested_actions_object({}, removed_actions, "dismiss_suggested_action"));
         G()->set_option_empty("otherwise_relogin_days");

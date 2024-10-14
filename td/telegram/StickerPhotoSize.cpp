@@ -82,10 +82,10 @@ telegram_api::object_ptr<telegram_api::VideoSize> StickerPhotoSize::get_input_vi
     case Type::Sticker:
       return telegram_api::make_object<telegram_api::videoSizeStickerMarkup>(
           td->stickers_manager_->get_input_sticker_set(sticker_set_id_), sticker_id_,
-          vector<int32>(background_colors_));
+          std::vector<int32>(background_colors_));
     case Type::CustomEmoji:
       return telegram_api::make_object<telegram_api::videoSizeEmojiMarkup>(custom_emoji_id_.get(),
-                                                                           vector<int32>(background_colors_));
+                                                                           std::vector<int32>(background_colors_));
     default:
       UNREACHABLE();
       return nullptr;

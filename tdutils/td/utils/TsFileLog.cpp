@@ -87,8 +87,8 @@ class TsFileLog final : public LogInterface {
     get_current_logger()->do_append(log_level, slice);
   }
 
-  vector<string> get_file_paths() final {
-    vector<string> res;
+  std::vector<string> get_file_paths() final {
+    std::vector<string> res;
     for (auto &log : logs_) {
       res.push_back(get_path(&log));
     }

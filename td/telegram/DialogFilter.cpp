@@ -121,7 +121,7 @@ Result<unique_ptr<DialogFilter>> DialogFilter::create_dialog_filter(Td *td, Dial
   dialog_filter->dialog_filter_id_ = dialog_filter_id;
 
   FlatHashSet<int64> added_dialog_ids;
-  auto add_chats = [td, &added_dialog_ids](vector<InputDialogId> &input_dialog_ids, const vector<int64> &chat_ids) {
+  auto add_chats = [td, &added_dialog_ids](vector<InputDialogId> &input_dialog_ids, const std::vector<int64> &chat_ids) {
     for (const auto &chat_id : chat_ids) {
       if (chat_id == 0 || !added_dialog_ids.insert(chat_id).second) {
         // do not allow duplicate chat_ids
@@ -237,7 +237,7 @@ bool DialogFilter::is_empty(bool for_server) const {
   }
 
   if (for_server) {
-    vector<InputDialogId> empty_input_dialog_ids;
+    std::vector<InputDialogId> empty_input_dialog_ids;
     return InputDialogId::are_equivalent(pinned_dialog_ids_, empty_input_dialog_ids) &&
            InputDialogId::are_equivalent(included_dialog_ids_, empty_input_dialog_ids);
   } else {
@@ -269,7 +269,7 @@ bool DialogFilter::can_include_dialog(DialogId dialog_id) const {
 }
 
 Status DialogFilter::check_limits() const {
-  auto get_server_dialog_count = [](const vector<InputDialogId> &input_dialog_ids) {
+  auto get_server_dialog_count = [](const std::vector<InputDialogId> &input_dialog_ids) {
     int32 result = 0;
     for (auto &input_dialog_id : input_dialog_ids) {
       if (input_dialog_id.get_dialog_id().get_type() != DialogType::SecretChat) {
@@ -474,9 +474,9 @@ telegram_api::object_ptr<telegram_api::DialogFilter> DialogFilter::get_input_dia
 }
 
 td_api::object_ptr<td_api::chatFolder> DialogFilter::get_chat_folder_object(
-    const vector<DialogId> &unknown_dialog_ids) const {
-  auto get_chat_ids = [unknown_dialog_ids](const vector<InputDialogId> &input_dialog_ids) {
-    vector<int64> chat_ids;
+    const std::vector<DialogId> &unknown_dialog_ids) const {
+  auto get_chat_ids = [unknown_dialog_ids](const std::vector<InputDialogId> &input_dialog_ids) {
+    std::vector<int64> chat_ids;
     chat_ids.reserve(input_dialog_ids.size());
     for (auto &input_dialog_id : input_dialog_ids) {
       auto dialog_id = input_dialog_id.get_dialog_id();
@@ -589,7 +589,7 @@ unique_ptr<DialogFilter> DialogFilter::merge_dialog_filter_changes(const DialogF
         added_dialog_ids.insert(dialog_id);
       }
     }
-    vector<InputDialogId> result;
+    std::vector<InputDialogId> result;
     for (const auto &input_dialog_id : new_dialog_ids) {
       // do not add dialog twice
       added_dialog_ids.erase(input_dialog_id.get_dialog_id());
@@ -717,7 +717,7 @@ vector<DialogId> DialogFilter::get_dialogs_for_invite_link(Td *td) {
       include_non_contacts_ || include_bots_ || include_groups_ || include_channels_) {
     return {};
   }
-  vector<DialogId> result;
+  std::vector<DialogId> result;
   for_each_dialog([&](const InputDialogId &input_dialog_id) {
     auto dialog_id = input_dialog_id.get_dialog_id();
     if (!td->dialog_manager_->have_dialog_force(dialog_id, "get_dialogs_for_invite_link")) {
@@ -819,7 +819,7 @@ bool DialogFilter::need_dialog(const Td *td, const DialogFilterDialogInfo &dialo
   }
 }
 
-vector<DialogFilterId> DialogFilter::get_dialog_filter_ids(const vector<unique_ptr<DialogFilter>> &dialog_filters,
+vector<DialogFilterId> DialogFilter::get_dialog_filter_ids(const std::vector<unique_ptr<DialogFilter>> &dialog_filters,
                                                            int32 main_dialog_list_position) {
   auto result = transform(dialog_filters, [](const auto &dialog_filter) { return dialog_filter->dialog_filter_id_; });
   if (static_cast<size_t>(main_dialog_list_position) <= result.size()) {
@@ -829,7 +829,7 @@ vector<DialogFilterId> DialogFilter::get_dialog_filter_ids(const vector<unique_p
 }
 
 bool DialogFilter::set_dialog_filters_order(vector<unique_ptr<DialogFilter>> &dialog_filters,
-                                            vector<DialogFilterId> dialog_filter_ids) {
+                                            std::vector<DialogFilterId> dialog_filter_ids) {
   auto old_dialog_filter_ids = get_dialog_filter_ids(dialog_filters, -1);
   if (old_dialog_filter_ids == dialog_filter_ids) {
     return false;
@@ -871,7 +871,7 @@ bool DialogFilter::are_similar(const DialogFilter &lhs, const DialogFilter &rhs)
     return false;
   }
 
-  vector<InputDialogId> empty_input_dialog_ids;
+  std::vector<InputDialogId> empty_input_dialog_ids;
   if (InputDialogId::are_equivalent(lhs.excluded_dialog_ids_, empty_input_dialog_ids) !=
       InputDialogId::are_equivalent(rhs.excluded_dialog_ids_, empty_input_dialog_ids)) {
     return false;
@@ -905,7 +905,7 @@ StringBuilder &operator<<(StringBuilder &string_builder, const DialogFilter &fil
 
 void DialogFilter::init_icon_names() {
   static bool is_inited = [&] {
-    vector<string> emojis{"\xF0\x9F\x92\xAC",         "\xE2\x9C\x85",     "\xF0\x9F\x94\x94",
+    std::vector<string> emojis{"\xF0\x9F\x92\xAC",         "\xE2\x9C\x85",     "\xF0\x9F\x94\x94",
                           "\xF0\x9F\xA4\x96",         "\xF0\x9F\x93\xA2", "\xF0\x9F\x91\xA5",
                           "\xF0\x9F\x91\xA4",         "\xF0\x9F\x93\x81", "\xF0\x9F\x93\x8B",
                           "\xF0\x9F\x90\xB1",         "\xF0\x9F\x91\x91", "\xE2\xAD\x90\xEF\xB8\x8F",
@@ -915,7 +915,7 @@ void DialogFilter::init_icon_names() {
                           "\xE2\x9C\x88\xEF\xB8\x8F", "\xF0\x9F\x92\xBC", "\xF0\x9F\x9B\xAB",
                           "\xF0\x9F\x93\x95",         "\xF0\x9F\x92\xA1", "\xF0\x9F\x91\x8D",
                           "\xF0\x9F\x92\xB0",         "\xF0\x9F\x8E\xB5", "\xF0\x9F\x8E\xA8"};
-    vector<string> icon_names{"All",   "Unread", "Unmuted", "Bots",     "Channels", "Groups", "Private", "Custom",
+    std::vector<string> icon_names{"All",   "Unread", "Unmuted", "Bots",     "Channels", "Groups", "Private", "Custom",
                               "Setup", "Cat",    "Crown",   "Favorite", "Flower",   "Game",   "Home",    "Love",
                               "Mask",  "Party",  "Sport",   "Study",    "Trade",    "Travel", "Work",    "Airplane",
                               "Book",  "Light",  "Like",    "Money",    "Note",     "Palette"};

@@ -344,7 +344,7 @@ class MultiSequenceDispatcherImpl final : public MultiSequenceDispatcher {
     auto &node = *scheduler_.get_task_extra(task_id);
 
     if (query->last_timeout_ != 0) {
-      vector<TaskId> to_check_timeout;
+      std::vector<TaskId> to_check_timeout;
 
       auto tl_constructor = query->tl_constructor();
       scheduler_.for_each_dependent(task_id, [&](TaskId child_task_id) {
@@ -440,7 +440,7 @@ class MultiSequenceDispatcherImpl final : public MultiSequenceDispatcher {
       CHECK(!node.net_query.empty());
 
       auto query = std::move(node.net_query);
-      vector<NetQueryRef> parents;
+      std::vector<NetQueryRef> parents;
       for (auto parent_id : task.parents) {
         auto &parent_node = *scheduler_.get_task_extra(parent_id);
         parents.push_back(parent_node.net_query_ref);

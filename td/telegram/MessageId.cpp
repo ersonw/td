@@ -52,7 +52,7 @@ MessageId MessageId::get_message_id(const tl_object_ptr<telegram_api::Message> &
   return get_message_id(message_ptr.get(), is_scheduled);
 }
 
-MessageId MessageId::get_max_message_id(const vector<telegram_api::object_ptr<telegram_api::Message>> &messages) {
+MessageId MessageId::get_max_message_id(const std::vector<telegram_api::object_ptr<telegram_api::Message>> &messages) {
   MessageId max_message_id;
   for (auto &message : messages) {
     auto message_id = get_message_id(message, false);
@@ -63,15 +63,15 @@ MessageId MessageId::get_max_message_id(const vector<telegram_api::object_ptr<te
   return max_message_id;
 }
 
-vector<MessageId> MessageId::get_message_ids(const vector<int64> &input_message_ids) {
+vector<MessageId> MessageId::get_message_ids(const std::vector<int64> &input_message_ids) {
   return transform(input_message_ids, [](int64 input_message_id) { return MessageId(input_message_id); });
 }
 
-vector<int32> MessageId::get_server_message_ids(const vector<MessageId> &message_ids) {
+vector<int32> MessageId::get_server_message_ids(const std::vector<MessageId> &message_ids) {
   return transform(message_ids, [](MessageId message_id) { return message_id.get_server_message_id().get(); });
 }
 
-vector<int32> MessageId::get_scheduled_server_message_ids(const vector<MessageId> &message_ids) {
+vector<int32> MessageId::get_scheduled_server_message_ids(const std::vector<MessageId> &message_ids) {
   return transform(message_ids,
                    [](MessageId message_id) { return message_id.get_scheduled_server_message_id().get(); });
 }

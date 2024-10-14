@@ -245,7 +245,7 @@ class FileDb final : public FileDbInterface {
     // LOG(DEBUG) << "Load by key " << format::as_hex_dump<4>(Slice(key));
     TRY_RESULT(file_db_id, get_file_db_id(pmc, key));
 
-    vector<FileDbId> file_db_ids;
+    std::vector<FileDbId> file_db_ids;
     string data_str;
     int attempt_count = 0;
     while (true) {

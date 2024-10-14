@@ -278,13 +278,13 @@ class DeactivateAllChannelUsernamesQuery final : public Td::ResultHandler {
 class ReorderChannelUsernamesQuery final : public Td::ResultHandler {
   Promise<Unit> promise_;
   ChannelId channel_id_;
-  vector<string> usernames_;
+  std::vector<string> usernames_;
 
  public:
   explicit ReorderChannelUsernamesQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(ChannelId channel_id, vector<string> &&usernames) {
+  void send(ChannelId channel_id, std::vector<string> &&usernames) {
     channel_id_ = channel_id;
     usernames_ = usernames;
     auto input_channel = td_->chat_manager_->get_input_channel(channel_id);
@@ -1179,7 +1179,7 @@ class ReportChannelSpamQuery final : public Td::ResultHandler {
   explicit ReportChannelSpamQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(ChannelId channel_id, DialogId sender_dialog_id, const vector<MessageId> &message_ids) {
+  void send(ChannelId channel_id, DialogId sender_dialog_id, const std::vector<MessageId> &message_ids) {
     channel_id_ = channel_id;
     sender_dialog_id_ = sender_dialog_id;
 
@@ -1527,7 +1527,7 @@ class GetChannelsQuery final : public Td::ResultHandler {
           ChannelId(static_cast<const telegram_api::inputChannelFromMessage *>(input_channel.get())->channel_id_);
     }
 
-    vector<tl_object_ptr<telegram_api::InputChannel>> input_channels;
+    std::vector<tl_object_ptr<telegram_api::InputChannel>> input_channels;
     input_channels.push_back(std::move(input_channel));
     send_query(G()->net_query_creator().create(telegram_api::channels_getChannels(std::move(input_channels))));
   }
@@ -2137,7 +2137,7 @@ void ChatManager::Channel::parse(ParserT &parser) {
     }
     string username;
     parse(username, parser);
-    usernames = Usernames(std::move(username), vector<telegram_api::object_ptr<telegram_api::username>>());
+    usernames = Usernames(std::move(username), std::vector<telegram_api::object_ptr<telegram_api::username>>());
   }
   parse(date, parser);
   if (legacy_is_restricted) {
@@ -2929,7 +2929,7 @@ void ChatManager::disable_all_channel_usernames(ChannelId channel_id, Promise<Un
   td_->create_handler<DeactivateAllChannelUsernamesQuery>(std::move(promise))->send(channel_id);
 }
 
-void ChatManager::reorder_channel_usernames(ChannelId channel_id, vector<string> &&usernames, Promise<Unit> &&promise) {
+void ChatManager::reorder_channel_usernames(ChannelId channel_id, std::vector<string> &&usernames, Promise<Unit> &&promise) {
   const auto *c = get_channel(channel_id);
   if (c == nullptr) {
     return promise.set_error(Status::Error(400, "Supergroup not found"));
@@ -2966,7 +2966,7 @@ void ChatManager::on_deactivate_channel_usernames(ChannelId channel_id, Promise<
   promise.set_value(Unit());
 }
 
-void ChatManager::on_update_channel_active_usernames_order(ChannelId channel_id, vector<string> &&usernames,
+void ChatManager::on_update_channel_active_usernames_order(ChannelId channel_id, std::vector<string> &&usernames,
                                                            Promise<Unit> &&promise) {
   auto *c = get_channel(channel_id);
   CHECK(c != nullptr);
@@ -3423,7 +3423,7 @@ void ChatManager::set_channel_location(ChannelId channel_id, const DialogLocatio
 }
 
 void ChatManager::set_channel_slow_mode_delay(DialogId dialog_id, int32 slow_mode_delay, Promise<Unit> &&promise) {
-  vector<int32> allowed_slow_mode_delays{0, 10, 30, 60, 300, 900, 3600};
+  std::vector<int32> allowed_slow_mode_delays{0, 10, 30, 60, 300, 900, 3600};
   if (!td::contains(allowed_slow_mode_delays, slow_mode_delay)) {
     return promise.set_error(Status::Error(400, "Invalid new value for slow mode delay"));
   }
@@ -3542,7 +3542,7 @@ bool ChatManager::can_convert_channel_to_gigagroup(ChannelId channel_id) const {
                                                     ChannelType::Unknown);
 }
 
-void ChatManager::report_channel_spam(ChannelId channel_id, const vector<MessageId> &message_ids,
+void ChatManager::report_channel_spam(ChannelId channel_id, const std::vector<MessageId> &message_ids,
                                       Promise<Unit> &&promise) {
   auto c = get_channel(channel_id);
   if (c == nullptr) {
@@ -3555,7 +3555,7 @@ void ChatManager::report_channel_spam(ChannelId channel_id, const vector<Message
     return promise.set_error(Status::Error(400, "Spam can be reported only by chat administrators"));
   }
 
-  FlatHashMap<DialogId, vector<MessageId>, DialogIdHash> server_message_ids;
+  FlatHashMap<DialogId, std::vector<MessageId>, DialogIdHash> server_message_ids;
   for (auto &message_id : message_ids) {
     TRY_STATUS_PROMISE(promise, MessagesManager::can_report_message(message_id));
     auto sender_dialog_id = td_->messages_manager_->get_dialog_message_sender({DialogId(channel_id), message_id});
@@ -3629,7 +3629,7 @@ void ChatManager::delete_channel(ChannelId channel_id, Promise<Unit> &&promise) 
 }
 
 vector<ChannelId> ChatManager::get_channel_ids(vector<tl_object_ptr<telegram_api::Chat>> &&chats, const char *source) {
-  vector<ChannelId> channel_ids;
+  std::vector<ChannelId> channel_ids;
   for (auto &chat : chats) {
     auto channel_id = get_channel_id(chat);
     if (!channel_id.is_valid()) {
@@ -3645,7 +3645,7 @@ vector<ChannelId> ChatManager::get_channel_ids(vector<tl_object_ptr<telegram_api
 }
 
 vector<DialogId> ChatManager::get_dialog_ids(vector<tl_object_ptr<telegram_api::Chat>> &&chats, const char *source) {
-  vector<DialogId> dialog_ids;
+  std::vector<DialogId> dialog_ids;
   for (auto &chat : chats) {
     auto channel_id = get_channel_id(chat);
     if (!channel_id.is_valid()) {
@@ -3664,7 +3664,7 @@ vector<DialogId> ChatManager::get_dialog_ids(vector<tl_object_ptr<telegram_api::
 }
 
 void ChatManager::return_created_public_dialogs(Promise<td_api::object_ptr<td_api::chats>> &&promise,
-                                                const vector<ChannelId> &channel_ids) {
+                                                const std::vector<ChannelId> &channel_ids) {
   if (!promise) {
     return;
   }
@@ -3716,7 +3716,7 @@ void ChatManager::get_created_public_dialogs(PublicDialogType type,
         G()->td_db()->get_binlog_pmc()->erase(pmc_key);
       } else {
         Dependencies dependencies;
-        vector<ChannelId> channel_ids;
+        std::vector<ChannelId> channel_ids;
         for (auto &r_channel_id : r_channel_ids) {
           auto channel_id = r_channel_id.move_as_ok();
           dependencies.add_dialog_and_dependencies(DialogId(channel_id));
@@ -3797,7 +3797,7 @@ void ChatManager::update_created_public_channels(Channel *c, ChannelId channel_i
 }
 
 void ChatManager::on_get_created_public_channels(PublicDialogType type,
-                                                 vector<tl_object_ptr<telegram_api::Chat>> &&chats) {
+                                                 std::vector<tl_object_ptr<telegram_api::Chat>> &&chats) {
   auto index = static_cast<int32>(type);
   auto channel_ids = get_channel_ids(std::move(chats), "on_get_created_public_channels");
   if (created_public_channels_inited_[index] && created_public_channels_[index] == channel_ids) {
@@ -3835,7 +3835,7 @@ bool ChatManager::are_created_public_broadcasts_inited() const {
   return created_public_channels_inited_[2];
 }
 
-const vector<ChannelId> &ChatManager::get_created_public_broadcasts() const {
+const std::vector<ChannelId> &ChatManager::get_created_public_broadcasts() const {
   return created_public_channels_[2];
 }
 
@@ -3914,7 +3914,7 @@ void ChatManager::remove_inactive_channel(ChannelId channel_id) {
   }
 }
 
-void ChatManager::register_message_channels(MessageFullId message_full_id, vector<ChannelId> channel_ids) {
+void ChatManager::register_message_channels(MessageFullId message_full_id, std::vector<ChannelId> channel_ids) {
   auto dialog_id = message_full_id.get_dialog_id();
   CHECK(dialog_id.get_type() == DialogType::Channel);
   if (!have_channel(dialog_id.get_channel_id())) {
@@ -3931,7 +3931,7 @@ void ChatManager::register_message_channels(MessageFullId message_full_id, vecto
   }
 }
 
-void ChatManager::unregister_message_channels(MessageFullId message_full_id, vector<ChannelId> channel_ids) {
+void ChatManager::unregister_message_channels(MessageFullId message_full_id, std::vector<ChannelId> channel_ids) {
   if (channel_messages_.empty()) {
     // fast path
     return;
@@ -4154,7 +4154,7 @@ void ChatManager::on_load_chat_from_database(ChatId chat_id, string value, bool 
   }
 
   auto it = load_chat_from_database_queries_.find(chat_id);
-  vector<Promise<Unit>> promises;
+  std::vector<Promise<Unit>> promises;
   if (it != load_chat_from_database_queries_.end()) {
     promises = std::move(it->second);
     CHECK(!promises.empty());
@@ -4401,7 +4401,7 @@ void ChatManager::on_load_channel_from_database(ChannelId channel_id, string val
   }
 
   auto it = load_channel_from_database_queries_.find(channel_id);
-  vector<Promise<Unit>> promises;
+  std::vector<Promise<Unit>> promises;
   if (it != load_channel_from_database_queries_.end()) {
     promises = std::move(it->second);
     CHECK(!promises.empty());
@@ -5047,8 +5047,8 @@ void ChatManager::update_chat_full(ChatFull *chat_full, ChatId chat_id, const ch
     LOG(INFO) << "Update full " << chat_id << " from " << source;
   }
   if (chat_full->need_send_update) {
-    vector<DialogAdministrator> administrators;
-    vector<UserId> bot_user_ids;
+    std::vector<DialogAdministrator> administrators;
+    std::vector<UserId> bot_user_ids;
     for (const auto &participant : chat_full->participants) {
       if (participant.status_.is_administrator() && participant.dialog_id_.get_type() == DialogType::User) {
         administrators.emplace_back(participant.dialog_id_.get_user_id(), participant.status_.get_rank(),
@@ -5521,7 +5521,7 @@ void ChatManager::on_get_chat_full(tl_object_ptr<telegram_api::ChatFull> &&chat_
                                                                              channel->online_count_, true);
     }
 
-    vector<UserId> bot_user_ids;
+    std::vector<UserId> bot_user_ids;
     for (const auto &bot_info : channel->bot_info_) {
       UserId user_id(bot_info->user_id_);
       if (!td_->user_manager_->is_user_bot(user_id)) {
@@ -5676,7 +5676,7 @@ void ChatManager::on_get_chat_participants(tl_object_ptr<telegram_api::ChatParti
       }
 
       UserId new_creator_user_id;
-      vector<DialogParticipant> new_participants;
+      std::vector<DialogParticipant> new_participants;
       new_participants.reserve(participants->participants_.size());
 
       for (auto &participant_ptr : participants->participants_) {
@@ -5740,7 +5740,7 @@ const DialogParticipant *ChatManager::get_chat_full_participant(const ChatFull *
   return nullptr;
 }
 
-const vector<DialogParticipant> *ChatManager::get_chat_participants(ChatId chat_id) const {
+const std::vector<DialogParticipant> *ChatManager::get_chat_participants(ChatId chat_id) const {
   auto chat_full = get_chat_full(chat_id);
   if (chat_full == nullptr) {
     return nullptr;
@@ -5833,7 +5833,7 @@ bool ChatManager::speculative_add_count(int32 &count, int32 delta_count, int32 m
   return true;
 }
 
-void ChatManager::speculative_add_channel_participants(ChannelId channel_id, const vector<UserId> &added_user_ids,
+void ChatManager::speculative_add_channel_participants(ChannelId channel_id, const std::vector<UserId> &added_user_ids,
                                                        UserId inviter_user_id, int32 date, bool by_me) {
   td_->dialog_participant_manager_->add_cached_channel_participants(channel_id, added_user_ids, inviter_user_id, date);
   auto channel_full = get_channel_full_force(channel_id, true, "speculative_add_channel_participants");
@@ -6759,7 +6759,7 @@ bool ChatManager::on_update_chat_full_participants_short(ChatFull *chat_full, Ch
 }
 
 void ChatManager::on_update_chat_full_participants(ChatFull *chat_full, ChatId chat_id,
-                                                   vector<DialogParticipant> participants, int32 version,
+                                                   std::vector<DialogParticipant> participants, int32 version,
                                                    bool from_update) {
   if (version <= -1) {
     LOG(ERROR) << "Receive members with wrong version " << version << " in " << chat_id;
@@ -7320,7 +7320,7 @@ void ChatManager::on_update_channel_slow_mode_next_send_date(ChannelId channel_i
   }
 }
 
-void ChatManager::on_update_channel_bot_user_ids(ChannelId channel_id, vector<UserId> &&bot_user_ids) {
+void ChatManager::on_update_channel_bot_user_ids(ChannelId channel_id, std::vector<UserId> &&bot_user_ids) {
   CHECK(channel_id.is_valid());
   if (!have_channel(channel_id)) {
     LOG(ERROR) << channel_id << " not found";
@@ -7338,7 +7338,7 @@ void ChatManager::on_update_channel_bot_user_ids(ChannelId channel_id, vector<Us
 }
 
 void ChatManager::on_update_channel_full_bot_user_ids(ChannelFull *channel_full, ChannelId channel_id,
-                                                      vector<UserId> &&bot_user_ids) {
+                                                      std::vector<UserId> &&bot_user_ids) {
   CHECK(channel_full != nullptr);
   send_closure_later(G()->messages_manager(), &MessagesManager::on_dialog_bots_updated, DialogId(channel_id),
                      bot_user_ids, false);
@@ -7475,14 +7475,14 @@ FileSourceId ChatManager::get_channel_full_file_source_id(ChannelId channel_id) 
   return source_id;
 }
 
-void ChatManager::create_new_chat(const vector<UserId> &user_ids, const string &title, MessageTtl message_ttl,
+void ChatManager::create_new_chat(const std::vector<UserId> &user_ids, const string &title, MessageTtl message_ttl,
                                   Promise<td_api::object_ptr<td_api::createdBasicGroupChat>> &&promise) {
   auto new_title = clean_name(title, MAX_TITLE_LENGTH);
   if (new_title.empty()) {
     return promise.set_error(Status::Error(400, "Title must be non-empty"));
   }
 
-  vector<telegram_api::object_ptr<telegram_api::InputUser>> input_users;
+  std::vector<telegram_api::object_ptr<telegram_api::InputUser>> input_users;
   for (auto user_id : user_ids) {
     TRY_RESULT_PROMISE(promise, input_user, td_->user_manager_->get_input_user(user_id));
     input_users.push_back(std::move(input_user));
@@ -7628,7 +7628,7 @@ void ChatManager::load_chat_full(ChatId chat_id, bool force, Promise<Unit> &&pro
     send_get_chat_full_query(chat_id, Auto(), source);
   }
 
-  vector<DialogId> participant_dialog_ids;
+  std::vector<DialogId> participant_dialog_ids;
   for (const auto &dialog_participant : chat_full->participants) {
     participant_dialog_ids.push_back(dialog_participant.dialog_id_);
   }

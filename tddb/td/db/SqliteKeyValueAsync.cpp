@@ -111,7 +111,7 @@ class SqliteKeyValueAsync final : public SqliteKeyValueAsyncInterface {
     static constexpr double MAX_PENDING_QUERIES_DELAY = 0.01;
     static constexpr size_t MAX_PENDING_QUERIES_COUNT = 100;
     FlatHashMap<string, optional<string>> buffer_;
-    vector<Promise<Unit>> buffer_promises_;
+    std::vector<Promise<Unit>> buffer_promises_;
     size_t cnt_ = 0;
 
     double wakeup_at_ = 0;

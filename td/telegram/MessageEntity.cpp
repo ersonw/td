@@ -194,9 +194,9 @@ tl_object_ptr<td_api::textEntity> MessageEntity::get_text_entity_object(const Us
 }
 
 vector<tl_object_ptr<td_api::textEntity>> get_text_entities_object(const UserManager *user_manager,
-                                                                   const vector<MessageEntity> &entities,
+                                                                   const std::vector<MessageEntity> &entities,
                                                                    bool skip_bot_commands, int32 max_media_timestamp) {
-  vector<tl_object_ptr<td_api::textEntity>> result;
+  std::vector<tl_object_ptr<td_api::textEntity>> result;
   result.reserve(entities.size());
 
   for (auto &entity : entities) {
@@ -257,8 +257,8 @@ static bool is_alpha_digit_or_underscore_or_minus(uint32 code) {
 
 // This functions just implements corresponding regexps
 // All other fixes will be in other functions
-static vector<Slice> match_mentions(Slice str) {
-  vector<Slice> result;
+static std::vector<Slice> match_mentions(Slice str) {
+  std::vector<Slice> result;
   const unsigned char *begin = str.ubegin();
   const unsigned char *end = str.uend();
   const unsigned char *ptr = begin;
@@ -301,8 +301,8 @@ static vector<Slice> match_mentions(Slice str) {
   return result;
 }
 
-static vector<Slice> match_bot_commands(Slice str) {
-  vector<Slice> result;
+static std::vector<Slice> match_bot_commands(Slice str) {
+  std::vector<Slice> result;
   const unsigned char *begin = str.ubegin();
   const unsigned char *end = str.uend();
   const unsigned char *ptr = begin;
@@ -374,8 +374,8 @@ static bool is_hashtag_letter(uint32 c, UnicodeSimpleCategory &category) {
   }
 }
 
-static vector<Slice> match_hashtags(Slice str) {
-  vector<Slice> result;
+static std::vector<Slice> match_hashtags(Slice str) {
+  std::vector<Slice> result;
   const unsigned char *begin = str.ubegin();
   const unsigned char *end = str.uend();
   const unsigned char *ptr = begin;
@@ -437,8 +437,8 @@ static vector<Slice> match_hashtags(Slice str) {
   return result;
 }
 
-static vector<Slice> match_cashtags(Slice str) {
-  vector<Slice> result;
+static std::vector<Slice> match_cashtags(Slice str) {
+  std::vector<Slice> result;
   const unsigned char *begin = str.ubegin();
   const unsigned char *end = str.uend();
   const unsigned char *ptr = begin;
@@ -489,8 +489,8 @@ static vector<Slice> match_cashtags(Slice str) {
   return result;
 }
 
-static vector<Slice> match_media_timestamps(Slice str) {
-  vector<Slice> result;
+static std::vector<Slice> match_media_timestamps(Slice str) {
+  std::vector<Slice> result;
   const unsigned char *begin = str.ubegin();
   const unsigned char *end = str.uend();
   const unsigned char *ptr = begin;
@@ -540,8 +540,8 @@ static vector<Slice> match_media_timestamps(Slice str) {
   return result;
 }
 
-static vector<Slice> match_bank_card_numbers(Slice str) {
-  vector<Slice> result;
+static std::vector<Slice> match_bank_card_numbers(Slice str) {
+  std::vector<Slice> result;
   const unsigned char *begin = str.ubegin();
   const unsigned char *end = str.uend();
   const unsigned char *ptr = begin;
@@ -626,8 +626,8 @@ static bool is_url_path_symbol(uint32 c) {
   }
 }
 
-static vector<Slice> match_tg_urls(Slice str) {
-  vector<Slice> result;
+static std::vector<Slice> match_tg_urls(Slice str) {
+  std::vector<Slice> result;
   const unsigned char *begin = str.ubegin();
   const unsigned char *end = str.uend();
   const unsigned char *ptr = begin;
@@ -691,8 +691,8 @@ static vector<Slice> match_tg_urls(Slice str) {
   return result;
 }
 
-static vector<Slice> match_urls(Slice str) {
-  vector<Slice> result;
+static std::vector<Slice> match_urls(Slice str) {
+  std::vector<Slice> result;
   const unsigned char *begin = str.ubegin();
   const unsigned char *end = str.uend();
 
@@ -996,7 +996,7 @@ bool is_email_address(Slice str) {
     return false;
   }
 
-  vector<Slice> domain_parts = full_split(domain, '.');
+  std::vector<Slice> domain_parts = full_split(domain, '.');
   if (domain_parts.size() <= 1 || domain_parts.size() > 7) {
     return false;
   }
@@ -1346,7 +1346,7 @@ vector<Slice> find_cashtags(Slice str) {
 }
 
 vector<Slice> find_bank_card_numbers(Slice str) {
-  vector<Slice> result;
+  std::vector<Slice> result;
   for (auto bank_card : match_bank_card_numbers(str)) {
     if (is_valid_bank_card(bank_card)) {
       result.emplace_back(bank_card);
@@ -1360,7 +1360,7 @@ vector<Slice> find_tg_urls(Slice str) {
 }
 
 vector<std::pair<Slice, bool>> find_urls(Slice str) {
-  vector<std::pair<Slice, bool>> result;
+  std::vector<std::pair<Slice, bool>> result;
   for (auto url : match_urls(str)) {
     if (is_email_address(url)) {
       result.emplace_back(url, true);
@@ -1377,9 +1377,9 @@ vector<std::pair<Slice, bool>> find_urls(Slice str) {
 }
 
 vector<std::pair<Slice, int32>> find_media_timestamps(Slice str) {
-  vector<std::pair<Slice, int32>> result;
+  std::vector<std::pair<Slice, int32>> result;
   for (auto media_timestamp : match_media_timestamps(str)) {
-    vector<Slice> parts = full_split(media_timestamp, ':');
+    std::vector<Slice> parts = full_split(media_timestamp, ':');
     CHECK(parts.size() >= 2);
     if (parts.size() > 3 || parts.back().size() != 2) {
       continue;
@@ -1443,12 +1443,12 @@ static void sort_entities(vector<MessageEntity> &entities) {
 }
 
 #define check_is_sorted(entities) check_is_sorted_impl((entities), __LINE__)
-static void check_is_sorted_impl(const vector<MessageEntity> &entities, int line) {
+static void check_is_sorted_impl(const std::vector<MessageEntity> &entities, int line) {
   LOG_CHECK(std::is_sorted(entities.begin(), entities.end())) << line << " " << entities;
 }
 
 #define check_non_intersecting(entities) check_non_intersecting_impl((entities), __LINE__)
-static void check_non_intersecting_impl(const vector<MessageEntity> &entities, int line) {
+static void check_non_intersecting_impl(const std::vector<MessageEntity> &entities, int line) {
   for (size_t i = 0; i + 1 < entities.size(); i++) {
     LOG_CHECK(entities[i].offset + entities[i].length <= entities[i + 1].offset) << line << " " << entities;
   }
@@ -1526,7 +1526,7 @@ static size_t get_splittable_entity_type_index(MessageEntity::Type type) {
   }
 }
 
-static bool are_entities_valid(const vector<MessageEntity> &entities) {
+static bool are_entities_valid(const std::vector<MessageEntity> &entities) {
   if (entities.empty()) {
     return true;
   }
@@ -1534,7 +1534,7 @@ static bool are_entities_valid(const vector<MessageEntity> &entities) {
 
   int32 end_pos[SPLITTABLE_ENTITY_TYPE_COUNT];
   std::fill_n(end_pos, SPLITTABLE_ENTITY_TYPE_COUNT, -1);
-  vector<const MessageEntity *> nested_entities_stack;
+  std::vector<const MessageEntity *> nested_entities_stack;
   int32 nested_entity_type_mask = 0;
   for (auto &entity : entities) {
     while (!nested_entities_stack.empty() &&
@@ -1613,7 +1613,7 @@ static void remove_intersecting_entities(vector<MessageEntity> &entities) {
 
 // continuous_entities and blockquote_entities must be pre-sorted and non-overlapping
 static void remove_entities_intersecting_blockquote(vector<MessageEntity> &entities,
-                                                    const vector<MessageEntity> &blockquote_entities) {
+                                                    const std::vector<MessageEntity> &blockquote_entities) {
   check_non_intersecting(entities);
   check_non_intersecting(blockquote_entities);
   if (blockquote_entities.empty()) {
@@ -1645,7 +1645,7 @@ static void remove_entities_intersecting_blockquote(vector<MessageEntity> &entit
 
 // keeps only non-intersecting entities
 // fixes entity offsets from UTF-8 to UTF-16 offsets
-static void fix_entity_offsets(Slice text, vector<MessageEntity> &entities) {
+static void fix_entity_offsets(Slice text, std::vector<MessageEntity> &entities) {
   if (entities.empty()) {
     return;
   }
@@ -1690,9 +1690,9 @@ static void fix_entity_offsets(Slice text, vector<MessageEntity> &entities) {
 }
 
 vector<MessageEntity> find_entities(Slice text, bool skip_bot_commands, bool skip_media_timestamps) {
-  vector<MessageEntity> entities;
+  std::vector<MessageEntity> entities;
 
-  auto add_entities = [&entities, &text](MessageEntity::Type type, vector<Slice> (*find_entities_f)(Slice)) mutable {
+  auto add_entities = [&entities, &text](MessageEntity::Type type, std::vector<Slice> (*find_entities_f)(Slice)) mutable {
     auto new_entities = find_entities_f(text);
     for (auto &entity : new_entities) {
       auto offset = narrow_cast<int32>(entity.begin() - text.begin());
@@ -1730,8 +1730,8 @@ vector<MessageEntity> find_entities(Slice text, bool skip_bot_commands, bool ski
   return entities;
 }
 
-static vector<MessageEntity> find_media_timestamp_entities(Slice text) {
-  vector<MessageEntity> entities;
+static std::vector<MessageEntity> find_media_timestamp_entities(Slice text) {
+  std::vector<MessageEntity> entities;
 
   auto media_timestamps = find_media_timestamps(text);
   for (auto &entity : media_timestamps) {
@@ -1745,7 +1745,7 @@ static vector<MessageEntity> find_media_timestamp_entities(Slice text) {
   return entities;
 }
 
-static vector<MessageEntity> merge_entities(vector<MessageEntity> old_entities, vector<MessageEntity> new_entities) {
+static std::vector<MessageEntity> merge_entities(vector<MessageEntity> old_entities, std::vector<MessageEntity> new_entities) {
   if (new_entities.empty()) {
     return old_entities;
   }
@@ -1753,7 +1753,7 @@ static vector<MessageEntity> merge_entities(vector<MessageEntity> old_entities, 
     return new_entities;
   }
 
-  vector<MessageEntity> result;
+  std::vector<MessageEntity> result;
   result.reserve(old_entities.size() + new_entities.size());
 
   auto new_it = new_entities.begin();
@@ -1876,7 +1876,7 @@ bool is_visible_url(const FormattedText &text, const string &url) {
 
 Result<vector<MessageEntity>> parse_markdown(string &text) {
   size_t result_size = 0;
-  vector<MessageEntity> entities;
+  std::vector<MessageEntity> entities;
   size_t size = text.size();
   int32 utf16_offset = 0;
   for (size_t i = 0; i < size; i++) {
@@ -1995,7 +1995,7 @@ Result<vector<MessageEntity>> parse_markdown(string &text) {
 
 Result<vector<MessageEntity>> parse_markdown_v2(string &text) {
   size_t result_size = 0;
-  vector<MessageEntity> entities;
+  std::vector<MessageEntity> entities;
   int32 utf16_offset = 0;
 
   struct EntityInfo {
@@ -2014,7 +2014,7 @@ Result<vector<MessageEntity>> parse_markdown_v2(string &text) {
         , entity_begin_pos(entity_begin_pos) {
     }
   };
-  vector<EntityInfo> nested_entities;
+  std::vector<EntityInfo> nested_entities;
 
   bool have_blockquote = false;
   bool can_start_blockquote = true;
@@ -2333,8 +2333,8 @@ Result<vector<MessageEntity>> parse_markdown_v2(string &text) {
   return std::move(entities);
 }
 
-static vector<Slice> find_text_url_entities_v3(Slice text) {
-  vector<Slice> result;
+static std::vector<Slice> find_text_url_entities_v3(Slice text) {
+  std::vector<Slice> result;
   size_t size = text.size();
   for (size_t i = 0; i < size; i++) {
     if (text[i] != '[') {
@@ -2377,7 +2377,7 @@ static vector<Slice> find_text_url_entities_v3(Slice text) {
 }
 
 // entities must be valid for the text
-static FormattedText parse_text_url_entities_v3(Slice text, const vector<MessageEntity> &entities) {
+static FormattedText parse_text_url_entities_v3(Slice text, const std::vector<MessageEntity> &entities) {
   // continuous entities can't intersect TextUrl entities,
   // so try to find new TextUrl entities only between the predetermined continuous entities
 
@@ -2385,8 +2385,8 @@ static FormattedText parse_text_url_entities_v3(Slice text, const vector<Message
 
   FormattedText result;
   int32 result_text_utf16_length = 0;
-  vector<MessageEntity> part_entities;
-  vector<MessageEntity> part_splittable_entities[SPLITTABLE_ENTITY_TYPE_COUNT];
+  std::vector<MessageEntity> part_entities;
+  std::vector<MessageEntity> part_splittable_entities[SPLITTABLE_ENTITY_TYPE_COUNT];
   int32 part_begin = 0;
   int32 max_end = 0;
   int32 skipped_length = 0;
@@ -2413,7 +2413,7 @@ static FormattedText parse_text_url_entities_v3(Slice text, const vector<Message
       auto parsed_part_text = utf8_utf16_substr(text, 0, part_end - max_end);
       text = text.substr(parsed_part_text.size());
 
-      vector<Slice> text_urls = find_text_url_entities_v3(parsed_part_text);
+      std::vector<Slice> text_urls = find_text_url_entities_v3(parsed_part_text);
 
       int32 text_utf16_offset = max_end;
       size_t prev_pos = 0;
@@ -2556,7 +2556,7 @@ static FormattedText parse_text_url_entities_v3(Slice text, const vector<Message
   return result;
 }
 
-static vector<MessageEntity> find_splittable_entities_v3(Slice text, const vector<MessageEntity> &entities) {
+static std::vector<MessageEntity> find_splittable_entities_v3(Slice text, const std::vector<MessageEntity> &entities) {
   FlatHashSet<int32, Hash<int32>> unallowed_boundaries;
   for (auto &entity : entities) {
     unallowed_boundaries.insert(entity.offset + 1);
@@ -2580,7 +2580,7 @@ static vector<MessageEntity> find_splittable_entities_v3(Slice text, const vecto
     }
   }
 
-  vector<MessageEntity> result;
+  std::vector<MessageEntity> result;
   int32 splittable_entity_offset[SPLITTABLE_ENTITY_TYPE_COUNT] = {};
   int32 utf16_offset = 0;
   for (size_t i = 0; i + 1 < text.size(); i++) {
@@ -2631,7 +2631,7 @@ static vector<MessageEntity> find_splittable_entities_v3(Slice text, const vecto
 
 // entities must be valid and can contain only splittable and continuous entities
 // __italic__ ~~strikethrough~~ **bold** ||spoiler|| and [text_url](telegram.org) entities are left to be parsed
-static FormattedText parse_markdown_v3_without_pre(Slice text, vector<MessageEntity> entities) {
+static FormattedText parse_markdown_v3_without_pre(Slice text, std::vector<MessageEntity> entities) {
   check_is_sorted(entities);
 
   FormattedText parsed_text_url_text;
@@ -2656,7 +2656,7 @@ static FormattedText parse_markdown_v3_without_pre(Slice text, vector<MessageEnt
   }
 
   auto found_splittable_entities = find_splittable_entities_v3(text, entities);
-  vector<int32> removed_pos;
+  std::vector<int32> removed_pos;
   for (auto &entity : found_splittable_entities) {
     removed_pos.push_back(entity.offset - 1);
     removed_pos.push_back(entity.offset + entity.length + 1);
@@ -2704,7 +2704,7 @@ static FormattedText parse_markdown_v3_without_pre(Slice text, vector<MessageEnt
 
 static FormattedText parse_pre_entities_v3(Slice text) {
   string result;
-  vector<MessageEntity> entities;
+  std::vector<MessageEntity> entities;
   size_t size = text.size();
   int32 utf16_offset = 0;
   for (size_t i = 0; i < size; i++) {
@@ -2786,7 +2786,7 @@ static FormattedText parse_pre_entities_v3(Slice text) {
 }
 
 // entities must be valid for the text
-static FormattedText parse_pre_entities_v3(Slice text, vector<MessageEntity> entities) {
+static FormattedText parse_pre_entities_v3(Slice text, std::vector<MessageEntity> entities) {
   // nothing can intersect pre entities, so ignore all '`' inside the predetermined entities
   // and try to find new pre entities only between the predetermined entities
 
@@ -2871,7 +2871,7 @@ static FormattedText parse_markdown_v3_without_blockquote(FormattedText text) {
 
   FormattedText result;
   int32 result_text_utf16_length = 0;
-  vector<MessageEntity> part_entities;
+  std::vector<MessageEntity> part_entities;
   int32 part_begin = 0;
   int32 max_end = 0;
   Slice left_text = text.text;
@@ -2939,7 +2939,7 @@ FormattedText parse_markdown_v3(FormattedText text) {
 
   FormattedText result;
   int32 result_text_utf16_length = 0;
-  vector<MessageEntity> part_entities;
+  std::vector<MessageEntity> part_entities;
   int32 part_begin = 0;
   int32 max_end = 0;
   Slice left_text = text.text;
@@ -3023,7 +3023,7 @@ FormattedText get_markdown_v3(FormattedText text) {
         : entity(entity), utf16_added_before(utf16_added_before) {
     }
   };
-  vector<EntityInfo> nested_entities_stack;
+  std::vector<EntityInfo> nested_entities_stack;
   size_t current_entity = 0;
 
   int32 utf16_offset = 0;
@@ -3227,7 +3227,7 @@ Result<vector<MessageEntity>> parse_html(string &str) {
   auto result_end = MutableSlice(str).ubegin();
   const unsigned char *result_begin = result_end;
 
-  vector<MessageEntity> entities;
+  std::vector<MessageEntity> entities;
   int32 utf16_offset = 0;
   bool need_recheck_utf8 = false;
 
@@ -3244,7 +3244,7 @@ Result<vector<MessageEntity>> parse_html(string &str) {
         , entity_begin_pos(entity_begin_pos) {
     }
   };
-  vector<EntityInfo> nested_entities;
+  std::vector<EntityInfo> nested_entities;
 
   for (size_t i = 0; i < str_size; i++) {
     auto c = static_cast<unsigned char>(text[i]);
@@ -3497,8 +3497,8 @@ Result<vector<MessageEntity>> parse_html(string &str) {
 }
 
 vector<tl_object_ptr<secret_api::MessageEntity>> get_input_secret_message_entities(
-    const vector<MessageEntity> &entities, int32 layer) {
-  vector<tl_object_ptr<secret_api::MessageEntity>> result;
+    const std::vector<MessageEntity> &entities, int32 layer) {
+  std::vector<tl_object_ptr<secret_api::MessageEntity>> result;
   for (auto &entity : entities) {
     switch (entity.type) {
       case MessageEntity::Type::Mention:
@@ -3585,9 +3585,9 @@ vector<tl_object_ptr<secret_api::MessageEntity>> get_input_secret_message_entiti
 }
 
 Result<vector<MessageEntity>> get_message_entities(const UserManager *user_manager,
-                                                   vector<tl_object_ptr<td_api::textEntity>> &&input_entities,
+                                                   std::vector<tl_object_ptr<td_api::textEntity>> &&input_entities,
                                                    bool allow_all) {
-  vector<MessageEntity> entities;
+  std::vector<MessageEntity> entities;
   entities.reserve(input_entities.size());
   for (auto &input_entity : input_entities) {
     if (input_entity == nullptr || input_entity->type_ == nullptr) {
@@ -3714,9 +3714,9 @@ Result<vector<MessageEntity>> get_message_entities(const UserManager *user_manag
 }
 
 vector<MessageEntity> get_message_entities(const UserManager *user_manager,
-                                           vector<tl_object_ptr<telegram_api::MessageEntity>> &&server_entities,
+                                           std::vector<tl_object_ptr<telegram_api::MessageEntity>> &&server_entities,
                                            const char *source) {
-  vector<MessageEntity> entities;
+  std::vector<MessageEntity> entities;
   entities.reserve(server_entities.size());
   for (auto &server_entity : server_entities) {
     switch (server_entity->get_id()) {
@@ -3850,13 +3850,13 @@ vector<MessageEntity> get_message_entities(const UserManager *user_manager,
   return entities;
 }
 
-vector<MessageEntity> get_message_entities(Td *td, vector<tl_object_ptr<secret_api::MessageEntity>> &&secret_entities,
+vector<MessageEntity> get_message_entities(Td *td, std::vector<tl_object_ptr<secret_api::MessageEntity>> &&secret_entities,
                                            bool is_premium, MultiPromiseActor &load_data_multipromise) {
   constexpr size_t MAX_SECRET_CHAT_ENTITIES = 1000;
   constexpr size_t MAX_CUSTOM_EMOJI_ENTITIES = 100;
-  vector<MessageEntity> entities;
+  std::vector<MessageEntity> entities;
   entities.reserve(secret_entities.size());
-  vector<CustomEmojiId> custom_emoji_ids;
+  std::vector<CustomEmojiId> custom_emoji_ids;
   for (auto &secret_entity : secret_entities) {
     switch (secret_entity->get_id()) {
       case secret_api::messageEntityUnknown::ID:
@@ -3998,7 +3998,7 @@ telegram_api::object_ptr<telegram_api::textWithEntities> get_input_text_with_ent
 }
 
 FormattedText get_formatted_text(const UserManager *user_manager, string &&text,
-                                 vector<telegram_api::object_ptr<telegram_api::MessageEntity>> &&server_entities,
+                                 std::vector<telegram_api::object_ptr<telegram_api::MessageEntity>> &&server_entities,
                                  bool skip_media_timestamps, bool skip_trim, const char *source) {
   auto entities = get_message_entities(user_manager, std::move(server_entities), source);
   auto status = fix_formatted_text(text, entities, true, true, true, skip_media_timestamps, skip_trim);
@@ -4023,7 +4023,7 @@ FormattedText get_formatted_text(const UserManager *user_manager,
 
 // like clean_input_string but also fixes entities
 // entities must be sorted, can be nested, but must not intersect each other
-static Result<string> clean_input_string_with_entities(const string &text, vector<MessageEntity> &entities) {
+static Result<string> clean_input_string_with_entities(const string &text, std::vector<MessageEntity> &entities) {
   check_is_sorted(entities);
 
   struct EntityInfo {
@@ -4034,7 +4034,7 @@ static Result<string> clean_input_string_with_entities(const string &text, vecto
         : entity(entity), utf16_skipped_before(utf16_skipped_before) {
     }
   };
-  vector<EntityInfo> nested_entities_stack;
+  std::vector<EntityInfo> nested_entities_stack;
   size_t current_entity = 0;
 
   int32 utf16_offset = 0;
@@ -4169,7 +4169,7 @@ static Result<string> clean_input_string_with_entities(const string &text, vecto
 // removes empty entities
 // entities must be sorted by offset and length, but not necessary by type
 // returns {last_non_whitespace_pos, last_non_whitespace_utf16_offset}
-static std::pair<size_t, int32> remove_invalid_entities(const string &text, vector<MessageEntity> &entities) {
+static std::pair<size_t, int32> remove_invalid_entities(const string &text, std::vector<MessageEntity> &entities) {
   if (entities.empty()) {
     // fast path
     for (size_t pos = 0; pos < text.size(); pos++) {
@@ -4214,14 +4214,14 @@ static std::pair<size_t, int32> remove_invalid_entities(const string &text, vect
 }
 
 // enitities must contain only splittable entities
-static void split_entities(vector<MessageEntity> &entities, const vector<MessageEntity> &other_entities) {
+static void split_entities(vector<MessageEntity> &entities, const std::vector<MessageEntity> &other_entities) {
   check_is_sorted(entities);
   check_is_sorted(other_entities);
 
   int32 begin_pos[SPLITTABLE_ENTITY_TYPE_COUNT] = {};
   int32 end_pos[SPLITTABLE_ENTITY_TYPE_COUNT] = {};
   auto it = entities.begin();
-  vector<MessageEntity> result;
+  std::vector<MessageEntity> result;
   auto add_entities = [&](int32 end_offset) {
     auto flush_entities = [&](int32 offset) {
       for (auto type : {MessageEntity::Type::Bold, MessageEntity::Type::Italic, MessageEntity::Type::Underline,
@@ -4260,7 +4260,7 @@ static void split_entities(vector<MessageEntity> &entities, const vector<Message
     flush_entities(end_offset);
   };
 
-  vector<const MessageEntity *> nested_entities_stack;
+  std::vector<const MessageEntity *> nested_entities_stack;
   auto add_offset = [&](int32 offset) {
     while (!nested_entities_stack.empty() &&
            offset >= nested_entities_stack.back()->offset + nested_entities_stack.back()->length) {
@@ -4287,8 +4287,8 @@ static void split_entities(vector<MessageEntity> &entities, const vector<Message
   sort_entities(entities);
 }
 
-static vector<MessageEntity> resplit_entities(vector<MessageEntity> &&splittable_entities,
-                                              vector<MessageEntity> &&entities) {
+static std::vector<MessageEntity> resplit_entities(vector<MessageEntity> &&splittable_entities,
+                                              std::vector<MessageEntity> &&entities) {
   if (!splittable_entities.empty()) {
     split_entities(splittable_entities, entities);  // can merge some entities
 
@@ -4310,9 +4310,9 @@ void fix_entities(vector<MessageEntity> &entities) {
     return;
   }
 
-  vector<MessageEntity> continuous_entities;
-  vector<MessageEntity> blockquote_entities;
-  vector<MessageEntity> splittable_entities;
+  std::vector<MessageEntity> continuous_entities;
+  std::vector<MessageEntity> blockquote_entities;
+  std::vector<MessageEntity> splittable_entities;
   for (auto &entity : entities) {
     if (is_splittable_entity(entity.type)) {
       splittable_entities.push_back(std::move(entity));
@@ -4339,7 +4339,7 @@ void fix_entities(vector<MessageEntity> &entities) {
   check_is_sorted(entities);
 }
 
-static void merge_new_entities(vector<MessageEntity> &entities, vector<MessageEntity> new_entities) {
+static void merge_new_entities(vector<MessageEntity> &entities, std::vector<MessageEntity> new_entities) {
   check_is_sorted(entities);
   if (new_entities.empty()) {
     // fast path
@@ -4348,9 +4348,9 @@ static void merge_new_entities(vector<MessageEntity> &entities, vector<MessageEn
 
   check_non_intersecting(new_entities);
 
-  vector<MessageEntity> continuous_entities;
-  vector<MessageEntity> blockquote_entities;
-  vector<MessageEntity> splittable_entities;
+  std::vector<MessageEntity> continuous_entities;
+  std::vector<MessageEntity> blockquote_entities;
+  std::vector<MessageEntity> splittable_entities;
   for (auto &entity : entities) {
     if (is_splittable_entity(entity.type)) {
       splittable_entities.push_back(std::move(entity));
@@ -4376,7 +4376,7 @@ static void merge_new_entities(vector<MessageEntity> &entities, vector<MessageEn
   check_is_sorted(entities);
 }
 
-Status fix_formatted_text(string &text, vector<MessageEntity> &entities, bool allow_empty, bool skip_new_entities,
+Status fix_formatted_text(string &text, std::vector<MessageEntity> &entities, bool allow_empty, bool skip_new_entities,
                           bool skip_bot_commands, bool skip_media_timestamps, bool skip_trim, int32 *ltrim_count) {
   string result;
   if (entities.empty()) {
@@ -4499,7 +4499,7 @@ Status fix_formatted_text(string &text, vector<MessageEntity> &entities, bool al
 }
 
 FormattedText get_message_text(const UserManager *user_manager, string message_text,
-                               vector<tl_object_ptr<telegram_api::MessageEntity>> &&server_entities,
+                               std::vector<tl_object_ptr<telegram_api::MessageEntity>> &&server_entities,
                                bool skip_new_entities, bool skip_media_timestamps, int32 send_date, bool from_album,
                                const char *source) {
   auto entities = get_message_entities(user_manager, std::move(server_entities), source);
@@ -4633,10 +4633,10 @@ bool need_always_skip_bot_commands(const UserManager *user_manager, DialogId dia
 }
 
 vector<tl_object_ptr<telegram_api::MessageEntity>> get_input_message_entities(const UserManager *user_manager,
-                                                                              const vector<MessageEntity> &entities,
+                                                                              const std::vector<MessageEntity> &entities,
                                                                               const char *source) {
-  vector<tl_object_ptr<telegram_api::MessageEntity>> result;
-  vector<MessageEntity> splittable_entities;
+  std::vector<tl_object_ptr<telegram_api::MessageEntity>> result;
+  std::vector<MessageEntity> splittable_entities;
   constexpr size_t MAX_USER_ENTITY_COUNT = 100;  // server-side limit
   size_t user_entity_count = 0;
   for (auto &entity : entities) {
@@ -4689,7 +4689,7 @@ vector<tl_object_ptr<telegram_api::MessageEntity>> get_input_message_entities(co
         UNREACHABLE();
     }
   }
-  split_entities(splittable_entities, vector<MessageEntity>());
+  split_entities(splittable_entities, std::vector<MessageEntity>());
   for (auto &entity : splittable_entities) {
     if (user_entity_count >= MAX_USER_ENTITY_COUNT) {
       break;
@@ -4729,7 +4729,7 @@ vector<tl_object_ptr<telegram_api::MessageEntity>> get_input_message_entities(co
   return {};
 }
 
-void remove_premium_custom_emoji_entities(const Td *td, vector<MessageEntity> &entities, bool remove_unknown) {
+void remove_premium_custom_emoji_entities(const Td *td, std::vector<MessageEntity> &entities, bool remove_unknown) {
   td::remove_if(entities, [&](const MessageEntity &entity) {
     return entity.type == MessageEntity::Type::CustomEmoji &&
            td->stickers_manager_->is_premium_custom_emoji(entity.custom_emoji_id, remove_unknown);

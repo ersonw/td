@@ -153,7 +153,7 @@ void TimeZoneManager::on_get_time_zones(
       break;
     case telegram_api::help_timezonesList::ID: {
       auto zone_list = telegram_api::move_object_as<telegram_api::help_timezonesList>(time_zones_ptr);
-      vector<TimeZone> time_zones;
+      std::vector<TimeZone> time_zones;
       for (auto &time_zone : zone_list->timezones_) {
         time_zones.emplace_back(std::move(time_zone->id_), std::move(time_zone->name_), time_zone->utc_offset_);
       }

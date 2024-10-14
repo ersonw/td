@@ -97,7 +97,7 @@ void RecentDialogList::load_dialogs(Promise<Unit> &&promise) {
   mpas.set_ignore_errors(true);
   auto lock = mpas.get_promise();
 
-  vector<DialogId> dialog_ids;
+  std::vector<DialogId> dialog_ids;
   for (auto &found_dialog : found_dialogs) {
     if (found_dialog[0] == '@') {
       td_->dialog_manager_->search_public_dialog(found_dialog, false, mpas.get_promise());
@@ -197,7 +197,7 @@ void RecentDialogList::remove_dialog(DialogId dialog_id) {
 
 void RecentDialogList::update_dialogs() {
   CHECK(is_loaded_);
-  vector<DialogId> dialog_ids;
+  std::vector<DialogId> dialog_ids;
   for (auto dialog_id : dialog_ids_) {
     if (!td_->messages_manager_->have_dialog(dialog_id)) {
       continue;
@@ -237,7 +237,7 @@ void RecentDialogList::update_dialogs() {
   }
 }
 
-std::pair<int32, vector<DialogId>> RecentDialogList::get_dialogs(int32 limit, Promise<Unit> &&promise) {
+std::pair<int32, std::vector<DialogId>> RecentDialogList::get_dialogs(int32 limit, Promise<Unit> &&promise) {
   load_dialogs(std::move(promise));
   if (!is_loaded_) {
     return {};
@@ -247,7 +247,7 @@ std::pair<int32, vector<DialogId>> RecentDialogList::get_dialogs(int32 limit, Pr
 
   CHECK(limit >= 0);
   auto total_count = narrow_cast<int32>(dialog_ids_.size());
-  return {total_count, vector<DialogId>(dialog_ids_.begin(), dialog_ids_.begin() + min(limit, total_count))};
+  return {total_count, std::vector<DialogId>(dialog_ids_.begin(), dialog_ids_.begin() + min(limit, total_count))};
 }
 
 void RecentDialogList::clear_dialogs() {

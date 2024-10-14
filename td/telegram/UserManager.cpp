@@ -226,7 +226,7 @@ class AddContactQuery final : public Td::ResultHandler {
 
 class EditCloseFriendsQuery final : public Td::ResultHandler {
   Promise<Unit> promise_;
-  vector<UserId> user_ids_;
+  std::vector<UserId> user_ids_;
 
  public:
   explicit EditCloseFriendsQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
@@ -387,13 +387,13 @@ class DeleteContactsQuery final : public Td::ResultHandler {
 
 class DeleteContactsByPhoneNumberQuery final : public Td::ResultHandler {
   Promise<Unit> promise_;
-  vector<UserId> user_ids_;
+  std::vector<UserId> user_ids_;
 
  public:
   explicit DeleteContactsByPhoneNumberQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(vector<string> &&user_phone_numbers, vector<UserId> &&user_ids) {
+  void send(vector<string> &&user_phone_numbers, std::vector<UserId> &&user_ids) {
     if (user_phone_numbers.empty()) {
       return promise_.set_value(Unit());
     }
@@ -735,7 +735,7 @@ class DeleteProfilePhotoQuery final : public Td::ResultHandler {
 
   void send(int64 profile_photo_id) {
     profile_photo_id_ = profile_photo_id;
-    vector<telegram_api::object_ptr<telegram_api::InputPhoto>> input_photo_ids;
+    std::vector<telegram_api::object_ptr<telegram_api::InputPhoto>> input_photo_ids;
     input_photo_ids.push_back(telegram_api::make_object<telegram_api::inputPhoto>(profile_photo_id, 0, BufferSlice()));
     send_query(G()->net_query_creator().create(telegram_api::photos_deletePhotos(std::move(input_photo_ids))));
   }
@@ -915,7 +915,7 @@ class ToggleUsernameQuery final : public Td::ResultHandler {
 
 class ReorderUsernamesQuery final : public Td::ResultHandler {
   Promise<Unit> promise_;
-  vector<string> usernames_;
+  std::vector<string> usernames_;
 
  public:
   explicit ReorderUsernamesQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
@@ -999,13 +999,13 @@ class ToggleBotUsernameQuery final : public Td::ResultHandler {
 class ReorderBotUsernamesQuery final : public Td::ResultHandler {
   Promise<Unit> promise_;
   UserId bot_user_id_;
-  vector<string> usernames_;
+  std::vector<string> usernames_;
 
  public:
   explicit ReorderBotUsernamesQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(UserId bot_user_id, vector<string> &&usernames) {
+  void send(UserId bot_user_id, std::vector<string> &&usernames) {
     bot_user_id_ = bot_user_id;
     usernames_ = usernames;
     auto r_input_user = td_->user_manager_->get_input_user(bot_user_id_);
@@ -1318,13 +1318,13 @@ class GetSupportUserQuery final : public Td::ResultHandler {
 
 class GetIsPremiumRequiredToContactQuery final : public Td::ResultHandler {
   Promise<Unit> promise_;
-  vector<UserId> user_ids_;
+  std::vector<UserId> user_ids_;
 
  public:
   explicit GetIsPremiumRequiredToContactQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(vector<UserId> &&user_ids, vector<telegram_api::object_ptr<telegram_api::InputUser>> &&input_users) {
+  void send(vector<UserId> &&user_ids, std::vector<telegram_api::object_ptr<telegram_api::InputUser>> &&input_users) {
     user_ids_ = std::move(user_ids);
     send_query(
         G()->net_query_creator().create(telegram_api::users_getIsPremiumRequiredToContact(std::move(input_users))));
@@ -1558,7 +1558,7 @@ void UserManager::User::parse(ParserT &parser) {
     CHECK(!has_usernames);
     string username;
     parse(username, parser);
-    usernames = Usernames(std::move(username), vector<telegram_api::object_ptr<telegram_api::username>>());
+    usernames = Usernames(std::move(username), std::vector<telegram_api::object_ptr<telegram_api::username>>());
   }
   parse(phone_number, parser);
   if (parser.version() < static_cast<int32>(Version::FixMinUsers)) {
@@ -3382,7 +3382,7 @@ void UserManager::on_update_user_full_intro(UserFull *user_full, UserId user_id,
 }
 
 void UserManager::on_update_user_commands(UserId user_id,
-                                          vector<telegram_api::object_ptr<telegram_api::botCommand>> &&bot_commands) {
+                                          std::vector<telegram_api::object_ptr<telegram_api::botCommand>> &&bot_commands) {
   UserFull *user_full = get_user_full_force(user_id, "on_update_user_commands");
   if (user_full != nullptr) {
     on_update_user_full_commands(user_full, user_id, std::move(bot_commands));
@@ -3391,7 +3391,7 @@ void UserManager::on_update_user_commands(UserId user_id,
 }
 
 void UserManager::on_update_user_full_commands(
-    UserFull *user_full, UserId user_id, vector<telegram_api::object_ptr<telegram_api::botCommand>> &&bot_commands) {
+    UserFull *user_full, UserId user_id, std::vector<telegram_api::object_ptr<telegram_api::botCommand>> &&bot_commands) {
   CHECK(user_full != nullptr);
   auto commands =
       transform(std::move(bot_commands), [](telegram_api::object_ptr<telegram_api::botCommand> &&bot_command) {
@@ -3758,7 +3758,7 @@ void UserManager::on_load_user_from_database(UserId user_id, string value, bool 
   }
 
   auto it = load_user_from_database_queries_.find(user_id);
-  vector<Promise<Unit>> promises;
+  std::vector<Promise<Unit>> promises;
   if (it != load_user_from_database_queries_.end()) {
     promises = std::move(it->second);
     CHECK(!promises.empty());
@@ -3878,7 +3878,7 @@ UserManager::User *UserManager::get_user_force(UserId user_id, const char *sourc
         false /*ignored*/, false /*ignored*/, false /*ignored*/, 0, false /*ignored*/, false /*ignored*/,
         false /*ignored*/, false /*ignored*/, false /*ignored*/, false /*ignored*/, false /*ignored*/, user_id.get(), 1,
         first_name, string(), username, phone_number, std::move(profile_photo), nullptr, bot_info_version, Auto(),
-        string(), string(), nullptr, vector<telegram_api::object_ptr<telegram_api::username>>(), 0, nullptr, nullptr,
+        string(), string(), nullptr, std::vector<telegram_api::object_ptr<telegram_api::username>>(), 0, nullptr, nullptr,
         0);
     on_get_user(std::move(user), "get_user_force");
     u = get_user(user_id);
@@ -3911,7 +3911,7 @@ UserManager::User *UserManager::get_user_force_impl(UserId user_id, const char *
 }
 
 void UserManager::send_get_me_query(Td *td, Promise<Unit> &&promise) {
-  vector<telegram_api::object_ptr<telegram_api::InputUser>> users;
+  std::vector<telegram_api::object_ptr<telegram_api::InputUser>> users;
   users.push_back(telegram_api::make_object<telegram_api::inputUserSelf>());
   td->create_handler<GetUsersQuery>(std::move(promise))->send(std::move(users));
 }
@@ -4513,8 +4513,8 @@ FolderId UserManager::get_secret_chat_initial_folder_id(SecretChatId secret_chat
 }
 
 vector<BotCommands> UserManager::get_bot_commands(vector<telegram_api::object_ptr<telegram_api::botInfo>> &&bot_infos,
-                                                  const vector<DialogParticipant> *participants) {
-  vector<BotCommands> result;
+                                                  const std::vector<DialogParticipant> *participants) {
+  std::vector<BotCommands> result;
   if (td_->auth_manager_->is_bot()) {
     return result;
   }
@@ -4760,7 +4760,7 @@ void UserManager::send_update_profile_photo_query(UserId user_id, FileId file_id
 
 void UserManager::upload_profile_photo(UserId user_id, FileId file_id, bool is_fallback, bool only_suggest,
                                        bool is_animation, double main_frame_timestamp, Promise<Unit> &&promise,
-                                       int reupload_count, vector<int> bad_parts) {
+                                       int reupload_count, std::vector<int> bad_parts) {
   CHECK(file_id.is_valid());
   bool is_inserted =
       uploaded_profile_photos_
@@ -5135,7 +5135,7 @@ void UserManager::on_update_username_is_active(UserId user_id, string &&username
   promise.set_value(Unit());
 }
 
-void UserManager::on_update_active_usernames_order(UserId user_id, vector<string> &&usernames,
+void UserManager::on_update_active_usernames_order(UserId user_id, std::vector<string> &&usernames,
                                                    Promise<Unit> &&promise) {
   User *u = get_user(user_id);
   CHECK(u != nullptr);
@@ -5161,7 +5161,7 @@ void UserManager::toggle_bot_username_is_active(UserId bot_user_id, string &&use
   td_->create_handler<ToggleBotUsernameQuery>(std::move(promise))->send(bot_user_id, std::move(username), is_active);
 }
 
-void UserManager::reorder_bot_usernames(UserId bot_user_id, vector<string> &&usernames, Promise<Unit> &&promise) {
+void UserManager::reorder_bot_usernames(UserId bot_user_id, std::vector<string> &&usernames, Promise<Unit> &&promise) {
   TRY_RESULT_PROMISE(promise, bot_data, get_bot_data(bot_user_id));
   if (!bot_data.can_be_edited) {
     return promise.set_error(Status::Error(400, "The bot can't be edited"));
@@ -5373,7 +5373,7 @@ void UserManager::get_user_profile_photos(UserId user_id, int32 offset, int32 li
   if (user_photos->count != -1) {  // know photo count
     CHECK(user_photos->offset != -1);
     LOG(INFO) << "Have " << user_photos->count << " cached user profile photos at offset " << user_photos->offset;
-    vector<td_api::object_ptr<td_api::chatPhoto>> photo_objects;
+    std::vector<td_api::object_ptr<td_api::chatPhoto>> photo_objects;
 
     if (offset >= user_photos->count) {
       // offset if too big
@@ -5458,10 +5458,10 @@ void UserManager::on_get_user_profile_photos(UserId user_id, Result<Unit> &&resu
 
   CHECK(user_photos->offset != -1);
   LOG(INFO) << "Have " << user_photos->count << " cached user profile photos at offset " << user_photos->offset;
-  vector<PendingGetPhotoRequest> left_requests;
+  std::vector<PendingGetPhotoRequest> left_requests;
   for (size_t request_index = 0; request_index < pending_requests.size(); request_index++) {
     auto &request = pending_requests[request_index];
-    vector<td_api::object_ptr<td_api::chatPhoto>> photo_objects;
+    std::vector<td_api::object_ptr<td_api::chatPhoto>> photo_objects;
 
     if (request.offset >= user_photos->count) {
       // offset if too big
@@ -5541,7 +5541,7 @@ UserManager::UserPhotos *UserManager::add_user_photos(UserId user_id) {
 }
 
 void UserManager::on_get_user_photos(UserId user_id, int32 offset, int32 limit, int32 total_count,
-                                     vector<telegram_api::object_ptr<telegram_api::Photo>> photos) {
+                                     std::vector<telegram_api::object_ptr<telegram_api::Photo>> photos) {
   auto photo_count = narrow_cast<int32>(photos.size());
   int32 min_total_count = (offset >= 0 && photo_count > 0 ? offset : 0) + photo_count;
   if (total_count < min_total_count) {
@@ -5636,7 +5636,7 @@ void UserManager::apply_pending_user_photo(User *u, UserId user_id) {
   }
 }
 
-void UserManager::register_message_users(MessageFullId message_full_id, vector<UserId> user_ids) {
+void UserManager::register_message_users(MessageFullId message_full_id, std::vector<UserId> user_ids) {
   auto dialog_id = message_full_id.get_dialog_id();
   CHECK(dialog_id.get_type() == DialogType::Channel);
   if (!td_->chat_manager_->have_channel(dialog_id.get_channel_id())) {
@@ -5656,7 +5656,7 @@ void UserManager::register_message_users(MessageFullId message_full_id, vector<U
   }
 }
 
-void UserManager::unregister_message_users(MessageFullId message_full_id, vector<UserId> user_ids) {
+void UserManager::unregister_message_users(MessageFullId message_full_id, std::vector<UserId> user_ids) {
   if (user_messages_.empty()) {
     // fast path
     return;
@@ -5725,7 +5725,7 @@ void UserManager::can_send_message_to_user(UserId user_id, bool force,
 }
 
 void UserManager::on_get_is_premium_required_to_contact_users(vector<UserId> &&user_ids,
-                                                              vector<bool> &&is_premium_required,
+                                                              std::vector<bool> &&is_premium_required,
                                                               Promise<Unit> &&promise) {
   if (user_ids.size() != is_premium_required.size()) {
     LOG(ERROR) << "Receive " << is_premium_required.size() << " flags instead of " << user_ids.size();
@@ -5798,7 +5798,7 @@ int64 UserManager::get_contacts_hash() {
     return 0;
   }
 
-  vector<int64> user_ids = contacts_hints_.search_empty(100000).second;
+  std::vector<int64> user_ids = contacts_hints_.search_empty(100000).second;
   CHECK(std::is_sorted(user_ids.begin(), user_ids.end()));
   auto my_id = get_my_id();
   const User *u = get_user_force(my_id, "get_contacts_hash");
@@ -5806,7 +5806,7 @@ int64 UserManager::get_contacts_hash() {
     user_ids.insert(std::upper_bound(user_ids.begin(), user_ids.end(), my_id.get()), my_id.get());
   }
 
-  vector<uint64> numbers;
+  std::vector<uint64> numbers;
   numbers.reserve(user_ids.size() + 1);
   numbers.push_back(saved_contact_count_);
   for (auto user_id : user_ids) {
@@ -5840,7 +5840,7 @@ void UserManager::save_contacts_to_database() {
   }
 
   LOG(INFO) << "Schedule save contacts to database";
-  vector<UserId> user_ids =
+  std::vector<UserId> user_ids =
       transform(contacts_hints_.search_empty(100000).second, [](int64 key) { return UserId(key); });
 
   G()->td_db()->get_binlog_pmc()->set("saved_contact_count", to_string(saved_contact_count_));
@@ -5929,7 +5929,7 @@ void UserManager::on_load_contacts_from_database(string value) {
     return;
   }
 
-  vector<UserId> user_ids;
+  std::vector<UserId> user_ids;
   if (log_event_parse(user_ids, value).is_error()) {
     LOG(ERROR) << "Failed to load contacts from database";
     reload_contacts(true);
@@ -6003,7 +6003,7 @@ void UserManager::add_contact(Contact contact, bool share_phone_number, Promise<
       ->send(user_id, std::move(input_user), contact, share_phone_number);
 }
 
-std::pair<vector<UserId>, vector<int32>> UserManager::import_contacts(const vector<Contact> &contacts, int64 &random_id,
+std::pair<vector<UserId>, std::vector<int32>> UserManager::import_contacts(const std::vector<Contact> &contacts, int64 &random_id,
                                                                       Promise<Unit> &&promise) {
   if (!are_contacts_loaded_) {
     load_contacts(std::move(promise));
@@ -6038,7 +6038,7 @@ void UserManager::do_import_contacts(vector<Contact> contacts, int64 random_id, 
     return promise.set_value(Unit());
   }
 
-  vector<telegram_api::object_ptr<telegram_api::inputPhoneContact>> input_phone_contacts;
+  std::vector<telegram_api::object_ptr<telegram_api::inputPhoneContact>> input_phone_contacts;
   input_phone_contacts.reserve(size);
   for (size_t i = 0; i < size; i++) {
     input_phone_contacts.push_back(contacts[i].get_input_phone_contact(static_cast<int64>(i)));
@@ -6097,7 +6097,7 @@ void UserManager::on_imported_contacts(
 
   if (!imported_contacts->retry_contacts_.empty()) {
     auto total_size = static_cast<int64>(task->input_contacts_.size());
-    vector<telegram_api::object_ptr<telegram_api::inputPhoneContact>> input_phone_contacts;
+    std::vector<telegram_api::object_ptr<telegram_api::inputPhoneContact>> input_phone_contacts;
     input_phone_contacts.reserve(imported_contacts->retry_contacts_.size());
     for (auto &client_id : imported_contacts->retry_contacts_) {
       if (client_id < 0 || client_id >= total_size) {
@@ -6118,8 +6118,8 @@ void UserManager::on_imported_contacts(
   promise.set_value(Unit());
 }
 
-void UserManager::on_import_contacts_finished(int64 random_id, vector<UserId> imported_contact_user_ids,
-                                              vector<int32> unimported_contact_invites) {
+void UserManager::on_import_contacts_finished(int64 random_id, std::vector<UserId> imported_contact_user_ids,
+                                              std::vector<int32> unimported_contact_invites) {
   LOG(INFO) << "Contacts import with random_id " << random_id
             << " has finished: " << format::as_array(imported_contact_user_ids);
   if (random_id == 1) {
@@ -6179,15 +6179,15 @@ void UserManager::on_import_contacts_finished(int64 random_id, vector<UserId> im
   imported_contacts_[random_id] = {std::move(imported_contact_user_ids), std::move(unimported_contact_invites)};
 }
 
-void UserManager::remove_contacts(const vector<UserId> &user_ids, Promise<Unit> &&promise) {
+void UserManager::remove_contacts(const std::vector<UserId> &user_ids, Promise<Unit> &&promise) {
   LOG(INFO) << "Delete contacts: " << format::as_array(user_ids);
   if (!are_contacts_loaded_) {
     load_contacts(std::move(promise));
     return;
   }
 
-  vector<UserId> to_delete_user_ids;
-  vector<telegram_api::object_ptr<telegram_api::InputUser>> input_users;
+  std::vector<UserId> to_delete_user_ids;
+  std::vector<telegram_api::object_ptr<telegram_api::InputUser>> input_users;
   for (auto &user_id : user_ids) {
     const User *u = get_user(user_id);
     if (u != nullptr && u->is_contact) {
@@ -6206,7 +6206,7 @@ void UserManager::remove_contacts(const vector<UserId> &user_ids, Promise<Unit> 
   td_->create_handler<DeleteContactsQuery>(std::move(promise))->send(std::move(input_users));
 }
 
-void UserManager::remove_contacts_by_phone_number(vector<string> user_phone_numbers, vector<UserId> user_ids,
+void UserManager::remove_contacts_by_phone_number(vector<string> user_phone_numbers, std::vector<UserId> user_ids,
                                                   Promise<Unit> &&promise) {
   LOG(INFO) << "Delete contacts by phone number: " << format::as_array(user_phone_numbers);
   if (!are_contacts_loaded_) {
@@ -6218,7 +6218,7 @@ void UserManager::remove_contacts_by_phone_number(vector<string> user_phone_numb
       ->send(std::move(user_phone_numbers), std::move(user_ids));
 }
 
-void UserManager::on_deleted_contacts(const vector<UserId> &deleted_contact_user_ids) {
+void UserManager::on_deleted_contacts(const std::vector<UserId> &deleted_contact_user_ids) {
   LOG(INFO) << "Contacts deletion has finished for " << deleted_contact_user_ids;
 
   for (auto user_id : deleted_contact_user_ids) {
@@ -6334,7 +6334,7 @@ void UserManager::on_load_imported_contacts_finished() {
   set_promises(load_imported_contacts_queries_);
 }
 
-std::pair<vector<UserId>, vector<int32>> UserManager::change_imported_contacts(vector<Contact> &contacts,
+std::pair<vector<UserId>, std::vector<int32>> UserManager::change_imported_contacts(vector<Contact> &contacts,
                                                                                int64 &random_id,
                                                                                Promise<Unit> &&promise) {
   if (!are_contacts_loaded_) {
@@ -6377,8 +6377,8 @@ std::pair<vector<UserId>, vector<int32>> UserManager::change_imported_contacts(v
     return {};
   }
 
-  vector<size_t> new_contacts_unique_id(contacts.size());
-  vector<Contact> unique_new_contacts;
+  std::vector<size_t> new_contacts_unique_id(contacts.size());
+  std::vector<Contact> unique_new_contacts;
   unique_new_contacts.reserve(contacts.size());
   std::unordered_map<Contact, size_t, ContactHash, ContactEqual> different_new_contacts;
   std::unordered_set<string, Hash<string>> different_new_phone_numbers;
@@ -6393,8 +6393,8 @@ std::pair<vector<UserId>, vector<int32>> UserManager::change_imported_contacts(v
     }
   }
 
-  vector<string> to_delete;
-  vector<UserId> to_delete_user_ids;
+  std::vector<string> to_delete;
+  std::vector<UserId> to_delete_user_ids;
   for (auto &old_contact : all_imported_contacts_) {
     auto user_id = old_contact.get_user_id();
     auto it = different_new_contacts.find(old_contact);
@@ -6411,7 +6411,7 @@ std::pair<vector<UserId>, vector<int32>> UserManager::change_imported_contacts(v
       different_new_contacts.erase(it);
     }
   }
-  std::pair<vector<size_t>, vector<Contact>> to_add;
+  std::pair<vector<size_t>, std::vector<Contact>> to_add;
   for (auto &new_contact : different_new_contacts) {
     to_add.first.push_back(new_contact.second);
     to_add.second.push_back(new_contact.first);
@@ -6425,7 +6425,7 @@ std::pair<vector<UserId>, vector<int32>> UserManager::change_imported_contacts(v
 
     promise.set_value(Unit());
     return {transform(contacts, [&](const Contact &contact) { return contact.get_user_id(); }),
-            vector<int32>(contacts.size())};
+            std::vector<int32>(contacts.size())};
   }
 
   are_imported_contacts_changing_ = true;
@@ -6457,8 +6457,8 @@ void UserManager::clear_imported_contacts(Promise<Unit> &&promise) {
   td_->create_handler<ResetContactsQuery>(std::move(promise))->send();
 }
 
-void UserManager::on_clear_imported_contacts(vector<Contact> &&contacts, vector<size_t> contacts_unique_id,
-                                             std::pair<vector<size_t>, vector<Contact>> &&to_add,
+void UserManager::on_clear_imported_contacts(vector<Contact> &&contacts, std::vector<size_t> contacts_unique_id,
+                                             std::pair<vector<size_t>, std::vector<Contact>> &&to_add,
                                              Promise<Unit> &&promise) {
   LOG(INFO) << "Add " << to_add.first.size() << " contacts";
   next_all_imported_contacts_ = std::move(contacts);
@@ -6549,7 +6549,7 @@ void UserManager::update_contacts_hints(const User *u, UserId user_id, bool from
   }
 }
 
-std::pair<int32, vector<UserId>> UserManager::search_contacts(const string &query, int32 limit,
+std::pair<int32, std::vector<UserId>> UserManager::search_contacts(const string &query, int32 limit,
                                                               Promise<Unit> &&promise) {
   LOG(INFO) << "Search contacts with query = \"" << query << "\" and limit = " << limit;
 
@@ -6564,14 +6564,14 @@ std::pair<int32, vector<UserId>> UserManager::search_contacts(const string &quer
   }
   reload_contacts(false);
 
-  std::pair<size_t, vector<int64>> result;
+  std::pair<size_t, std::vector<int64>> result;
   if (query.empty()) {
     result = contacts_hints_.search_empty(limit);
   } else {
     result = contacts_hints_.search(query, limit);
   }
 
-  vector<UserId> user_ids;
+  std::vector<UserId> user_ids;
   user_ids.reserve(result.second.size());
   for (auto key : result.second) {
     user_ids.emplace_back(key);
@@ -6612,7 +6612,7 @@ void UserManager::on_get_contact_birthdates(
   contact_birthdates_.next_sync_time_ = Time::now() + Random::fast(86400 / 4, 86400 / 3);
 
   on_get_users(std::move(birthdays->users_), "on_get_contact_birthdates");
-  vector<std::pair<UserId, Birthdate>> users;
+  std::vector<std::pair<UserId, Birthdate>> users;
   for (auto &contact : birthdays->contacts_) {
     UserId user_id(contact->contact_id_);
     if (is_user_contact(user_id)) {
@@ -6648,7 +6648,7 @@ vector<UserId> UserManager::get_close_friends(Promise<Unit> &&promise) {
 
   auto result = contacts_hints_.search_empty(10000);
 
-  vector<UserId> user_ids;
+  std::vector<UserId> user_ids;
   for (auto key : result.second) {
     UserId user_id(key);
     const User *u = get_user(user_id);
@@ -6671,7 +6671,7 @@ void UserManager::set_close_friends(vector<UserId> user_ids, Promise<Unit> &&pro
   td_->create_handler<EditCloseFriendsQuery>(std::move(promise))->send(std::move(user_ids));
 }
 
-void UserManager::on_set_close_friends(const vector<UserId> &user_ids, Promise<Unit> &&promise) {
+void UserManager::on_set_close_friends(const std::vector<UserId> &user_ids, Promise<Unit> &&promise) {
   FlatHashSet<UserId, UserIdHash> close_friend_user_ids;
   for (auto &user_id : user_ids) {
     CHECK(user_id.is_valid());
@@ -7437,7 +7437,7 @@ void UserManager::on_load_secret_chat_from_database(SecretChatId secret_chat_id,
   }
 
   auto it = load_secret_chat_from_database_queries_.find(secret_chat_id);
-  vector<Promise<Unit>> promises;
+  std::vector<Promise<Unit>> promises;
   if (it != load_secret_chat_from_database_queries_.end()) {
     promises = std::move(it->second);
     CHECK(!promises.empty());
@@ -7772,7 +7772,7 @@ void UserManager::update_user_full(UserFull *user_full, UserId user_id, const ch
     user_full->is_common_chat_count_changed = false;
   }
   if (true) {
-    vector<FileId> file_ids;
+    std::vector<FileId> file_ids;
     if (!user_full->personal_photo.is_empty()) {
       append(file_ids, photo_get_file_ids(user_full->personal_photo));
     }
@@ -7939,12 +7939,12 @@ td_api::object_ptr<td_api::user> UserManager::get_user_object(UserId user_id, co
       std::move(type), u->language_code, u->attach_menu_enabled);
 }
 
-vector<int64> UserManager::get_user_ids_object(const vector<UserId> &user_ids, const char *source) const {
+vector<int64> UserManager::get_user_ids_object(const std::vector<UserId> &user_ids, const char *source) const {
   return transform(user_ids, [this, source](UserId user_id) { return get_user_id_object(user_id, source); });
 }
 
 td_api::object_ptr<td_api::users> UserManager::get_users_object(int32 total_count,
-                                                                const vector<UserId> &user_ids) const {
+                                                                const std::vector<UserId> &user_ids) const {
   if (total_count == -1) {
     total_count = narrow_cast<int32>(user_ids.size());
   }

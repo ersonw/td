@@ -16,7 +16,7 @@
 
 namespace td {
 
-const RestrictionReason *get_restriction_reason(const vector<RestrictionReason> &restriction_reasons, bool sensitive) {
+const RestrictionReason *get_restriction_reason(const std::vector<RestrictionReason> &restriction_reasons, bool sensitive) {
   if (restriction_reasons.empty()) {
     return nullptr;
   }
@@ -74,11 +74,11 @@ const RestrictionReason *get_restriction_reason(const vector<RestrictionReason> 
   return nullptr;
 }
 
-bool get_restriction_reason_has_sensitive_content(const vector<RestrictionReason> &restriction_reasons) {
+bool get_restriction_reason_has_sensitive_content(const std::vector<RestrictionReason> &restriction_reasons) {
   return get_restriction_reason(restriction_reasons, true) != nullptr;
 }
 
-string get_restriction_reason_description(const vector<RestrictionReason> &restriction_reasons) {
+string get_restriction_reason_description(const std::vector<RestrictionReason> &restriction_reasons) {
   const auto *restriction_reason = get_restriction_reason(restriction_reasons, false);
   if (restriction_reason == nullptr) {
     return string();
@@ -93,7 +93,7 @@ vector<RestrictionReason> get_restriction_reasons(Slice legacy_restriction_reaso
   auto parts = full_split(type, '-');
   description = trim(description);
 
-  vector<RestrictionReason> result;
+  std::vector<RestrictionReason> result;
   if (parts.size() <= 1) {
     return result;
   }
@@ -104,7 +104,7 @@ vector<RestrictionReason> get_restriction_reasons(Slice legacy_restriction_reaso
 }
 
 vector<RestrictionReason> get_restriction_reasons(
-    vector<telegram_api::object_ptr<telegram_api::restrictionReason>> &&restriction_reasons) {
+    std::vector<telegram_api::object_ptr<telegram_api::restrictionReason>> &&restriction_reasons) {
   return transform(std::move(restriction_reasons),
                    [](telegram_api::object_ptr<telegram_api::restrictionReason> &&restriction_reason) {
                      return RestrictionReason(std::move(restriction_reason->platform_),

@@ -23,9 +23,9 @@ MessagesInfo get_messages_info(Td *td, DialogId dialog_id,
   CHECK(messages_ptr != nullptr);
   LOG(DEBUG) << "Receive result for " << source << ": " << to_string(messages_ptr);
 
-  vector<tl_object_ptr<telegram_api::User>> users;
-  vector<tl_object_ptr<telegram_api::Chat>> chats;
-  vector<tl_object_ptr<telegram_api::ForumTopic>> topics;
+  std::vector<tl_object_ptr<telegram_api::User>> users;
+  std::vector<tl_object_ptr<telegram_api::Chat>> chats;
+  std::vector<tl_object_ptr<telegram_api::ForumTopic>> topics;
   MessagesInfo result;
   switch (messages_ptr->get_id()) {
     case telegram_api::messages_messages::ID: {

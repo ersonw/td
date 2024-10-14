@@ -99,24 +99,24 @@ ReactionType ReactionType::paid() {
 }
 
 vector<ReactionType> ReactionType::get_reaction_types(
-    const vector<telegram_api::object_ptr<telegram_api::Reaction>> &reactions) {
+    const std::vector<telegram_api::object_ptr<telegram_api::Reaction>> &reactions) {
   return transform(reactions, [](const auto &reaction) { return ReactionType(reaction); });
 }
 
 vector<ReactionType> ReactionType::get_reaction_types(
-    const vector<td_api::object_ptr<td_api::ReactionType>> &reactions) {
+    const std::vector<td_api::object_ptr<td_api::ReactionType>> &reactions) {
   return transform(reactions, [](const auto &reaction) { return ReactionType(reaction); });
 }
 
 vector<telegram_api::object_ptr<telegram_api::Reaction>> ReactionType::get_input_reactions(
-    const vector<ReactionType> &reaction_types) {
+    const std::vector<ReactionType> &reaction_types) {
   return transform(reaction_types,
                    [](const ReactionType &reaction_type) { return reaction_type.get_input_reaction(); });
 }
 
 vector<td_api::object_ptr<td_api::ReactionType>> ReactionType::get_reaction_types_object(
-    const vector<ReactionType> &reaction_types, bool paid_reactions_available) {
-  vector<td_api::object_ptr<td_api::ReactionType>> result;
+    const std::vector<ReactionType> &reaction_types, bool paid_reactions_available) {
+  std::vector<td_api::object_ptr<td_api::ReactionType>> result;
   result.reserve(reaction_types.size() + (paid_reactions_available ? 1 : 0));
   if (paid_reactions_available) {
     result.push_back(paid().get_reaction_type_object());
@@ -208,8 +208,8 @@ StringBuilder &operator<<(StringBuilder &string_builder, const ReactionType &rea
   return string_builder << "reaction " << reaction_type.reaction_;
 }
 
-int64 get_reaction_types_hash(const vector<ReactionType> &reaction_types) {
-  vector<uint64> numbers;
+int64 get_reaction_types_hash(const std::vector<ReactionType> &reaction_types) {
+  std::vector<uint64> numbers;
   for (auto &reaction_type : reaction_types) {
     if (reaction_type.is_custom_reaction()) {
       auto custom_emoji_id = static_cast<uint64>(get_custom_emoji_id(reaction_type.get_string()));

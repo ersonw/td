@@ -92,7 +92,7 @@ class DownloadManagerImpl final : public DownloadManager {
   void toggle_all_is_paused(bool is_paused, Promise<Unit> promise) final {
     TRY_STATUS_PROMISE(promise, check_is_active("toggle_all_is_paused"));
 
-    vector<FileId> to_toggle;
+    std::vector<FileId> to_toggle;
     for (auto &it : files_) {
       FileInfo &file_info = *it.second;
       if (!is_completed(file_info) && is_paused != file_info.is_paused) {
@@ -122,7 +122,7 @@ class DownloadManagerImpl final : public DownloadManager {
 
   void remove_all_files(bool only_active, bool only_completed, bool delete_from_cache, Promise<Unit> promise) final {
     TRY_STATUS_PROMISE(promise, check_is_active("remove_all_files"));
-    vector<const FileInfo *> to_remove;
+    std::vector<const FileInfo *> to_remove;
     for (auto &it : files_) {
       FileInfo &file_info = *it.second;
       if (only_active && is_completed(file_info)) {

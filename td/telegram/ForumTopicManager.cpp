@@ -252,7 +252,7 @@ class ReorderPinnedForumTopicsQuery final : public Td::ResultHandler {
   explicit ReorderPinnedForumTopicsQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(ChannelId channel_id, const vector<MessageId> &top_thread_message_ids) {
+  void send(ChannelId channel_id, const std::vector<MessageId> &top_thread_message_ids) {
     channel_id_ = channel_id;
 
     auto input_channel = td_->chat_manager_->get_input_channel(channel_id);
@@ -675,7 +675,7 @@ void ForumTopicManager::on_update_forum_topic_is_pinned(DialogId dialog_id, Mess
   }
 }
 
-void ForumTopicManager::on_update_pinned_forum_topics(DialogId dialog_id, vector<MessageId> top_thread_message_ids) {
+void ForumTopicManager::on_update_pinned_forum_topics(DialogId dialog_id, std::vector<MessageId> top_thread_message_ids) {
   if (!td_->dialog_manager_->have_dialog_force(dialog_id, "on_update_pinned_forum_topics")) {
     return;
   }
@@ -818,13 +818,13 @@ void ForumTopicManager::get_forum_topics(DialogId dialog_id, string query, int32
 }
 
 void ForumTopicManager::on_get_forum_topics(ChannelId channel_id, bool order_by_creation_date, MessagesInfo &&info,
-                                            vector<telegram_api::object_ptr<telegram_api::ForumTopic>> &&topics,
+                                            std::vector<telegram_api::object_ptr<telegram_api::ForumTopic>> &&topics,
                                             Promise<td_api::object_ptr<td_api::forumTopics>> &&promise) {
   DialogId dialog_id(channel_id);
   TRY_STATUS_PROMISE(promise, is_forum(dialog_id));
   td_->messages_manager_->on_get_messages(std::move(info.messages), true, false, Promise<Unit>(),
                                           "on_get_forum_topics");
-  vector<td_api::object_ptr<td_api::forumTopic>> forum_topics;
+  std::vector<td_api::object_ptr<td_api::forumTopic>> forum_topics;
   int32 next_offset_date = 0;
   MessageId next_offset_message_id;
   MessageId next_offset_top_thread_message_id;
@@ -892,7 +892,7 @@ void ForumTopicManager::toggle_forum_topic_is_pinned(DialogId dialog_id, Message
       ->send(channel_id, top_thread_message_id, is_pinned);
 }
 
-void ForumTopicManager::set_pinned_forum_topics(DialogId dialog_id, vector<MessageId> top_thread_message_ids,
+void ForumTopicManager::set_pinned_forum_topics(DialogId dialog_id, std::vector<MessageId> top_thread_message_ids,
                                                 Promise<Unit> &&promise) {
   TRY_STATUS_PROMISE(promise, is_forum(dialog_id));
   for (auto top_thread_message_id : top_thread_message_ids) {
@@ -988,7 +988,7 @@ void ForumTopicManager::on_get_forum_topic_info(DialogId dialog_id, const ForumT
 }
 
 void ForumTopicManager::on_get_forum_topic_infos(DialogId dialog_id,
-                                                 vector<tl_object_ptr<telegram_api::ForumTopic>> &&forum_topics,
+                                                 std::vector<tl_object_ptr<telegram_api::ForumTopic>> &&forum_topics,
                                                  const char *source) {
   if (forum_topics.empty()) {
     return;

@@ -119,7 +119,7 @@ MediaArea::MediaArea(Td *td, telegram_api::object_ptr<telegram_api::MediaArea> &
 }
 
 MediaArea::MediaArea(Td *td, td_api::object_ptr<td_api::inputStoryArea> &&input_story_area,
-                     const vector<MediaArea> &old_media_areas) {
+                     const std::vector<MediaArea> &old_media_areas) {
   if (input_story_area == nullptr || input_story_area->position_ == nullptr || input_story_area->type_ == nullptr) {
     return;
   }
@@ -239,7 +239,7 @@ bool MediaArea::has_reaction_type(const ReactionType &reaction_type) const {
 }
 
 td_api::object_ptr<td_api::storyArea> MediaArea::get_story_area_object(
-    Td *td, const vector<std::pair<ReactionType, int32>> &reaction_counts) const {
+    Td *td, const std::vector<std::pair<ReactionType, int32>> &reaction_counts) const {
   CHECK(is_valid());
   td_api::object_ptr<td_api::StoryAreaType> type;
   switch (type_) {
@@ -351,8 +351,8 @@ telegram_api::object_ptr<telegram_api::MediaArea> MediaArea::get_input_media_are
 }
 
 vector<telegram_api::object_ptr<telegram_api::MediaArea>> MediaArea::get_input_media_areas(
-    const Td *td, const vector<MediaArea> &media_areas) {
-  vector<telegram_api::object_ptr<telegram_api::MediaArea>> input_media_areas;
+    const Td *td, const std::vector<MediaArea> &media_areas) {
+  std::vector<telegram_api::object_ptr<telegram_api::MediaArea>> input_media_areas;
   for (const auto &media_area : media_areas) {
     auto input_media_area = media_area.get_input_media_area(td);
     if (input_media_area != nullptr) {

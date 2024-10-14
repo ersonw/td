@@ -88,15 +88,15 @@ class GetCountriesListQuery final : public Td::ResultHandler {
 
 struct CountryInfoManager::CallingCodeInfo {
   string calling_code;
-  vector<string> prefixes;
-  vector<string> patterns;
+  std::vector<string> prefixes;
+  std::vector<string> patterns;
 };
 
 struct CountryInfoManager::CountryInfo {
   string country_code;
   string default_name;
   string name;
-  vector<CallingCodeInfo> calling_codes;
+  std::vector<CallingCodeInfo> calling_codes;
   bool is_hidden = false;
 
   td_api::object_ptr<td_api::countryInfo> get_country_info_object() const {
@@ -107,7 +107,7 @@ struct CountryInfoManager::CountryInfo {
 };
 
 struct CountryInfoManager::CountryList {
-  vector<CountryInfo> countries;
+  std::vector<CountryInfo> countries;
   int32 hash = 0;
   double next_reload_time = 0.0;
 

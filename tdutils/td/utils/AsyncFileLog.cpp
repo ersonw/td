@@ -126,7 +126,7 @@ AsyncFileLog::~AsyncFileLog() {
 }
 
 vector<string> AsyncFileLog::get_file_paths() {
-  vector<string> result;
+  std::vector<string> result;
   if (!path_.empty()) {
     result.push_back(path_);
     result.push_back(PSTRING() << path_ << ".old");

@@ -199,7 +199,7 @@ class IncrementStoryViewsQuery final : public Td::ResultHandler {
   explicit IncrementStoryViewsQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(DialogId dialog_id, const vector<StoryId> &story_ids) {
+  void send(DialogId dialog_id, const std::vector<StoryId> &story_ids) {
     dialog_id_ = dialog_id;
     auto input_peer = td_->dialog_manager_->get_input_peer(dialog_id_, AccessRights::Read);
     if (input_peer == nullptr) {
@@ -412,13 +412,13 @@ class GetStoryReactionsListQuery final : public Td::ResultHandler {
 class GetStoriesByIDQuery final : public Td::ResultHandler {
   Promise<Unit> promise_;
   DialogId dialog_id_;
-  vector<StoryId> story_ids_;
+  std::vector<StoryId> story_ids_;
 
  public:
   explicit GetStoriesByIDQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(DialogId dialog_id, vector<StoryId> story_ids) {
+  void send(DialogId dialog_id, std::vector<StoryId> story_ids) {
     dialog_id_ = dialog_id;
     story_ids_ = std::move(story_ids);
     auto input_peer = td_->dialog_manager_->get_input_peer(dialog_id_, AccessRights::Read);
@@ -582,8 +582,8 @@ class EditStoryCoverQuery final : public Td::ResultHandler {
     send_query(G()->net_query_creator().create(
         telegram_api::stories_editStory(telegram_api::stories_editStory::MEDIA_MASK, std::move(input_peer),
                                         story_id.get(), std::move(input_media),
-                                        vector<telegram_api::object_ptr<telegram_api::MediaArea>>(), string(),
-                                        vector<telegram_api::object_ptr<telegram_api::MessageEntity>>(), Auto()),
+                                        std::vector<telegram_api::object_ptr<telegram_api::MediaArea>>(), string(),
+                                        std::vector<telegram_api::object_ptr<telegram_api::MessageEntity>>(), Auto()),
         {{StoryFullId{dialog_id_, story_id}}}));
   }
 
@@ -642,8 +642,8 @@ class EditStoryPrivacyQuery final : public Td::ResultHandler {
     int32 flags = telegram_api::stories_editStory::PRIVACY_RULES_MASK;
     send_query(G()->net_query_creator().create(
         telegram_api::stories_editStory(flags, std::move(input_peer), story_id.get(), nullptr,
-                                        vector<telegram_api::object_ptr<telegram_api::MediaArea>>(), string(),
-                                        vector<telegram_api::object_ptr<telegram_api::MessageEntity>>(),
+                                        std::vector<telegram_api::object_ptr<telegram_api::MediaArea>>(), string(),
+                                        std::vector<telegram_api::object_ptr<telegram_api::MessageEntity>>(),
                                         privacy_rules.get_input_privacy_rules(td_)),
         {{StoryFullId{dialog_id, story_id}}}));
   }
@@ -712,7 +712,7 @@ class DeleteStoriesQuery final : public Td::ResultHandler {
   explicit DeleteStoriesQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(DialogId dialog_id, const vector<StoryId> &story_ids) {
+  void send(DialogId dialog_id, const std::vector<StoryId> &story_ids) {
     dialog_id_ = dialog_id;
     auto input_peer = td_->dialog_manager_->get_input_peer(dialog_id_, AccessRights::Write);
     if (input_peer == nullptr) {
@@ -803,7 +803,7 @@ class SearchStoriesQuery final : public Td::ResultHandler {
       LOG(ERROR) << "Receive total count = " << total_count << " and " << ptr->stories_.size() << " stories";
       total_count = static_cast<int32>(ptr->stories_.size());
     }
-    vector<td_api::object_ptr<td_api::story>> stories;
+    std::vector<td_api::object_ptr<td_api::story>> stories;
     for (auto &found_story : ptr->stories_) {
       DialogId owner_dialog_id(found_story->peer_);
       auto story_id = td_->story_manager_->on_get_story(owner_dialog_id, std::move(found_story->story_));
@@ -836,7 +836,7 @@ class TogglePinnedStoriesToTopQuery final : public Td::ResultHandler {
   explicit TogglePinnedStoriesToTopQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
   }
 
-  void send(DialogId dialog_id, vector<StoryId> story_ids) {
+  void send(DialogId dialog_id, std::vector<StoryId> story_ids) {
     dialog_id_ = dialog_id;
     auto input_peer = td_->dialog_manager_->get_input_peer(dialog_id_, AccessRights::Write);
     CHECK(input_peer != nullptr);
@@ -862,11 +862,11 @@ class TogglePinnedStoriesToTopQuery final : public Td::ResultHandler {
 };
 
 class GetStoriesViewsQuery final : public Td::ResultHandler {
-  vector<StoryId> story_ids_;
+  std::vector<StoryId> story_ids_;
   DialogId dialog_id_;
 
  public:
-  void send(DialogId dialog_id, vector<StoryId> story_ids) {
+  void send(DialogId dialog_id, std::vector<StoryId> story_ids) {
     dialog_id_ = dialog_id;
     story_ids_ = std::move(story_ids);
     auto input_peer = td_->dialog_manager_->get_input_peer(dialog_id_, AccessRights::Read);
@@ -930,10 +930,10 @@ class ReportStoryQuery final : public Td::ResultHandler {
 };
 
 class GetStoriesMaxIdsQuery final : public Td::ResultHandler {
-  vector<DialogId> dialog_ids_;
+  std::vector<DialogId> dialog_ids_;
 
  public:
-  void send(vector<DialogId> dialog_ids, vector<telegram_api::object_ptr<telegram_api::InputPeer>> &&input_peers) {
+  void send(vector<DialogId> dialog_ids, std::vector<telegram_api::object_ptr<telegram_api::InputPeer>> &&input_peers) {
     dialog_ids_ = std::move(dialog_ids);
     send_query(G()->net_query_creator().create(telegram_api::stories_getPeerMaxIDs(std::move(input_peers))));
   }
@@ -1200,12 +1200,12 @@ class StoryManager::EditStoryQuery final : public Td::ResultHandler {
       CHECK(input_media != nullptr);
       flags |= telegram_api::stories_editStory::MEDIA_MASK;
     }
-    vector<telegram_api::object_ptr<telegram_api::MediaArea>> input_media_areas;
+    std::vector<telegram_api::object_ptr<telegram_api::MediaArea>> input_media_areas;
     if (edited_story->edit_media_areas_) {
       input_media_areas = MediaArea::get_input_media_areas(td_, edited_story->areas_);
       flags |= telegram_api::stories_editStory::MEDIA_AREAS_MASK;
     }
-    vector<telegram_api::object_ptr<telegram_api::MessageEntity>> entities;
+    std::vector<telegram_api::object_ptr<telegram_api::MessageEntity>> entities;
     if (edited_story->edit_caption_) {
       flags |= telegram_api::stories_editStory::CAPTION_MASK;
       if (td_->option_manager_->get_option_boolean("can_use_text_entities_in_story_caption")) {
@@ -2054,7 +2054,7 @@ StoryManager::ActiveStories *StoryManager::on_get_active_stories_from_database(S
     return nullptr;
   }
 
-  vector<StoryId> story_ids;
+  std::vector<StoryId> story_ids;
   for (auto &story_info : saved_active_stories.story_infos_) {
     story_ids.push_back(on_get_story_info(owner_dialog_id, std::move(story_info)));
   }
@@ -2284,7 +2284,7 @@ void StoryManager::on_load_active_stories_from_server(
       }
 
       auto max_story_date = MIN_DIALOG_DATE;
-      vector<DialogId> owner_dialog_ids;
+      std::vector<DialogId> owner_dialog_ids;
       for (auto &peer_stories : stories->peer_stories_) {
         auto owner_dialog_id = on_get_dialog_stories(DialogId(), std::move(peer_stories), mpas.get_promise());
         auto active_stories = get_active_stories(owner_dialog_id);
@@ -2306,7 +2306,7 @@ void StoryManager::on_load_active_stories_from_server(
         max_story_date = MAX_DIALOG_DATE;
       }
 
-      vector<DialogId> delete_dialog_ids;
+      std::vector<DialogId> delete_dialog_ids;
       auto min_story_date = is_next ? story_list.list_last_story_date_ : MIN_DIALOG_DATE;
       for (auto it = story_list.ordered_stories_.upper_bound(min_story_date);
            it != story_list.ordered_stories_.end() && *it <= max_story_date; ++it) {
@@ -2327,7 +2327,7 @@ void StoryManager::on_load_active_stories_from_server(
         LOG(INFO) << "Delete active stories in " << delete_dialog_ids;
       }
       for (auto dialog_id : delete_dialog_ids) {
-        on_update_active_stories(dialog_id, StoryId(), vector<StoryId>(), mpas.get_promise(),
+        on_update_active_stories(dialog_id, StoryId(), std::vector<StoryId>(), mpas.get_promise(),
                                  "on_load_active_stories_from_server");
         load_dialog_expiring_stories(dialog_id, 0, "on_load_active_stories_from_server 1");
       }
@@ -2709,7 +2709,7 @@ void StoryManager::search_venue_posts(string venue_provider, string venue_id, st
   td_->create_handler<SearchStoriesQuery>(std::move(promise))->send(venue_provider, venue_id, offset, limit);
 }
 
-void StoryManager::set_pinned_stories(DialogId owner_dialog_id, vector<StoryId> story_ids, Promise<Unit> &&promise) {
+void StoryManager::set_pinned_stories(DialogId owner_dialog_id, std::vector<StoryId> story_ids, Promise<Unit> &&promise) {
   TRY_STATUS_PROMISE(promise, td_->dialog_manager_->check_dialog_access(owner_dialog_id, false, AccessRights::Write,
                                                                         "set_pinned_stories"));
   if (!can_edit_stories(owner_dialog_id)) {
@@ -2991,7 +2991,7 @@ void StoryManager::update_interaction_info() {
   if (opened_stories_with_view_count_.empty()) {
     return;
   }
-  FlatHashMap<DialogId, vector<StoryId>, DialogIdHash> split_story_ids;
+  FlatHashMap<DialogId, std::vector<StoryId>, DialogIdHash> split_story_ids;
   for (auto &it : opened_stories_with_view_count_) {
     auto story_full_id = it.first;
     auto &story_ids = split_story_ids[story_full_id.get_dialog_id()];
@@ -3008,7 +3008,7 @@ void StoryManager::update_interaction_info() {
 
 void StoryManager::increment_story_views(DialogId owner_dialog_id, PendingStoryViews &story_views) {
   CHECK(!story_views.has_query_);
-  vector<StoryId> viewed_story_ids;
+  std::vector<StoryId> viewed_story_ids;
   const size_t MAX_VIEWED_STORIES = 200;  // server-side limit
   while (!story_views.story_ids_.empty() && viewed_story_ids.size() < MAX_VIEWED_STORIES) {
     auto story_id_it = story_views.story_ids_.begin();
@@ -3102,7 +3102,7 @@ void StoryManager::get_channel_differences_if_needed(
   td_->user_manager_->on_get_users(std::move(story_views->users_), "stories_storyViewsList");
   td_->chat_manager_->on_get_chats(std::move(story_views->chats_), "stories_storyViewsList");
 
-  vector<const telegram_api::object_ptr<telegram_api::Message> *> messages;
+  std::vector<const telegram_api::object_ptr<telegram_api::Message> *> messages;
   for (const auto &view : story_views->views_) {
     CHECK(view != nullptr);
     if (view->get_id() != telegram_api::storyViewPublicForward::ID) {
@@ -3209,7 +3209,7 @@ void StoryManager::get_channel_differences_if_needed(
   td_->user_manager_->on_get_users(std::move(story_reactions->users_), "stories_storyReactionsList");
   td_->chat_manager_->on_get_chats(std::move(story_reactions->chats_), "stories_storyReactionsList");
 
-  vector<const telegram_api::object_ptr<telegram_api::Message> *> messages;
+  std::vector<const telegram_api::object_ptr<telegram_api::Message> *> messages;
   for (const auto &reaction : story_reactions->reactions_) {
     CHECK(reaction != nullptr);
     if (reaction->get_id() != telegram_api::storyReactionPublicForward::ID) {
@@ -3495,8 +3495,8 @@ td_api::object_ptr<td_api::story> StoryManager::get_story_object(StoryFullId sto
 }
 
 td_api::object_ptr<td_api::stories> StoryManager::get_stories_object(int32 total_count,
-                                                                     const vector<StoryFullId> &story_full_ids,
-                                                                     const vector<StoryId> &pinned_story_ids) const {
+                                                                     const std::vector<StoryFullId> &story_full_ids,
+                                                                     const std::vector<StoryId> &pinned_story_ids) const {
   if (total_count == -1) {
     total_count = static_cast<int32>(story_full_ids.size());
   }
@@ -3510,7 +3510,7 @@ td_api::object_ptr<td_api::chatActiveStories> StoryManager::get_chat_active_stor
     DialogId owner_dialog_id, const ActiveStories *active_stories) const {
   StoryListId story_list_id;
   StoryId max_read_story_id;
-  vector<td_api::object_ptr<td_api::storyInfo>> stories;
+  std::vector<td_api::object_ptr<td_api::storyInfo>> stories;
   int64 order = 0;
   if (active_stories != nullptr) {
     story_list_id = active_stories->story_list_id_;
@@ -3595,7 +3595,7 @@ void StoryManager::delete_story_files(const Story *story) const {
 }
 
 void StoryManager::change_story_files(StoryFullId story_full_id, const Story *story,
-                                      const vector<FileId> &old_file_ids) {
+                                      const std::vector<FileId> &old_file_ids) {
   auto new_file_ids = get_story_file_ids(story);
   if (new_file_ids == old_file_ids) {
     return;
@@ -3801,7 +3801,7 @@ StoryId StoryManager::on_get_new_story(DialogId owner_dialog_id,
       is_changed = true;
     }
   }
-  vector<MediaArea> media_areas;
+  std::vector<MediaArea> media_areas;
   for (auto &media_area_ptr : story_item->media_areas_) {
     MediaArea media_area(td_, std::move(media_area_ptr));
     if (media_area.is_valid()) {
@@ -3834,7 +3834,7 @@ StoryId StoryManager::on_get_new_story(DialogId owner_dialog_id,
         load_dialog_expiring_stories(owner_dialog_id, 0, "on_get_new_story");
 
         if (updated_active_stories_.count(owner_dialog_id)) {
-          on_update_active_stories(owner_dialog_id, StoryId(), vector<StoryId>{story_id}, Promise<Unit>(),
+          on_update_active_stories(owner_dialog_id, StoryId(), std::vector<StoryId>{story_id}, Promise<Unit>(),
                                    "on_get_new_story 1");
         } else if (old_story_id.is_valid()) {
           send_update_chat_active_stories(owner_dialog_id, active_stories, "on_get_new_story 2");
@@ -4035,7 +4035,7 @@ void StoryManager::on_story_changed(StoryFullId story_full_id, const Story *stor
     send_closure_later(G()->web_pages_manager(), &WebPagesManager::on_story_changed, story_full_id);
 
     if (story_messages_.count(story_full_id) != 0) {
-      vector<MessageFullId> message_full_ids;
+      std::vector<MessageFullId> message_full_ids;
       story_messages_[story_full_id].foreach(
           [&message_full_ids](const MessageFullId &message_full_id) { message_full_ids.push_back(message_full_id); });
       CHECK(!message_full_ids.empty());
@@ -4046,7 +4046,7 @@ void StoryManager::on_story_changed(StoryFullId story_full_id, const Story *stor
     }
 
     if (story_quick_reply_messages_.count(story_full_id) != 0) {
-      vector<QuickReplyMessageFullId> message_full_ids;
+      std::vector<QuickReplyMessageFullId> message_full_ids;
       story_quick_reply_messages_[story_full_id].foreach(
           [&message_full_ids](const QuickReplyMessageFullId &message_full_id) {
             message_full_ids.push_back(message_full_id);
@@ -4072,13 +4072,13 @@ void StoryManager::unregister_story_global_id(const Story *story) {
   stories_by_global_id_.erase(story->global_id_);
 }
 
-std::pair<int32, vector<StoryId>> StoryManager::on_get_stories(
-    DialogId owner_dialog_id, vector<StoryId> &&expected_story_ids,
+std::pair<int32, std::vector<StoryId>> StoryManager::on_get_stories(
+    DialogId owner_dialog_id, std::vector<StoryId> &&expected_story_ids,
     telegram_api::object_ptr<telegram_api::stories_stories> &&stories) {
   td_->user_manager_->on_get_users(std::move(stories->users_), "on_get_stories");
   td_->chat_manager_->on_get_chats(std::move(stories->chats_), "on_get_stories");
 
-  vector<StoryId> story_ids;
+  std::vector<StoryId> story_ids;
   for (auto &story : stories->stories_) {
     switch (story->get_id()) {
       case telegram_api::storyItemDeleted::ID:
@@ -4154,7 +4154,7 @@ DialogId StoryManager::on_get_dialog_stories(DialogId owner_dialog_id,
     max_read_story_id = StoryId();
   }
 
-  vector<StoryId> story_ids;
+  std::vector<StoryId> story_ids;
   for (auto &story : peer_stories->stories_) {
     switch (story->get_id()) {
       case telegram_api::storyItemDeleted::ID:
@@ -4257,7 +4257,7 @@ void StoryManager::update_active_stories(DialogId owner_dialog_id) {
 }
 
 void StoryManager::on_update_active_stories(DialogId owner_dialog_id, StoryId max_read_story_id,
-                                            vector<StoryId> &&story_ids, Promise<Unit> &&promise, const char *source,
+                                            std::vector<StoryId> &&story_ids, Promise<Unit> &&promise, const char *source,
                                             bool from_database) {
   CHECK(owner_dialog_id.is_valid());
   if (td::remove_if(story_ids, [&](StoryId story_id) {
@@ -4711,7 +4711,7 @@ void StoryManager::on_dialog_active_stories_order_updated(DialogId owner_dialog_
   }
 }
 
-void StoryManager::on_get_story_views(DialogId owner_dialog_id, const vector<StoryId> &story_ids,
+void StoryManager::on_get_story_views(DialogId owner_dialog_id, const std::vector<StoryId> &story_ids,
                                       telegram_api::object_ptr<telegram_api::stories_storyViews> &&story_views) {
   schedule_interaction_info_update();
   td_->user_manager_->on_get_users(std::move(story_views->users_), "on_get_story_views");
@@ -4751,8 +4751,8 @@ void StoryManager::on_view_dialog_active_stories(vector<DialogId> dialog_ids) {
   LOG(DEBUG) << "View active stories of " << dialog_ids;
 
   const size_t MAX_SLICE_SIZE = 100;  // server side limit
-  vector<DialogId> input_dialog_ids;
-  vector<telegram_api::object_ptr<telegram_api::InputPeer>> input_peers;
+  std::vector<DialogId> input_dialog_ids;
+  std::vector<telegram_api::object_ptr<telegram_api::InputPeer>> input_peers;
   for (auto &dialog_id : dialog_ids) {
     if (td::contains(input_dialog_ids, dialog_id)) {
       continue;
@@ -4795,8 +4795,8 @@ void StoryManager::on_view_dialog_active_stories(vector<DialogId> dialog_ids) {
   }
 }
 
-void StoryManager::on_get_dialog_max_active_story_ids(const vector<DialogId> &dialog_ids,
-                                                      const vector<int32> &max_story_ids) {
+void StoryManager::on_get_dialog_max_active_story_ids(const std::vector<DialogId> &dialog_ids,
+                                                      const std::vector<int32> &max_story_ids) {
   for (auto &dialog_id : dialog_ids) {
     auto is_deleted = being_reloaded_active_stories_dialog_ids_.erase(dialog_id) > 0;
     CHECK(is_deleted);
@@ -4938,7 +4938,7 @@ Result<StoryId> StoryManager::get_next_yet_unsent_story_id(DialogId dialog_id) {
 }
 
 void StoryManager::return_dialogs_to_send_stories(Promise<td_api::object_ptr<td_api::chats>> &&promise,
-                                                  const vector<ChannelId> &channel_ids) {
+                                                  const std::vector<ChannelId> &channel_ids) {
   if (!promise) {
     return;
   }
@@ -4970,7 +4970,7 @@ void StoryManager::get_dialogs_to_send_stories(Promise<td_api::object_ptr<td_api
         G()->td_db()->get_binlog_pmc()->erase(pmc_key);
       } else {
         Dependencies dependencies;
-        vector<ChannelId> channel_ids;
+        std::vector<ChannelId> channel_ids;
         for (auto &r_channel_id : r_channel_ids) {
           auto channel_id = r_channel_id.move_as_ok();
           dependencies.add_dialog_and_dependencies(DialogId(channel_id));
@@ -5130,7 +5130,7 @@ void StoryManager::send_story(DialogId dialog_id, td_api::object_ptr<td_api::Inp
     }
   }
   TRY_RESULT_PROMISE(promise, story_id, get_next_yet_unsent_story_id(dialog_id));
-  vector<MediaArea> areas;
+  std::vector<MediaArea> areas;
   if (input_areas != nullptr) {
     for (auto &input_area : input_areas->areas_) {
       MediaArea media_area(td_, std::move(input_area), Auto());
@@ -5212,7 +5212,7 @@ int64 StoryManager::save_send_story_log_event(const PendingStory *pending_story)
                     get_log_event_storer(SendStoryLogEvent(pending_story)));
 }
 
-void StoryManager::do_send_story(unique_ptr<PendingStory> &&pending_story, vector<int> bad_parts) {
+void StoryManager::do_send_story(unique_ptr<PendingStory> &&pending_story, std::vector<int> bad_parts) {
   CHECK(pending_story != nullptr);
   CHECK(pending_story->story_id_.is_valid());
   CHECK(pending_story->story_ != nullptr);
@@ -5350,7 +5350,7 @@ void StoryManager::on_upload_story_error(FileId file_id, Status status) {
 
   being_uploaded_files_.erase(it);
 
-  vector<Promise<Unit>> promises;
+  std::vector<Promise<Unit>> promises;
   if (!pending_story->story_id_.is_server()) {
     being_uploaded_file_ids_.erase({pending_story->dialog_id_, pending_story->story_id_});
 
@@ -5387,7 +5387,7 @@ void StoryManager::try_send_story(DialogId dialog_id) {
                                               std::move(ready_to_send_story->input_file_));
 }
 
-void StoryManager::on_send_story_file_parts_missing(unique_ptr<PendingStory> &&pending_story, vector<int> &&bad_parts) {
+void StoryManager::on_send_story_file_parts_missing(unique_ptr<PendingStory> &&pending_story, std::vector<int> &&bad_parts) {
   do_send_story(std::move(pending_story), std::move(bad_parts));
 }
 
@@ -5396,14 +5396,14 @@ class StoryManager::EditStoryLogEvent {
   const PendingStory *pending_story_in_;
   unique_ptr<PendingStory> pending_story_out_;
   bool edit_media_areas_;
-  vector<MediaArea> areas_;
+  std::vector<MediaArea> areas_;
   bool edit_caption_;
   FormattedText caption_;
 
   EditStoryLogEvent() : pending_story_in_(nullptr), edit_caption_(false) {
   }
 
-  EditStoryLogEvent(const PendingStory *pending_story, bool edit_media_areas, vector<MediaArea> areas,
+  EditStoryLogEvent(const PendingStory *pending_story, bool edit_media_areas, std::vector<MediaArea> areas,
                     bool edit_caption, const FormattedText &caption)
       : pending_story_in_(pending_story)
       , edit_media_areas_(edit_media_areas)
@@ -5467,7 +5467,7 @@ void StoryManager::edit_story(DialogId owner_dialog_id, StoryId story_id,
   bool is_bot = td_->auth_manager_->is_bot();
   unique_ptr<StoryContent> content;
   bool are_media_areas_edited = input_areas != nullptr;
-  vector<MediaArea> areas;
+  std::vector<MediaArea> areas;
   bool is_caption_edited = input_caption != nullptr;
   FormattedText caption;
   if (input_story_content != nullptr) {
@@ -5820,7 +5820,7 @@ telegram_api::object_ptr<telegram_api::InputMedia> StoryManager::get_input_media
                                                                   story_full_id.get_story_id().get());
 }
 
-void StoryManager::remove_story_notifications_by_story_ids(DialogId dialog_id, const vector<StoryId> &story_ids) {
+void StoryManager::remove_story_notifications_by_story_ids(DialogId dialog_id, const std::vector<StoryId> &story_ids) {
   VLOG(notifications) << "Trying to remove notification about " << story_ids << " in " << dialog_id;
   for (auto story_id : story_ids) {
     if (!story_id.is_server()) {

@@ -254,7 +254,7 @@ td_api::object_ptr<td_api::AuthorizationState> Td::get_fake_authorization_state_
 
 vector<td_api::object_ptr<td_api::Update>> Td::get_fake_current_state() const {
   CHECK(state_ != State::Run);
-  vector<td_api::object_ptr<td_api::Update>> updates;
+  std::vector<td_api::object_ptr<td_api::Update>> updates;
   OptionManager::get_common_state(updates);
   updates.push_back(td_api::make_object<td_api::updateAuthorizationState>(get_fake_authorization_state_object()));
   return updates;
@@ -1060,7 +1060,7 @@ void Td::init_file_manager() {
       td_->file_reference_manager_->merge(to_file_id, from_file_id);
     }
 
-    vector<FileSourceId> get_some_file_sources(FileId file_id) final {
+    std::vector<FileSourceId> get_some_file_sources(FileId file_id) final {
       return td_->file_reference_manager_->get_some_file_sources(file_id);
     }
 

@@ -28,7 +28,7 @@ char *str_dup(Slice str) {
   return res;
 }
 
-string implode(const vector<string> &v, char delimiter) {
+string implode(const std::vector<string> &v, char delimiter) {
   string result;
   for (size_t i = 0; i < v.size(); i++) {
     if (i != 0) {

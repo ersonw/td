@@ -50,7 +50,7 @@ static const std::vector<std::pair<string, string>> &get_ru_to_en_complex_rules(
 
 static void add_word_transliterations(vector<string> &result, Slice word, bool allow_partial,
                                       const FlatHashMap<uint32, string> &simple_rules,
-                                      const vector<std::pair<string, string>> &complex_rules) {
+                                      const std::vector<std::pair<string, string>> &complex_rules) {
   string s;
   auto pos = word.ubegin();
   auto end = word.uend();
@@ -103,7 +103,7 @@ static void add_word_transliterations(vector<string> &result, Slice word, bool a
 }
 
 vector<string> get_word_transliterations(Slice word, bool allow_partial) {
-  vector<string> result;
+  std::vector<string> result;
 
   add_word_transliterations(result, word, allow_partial, get_en_to_ru_simple_rules(), get_en_to_ru_complex_rules());
   add_word_transliterations(result, word, allow_partial, get_ru_to_en_simple_rules(), get_ru_to_en_complex_rules());

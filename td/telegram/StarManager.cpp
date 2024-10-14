@@ -60,7 +60,7 @@ class GetStarsTopupOptionsQuery final : public Td::ResultHandler {
     }
 
     auto results = result_ptr.move_as_ok();
-    vector<td_api::object_ptr<td_api::starPaymentOption>> options;
+    std::vector<td_api::object_ptr<td_api::starPaymentOption>> options;
     for (auto &result : results) {
       options.push_back(td_api::make_object<td_api::starPaymentOption>(result->currency_, result->amount_,
                                                                        StarManager::get_star_count(result->stars_),
@@ -99,7 +99,7 @@ class GetStarsGiftOptionsQuery final : public Td::ResultHandler {
     }
 
     auto results = result_ptr.move_as_ok();
-    vector<td_api::object_ptr<td_api::starPaymentOption>> options;
+    std::vector<td_api::object_ptr<td_api::starPaymentOption>> options;
     for (auto &result : results) {
       options.push_back(td_api::make_object<td_api::starPaymentOption>(result->currency_, result->amount_,
                                                                        StarManager::get_star_count(result->stars_),
@@ -164,7 +164,7 @@ class GetStarsTransactionsQuery final : public Td::ResultHandler {
     if (is_refund) {
       flags |= telegram_api::inputStarsTransaction::REFUND_MASK;
     }
-    vector<telegram_api::object_ptr<telegram_api::inputStarsTransaction>> transaction_ids;
+    std::vector<telegram_api::object_ptr<telegram_api::inputStarsTransaction>> transaction_ids;
     transaction_ids.push_back(
         telegram_api::make_object<telegram_api::inputStarsTransaction>(flags, false /*ignored*/, transaction_id));
     send_query(G()->net_query_creator().create(
@@ -190,9 +190,9 @@ class GetStarsTransactionsQuery final : public Td::ResultHandler {
     bool for_bot =
         (dialog_id_.get_type() == DialogType::User && td_->user_manager_->is_user_bot(dialog_id_.get_user_id())) ||
         td_->auth_manager_->is_bot();
-    vector<td_api::object_ptr<td_api::starTransaction>> transactions;
+    std::vector<td_api::object_ptr<td_api::starTransaction>> transactions;
     for (auto &transaction : result->history_) {
-      vector<FileId> file_ids;
+      std::vector<FileId> file_ids;
       td_api::object_ptr<td_api::productInfo> product_info;
       string bot_payload;
       if (!transaction->title_.empty() || !transaction->description_.empty() || transaction->photo_ != nullptr) {
@@ -207,7 +207,7 @@ class GetStarsTransactionsQuery final : public Td::ResultHandler {
           LOG(ERROR) << "Receive Star transaction with bot payload";
         }
       }
-      auto get_paid_media_object = [&](DialogId dialog_id) -> vector<td_api::object_ptr<td_api::PaidMedia>> {
+      auto get_paid_media_object = [&](DialogId dialog_id) -> std::vector<td_api::object_ptr<td_api::PaidMedia>> {
         auto extended_media = transform(std::move(transaction->extended_media_), [td = td_, dialog_id](auto &&media) {
           return MessageExtendedMedia(td, std::move(media), dialog_id);
         });
@@ -436,7 +436,7 @@ class GetStarsSubscriptionsQuery final : public Td::ResultHandler {
     td_->user_manager_->on_get_users(std::move(result->users_), "GetStarsSubscriptionsQuery");
     td_->chat_manager_->on_get_chats(std::move(result->chats_), "GetStarsSubscriptionsQuery");
 
-    vector<td_api::object_ptr<td_api::starSubscription>> subscriptions;
+    std::vector<td_api::object_ptr<td_api::starSubscription>> subscriptions;
     for (auto &subscription : result->subscriptions_) {
       StarSubscription star_subscription(std::move(subscription));
       if (!star_subscription.is_valid()) {
