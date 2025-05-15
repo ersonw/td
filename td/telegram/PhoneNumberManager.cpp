@@ -1,15 +1,15 @@
 //
-// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2024
+// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2025
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 #include "td/telegram/PhoneNumberManager.h"
 
-#include "td/telegram/ConfigManager.h"
 #include "td/telegram/Global.h"
 #include "td/telegram/misc.h"
 #include "td/telegram/SuggestedAction.h"
+#include "td/telegram/SuggestedActionManager.h"
 #include "td/telegram/Td.h"
 #include "td/telegram/telegram_api.h"
 #include "td/telegram/UserManager.h"
@@ -40,6 +40,7 @@ class SendCodeQuery final : public Td::ResultHandler {
     auto ptr = result_ptr.move_as_ok();
     switch (ptr->get_id()) {
       case telegram_api::auth_sentCodeSuccess::ID:
+      case telegram_api::auth_sentCodePaymentRequired::ID:
         return on_error(Status::Error(500, "Receive invalid response"));
       case telegram_api::auth_sentCode::ID:
         return promise_.set_value(telegram_api::move_object_as<telegram_api::auth_sentCode>(ptr));
@@ -246,7 +247,7 @@ void PhoneNumberManager::set_phone_number(string phone_number,
   switch (type->get_id()) {
     case td_api::phoneNumberCodeTypeChange::ID:
       type_ = Type::ChangePhone;
-      send_closure(G()->config_manager(), &ConfigManager::hide_suggested_action,
+      send_closure(G()->suggested_action_manager(), &SuggestedActionManager::hide_suggested_action,
                    SuggestedAction{SuggestedAction::Type::CheckPhoneNumber});
       return send_new_send_code_query(send_code_helper_.send_change_phone_code(phone_number, settings),
                                       std::move(promise));
@@ -296,12 +297,8 @@ void PhoneNumberManager::resend_authentication_code(
     return promise.set_error(Status::Error(400, "Can't resend code"));
   }
 
-  auto r_resend_code = send_code_helper_.resend_code(std::move(reason));
-  if (r_resend_code.is_error()) {
-    return promise.set_error(r_resend_code.move_as_error());
-  }
-
-  send_new_send_code_query(r_resend_code.move_as_ok(), std::move(promise));
+  TRY_RESULT_PROMISE(promise, resend_code, send_code_helper_.resend_code(std::move(reason)));
+  send_new_send_code_query(std::move(resend_code), std::move(promise));
 }
 
 void PhoneNumberManager::check_code(string code, Promise<Unit> &&promise) {
@@ -317,15 +314,15 @@ void PhoneNumberManager::check_code(string code, Promise<Unit> &&promise) {
   switch (type_) {
     case Type::ChangePhone:
       td_->create_handler<ChangePhoneQuery>(std::move(query_promise))
-          ->send(send_code_helper_.phone_number().str(), send_code_helper_.phone_code_hash().str(), code);
+          ->send(send_code_helper_.get_phone_number(), send_code_helper_.get_phone_code_hash(), code);
       break;
     case Type::VerifyPhone:
       td_->create_handler<VerifyPhoneQuery>(std::move(query_promise))
-          ->send(send_code_helper_.phone_number().str(), send_code_helper_.phone_code_hash().str(), code);
+          ->send(send_code_helper_.get_phone_number(), send_code_helper_.get_phone_code_hash(), code);
       break;
     case Type::ConfirmPhone:
       td_->create_handler<ConfirmPhoneQuery>(std::move(query_promise))
-          ->send(send_code_helper_.phone_code_hash().str(), code);
+          ->send(send_code_helper_.get_phone_code_hash(), code);
       break;
     default:
       UNREACHABLE();

@@ -1,5 +1,5 @@
 //
-// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2024
+// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2025
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -24,6 +24,7 @@
 #include "td/telegram/StoryManager.h"
 #include "td/telegram/Td.h"
 #include "td/telegram/UserManager.h"
+#include "td/telegram/WebAppManager.h"
 #include "td/telegram/WebPageId.h"
 #include "td/telegram/WebPagesManager.h"
 
@@ -54,15 +55,26 @@ bool FileReferenceManager::is_file_reference_error(const Status &error) {
   return error.is_error() && error.code() == 400 && begins_with(error.message(), "FILE_REFERENCE_");
 }
 
-size_t FileReferenceManager::get_file_reference_error_pos(const Status &error) {
+FileReferenceManager::FileReferenceErrorSource FileReferenceManager::get_file_reference_error_source(
+    const Status &error) {
   if (!is_file_reference_error(error)) {
-    return 0;
+    return {0, false};
   }
   auto offset = Slice("FILE_REFERENCE_").size();
-  if (error.message().size() <= offset || !is_digit(error.message()[offset])) {
-    return 0;
+  Slice message = error.message();
+  if (message.size() <= offset) {
+    return {0, false};
   }
-  return to_integer<size_t>(error.message().substr(offset)) + 1;
+  message = message.substr(offset);
+  if (!is_digit(message[0])) {
+    if (message[0] == '_') {
+      message = message.substr(1);
+    }
+    return {0, begins_with(message, "COVER_")};
+  }
+  auto underscore_pos = message.find('_');
+  auto is_cover = underscore_pos != Slice::npos && begins_with(message.substr(underscore_pos + 1), "COVER_");
+  return {to_integer<size_t>(message) + 1, is_cover};
 }
 
 /*
@@ -208,21 +220,23 @@ FileReferenceManager::Node &FileReferenceManager::add_node(NodeId node_id) {
   return *node;
 }
 
-bool FileReferenceManager::add_file_source(NodeId node_id, FileSourceId file_source_id) {
+bool FileReferenceManager::add_file_source(NodeId node_id, FileSourceId file_source_id, const char *source) {
   auto &node = add_node(node_id);
   bool is_added = node.file_source_ids.add(file_source_id);
-  VLOG(file_references) << "Add " << (is_added ? "new" : "old") << ' ' << file_source_id << " for file " << node_id;
+  VLOG(file_references) << "Add " << (is_added ? "new" : "old") << ' ' << file_source_id << " for file " << node_id
+                        << " from " << source;
   return is_added;
 }
 
-bool FileReferenceManager::remove_file_source(NodeId node_id, FileSourceId file_source_id) {
+bool FileReferenceManager::remove_file_source(NodeId node_id, FileSourceId file_source_id, const char *source) {
   CHECK(node_id.is_valid());
   auto *node = nodes_.get_pointer(node_id);
   bool is_removed = node != nullptr && node->file_source_ids.remove(file_source_id);
   if (is_removed) {
-    VLOG(file_references) << "Remove " << file_source_id << " from file " << node_id;
+    VLOG(file_references) << "Remove " << file_source_id << " from file " << node_id << " from " << source;
   } else {
-    VLOG(file_references) << "Can't find " << file_source_id << " from file " << node_id << " to remove it";
+    VLOG(file_references) << "Can't find " << file_source_id << " from file " << node_id << " to remove it from "
+                          << source;
   }
   return is_removed;
 }
@@ -360,7 +374,7 @@ void FileReferenceManager::send_query(Destination dest, FileSourceId file_source
       },
       [&](const FileSourceWallpapers &source) { promise.set_error(Status::Error("Can't repair old wallpapers")); },
       [&](const FileSourceWebPage &source) {
-        send_closure_later(G()->web_pages_manager(), &WebPagesManager::reload_web_page_by_url, source.url,
+        send_closure_later(G()->web_pages_manager(), &WebPagesManager::reload_web_page_by_url, source.url, false,
                            PromiseCreator::lambda([promise = std::move(promise)](Result<WebPageId> &&result) mutable {
                              if (result.is_error()) {
                                promise.set_error(result.move_as_error());
@@ -407,8 +421,8 @@ void FileReferenceManager::send_query(Destination dest, FileSourceId file_source
                            std::move(promise));
       },
       [&](const FileSourceWebApp &source) {
-        send_closure_later(G()->attach_menu_manager(), &AttachMenuManager::reload_web_app, source.user_id,
-                           source.short_name, std::move(promise));
+        send_closure_later(G()->web_app_manager(), &WebAppManager::reload_web_app, source.user_id, source.short_name,
+                           std::move(promise));
       },
       [&](const FileSourceStory &source) {
         send_closure_later(G()->story_manager(), &StoryManager::reload_story, source.story_full_id, std::move(promise),

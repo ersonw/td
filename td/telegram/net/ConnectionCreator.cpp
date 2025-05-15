@@ -1,5 +1,5 @@
 //
-// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2024
+// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2025
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -10,7 +10,6 @@
 #include "td/telegram/Global.h"
 #include "td/telegram/LinkManager.h"
 #include "td/telegram/logevent/LogEvent.h"
-#include "td/telegram/MessagesManager.h"
 #include "td/telegram/net/MtprotoHeader.h"
 #include "td/telegram/net/NetQueryDispatcher.h"
 #include "td/telegram/net/NetType.h"
@@ -44,6 +43,7 @@
 #include "td/utils/Time.h"
 #include "td/utils/tl_helpers.h"
 
+#include <algorithm>
 #include <utility>
 
 namespace td {
@@ -432,7 +432,7 @@ void ConnectionCreator::test_proxy(Proxy &&proxy, int32 dc_id, double timeout, P
   test_proxy_requests_.emplace(request_id, std::move(request));
 
   create_actor<SleepActor>("TestProxyTimeoutActor", timeout + start_time - Time::now(),
-                           PromiseCreator::lambda([actor_id = actor_id(this), request_id](Result<Unit> result) {
+                           PromiseCreator::lambda([actor_id = actor_id(this), request_id](Unit) {
                              send_closure(actor_id, &ConnectionCreator::on_test_proxy_timeout, request_id);
                            }))
       .release();
@@ -558,7 +558,7 @@ void ConnectionCreator::enable_proxy_impl(int32 proxy_id) {
 
 void ConnectionCreator::disable_proxy_impl() {
   if (active_proxy_id_ == 0) {
-    send_closure(G()->messages_manager(), &MessagesManager::remove_sponsored_dialog);
+    send_closure(G()->promo_data_manager(), &PromoDataManager::remove_sponsored_dialog);
     send_closure(G()->promo_data_manager(), &PromoDataManager::reload_promo_data);
     return;
   }
@@ -592,7 +592,7 @@ void ConnectionCreator::on_proxy_changed(bool from_db) {
   proxy_ip_address_ = IPAddress();
 
   if (active_proxy_id_ == 0 || !from_db) {
-    send_closure(G()->messages_manager(), &MessagesManager::remove_sponsored_dialog);
+    send_closure(G()->promo_data_manager(), &PromoDataManager::remove_sponsored_dialog);
   }
   send_closure(G()->promo_data_manager(), &PromoDataManager::reload_promo_data);
 
@@ -753,11 +753,7 @@ void ConnectionCreator::request_raw_connection(DcId dc_id, bool allow_media_only
 
 void ConnectionCreator::request_raw_connection_by_ip(IPAddress ip_address, mtproto::TransportType transport_type,
                                                      Promise<unique_ptr<mtproto::RawConnection>> promise) {
-  auto r_socket_fd = SocketFd::open(ip_address);
-  if (r_socket_fd.is_error()) {
-    return promise.set_error(r_socket_fd.move_as_error());
-  }
-  auto socket_fd = r_socket_fd.move_as_ok();
+  TRY_RESULT_PROMISE(promise, socket_fd, SocketFd::open(ip_address));
 
   auto connection_promise = PromiseCreator::lambda([actor_id = actor_id(this), promise = std::move(promise),
                                                     transport_type, network_generation = network_generation_,
@@ -859,9 +855,9 @@ ActorOwn<> ConnectionCreator::prepare_connection(IPAddress ip_address, SocketFd 
     VLOG(connections) << "Create new transparent proxy connection " << debug_str;
     class Callback final : public TransparentProxy::Callback {
      public:
-      explicit Callback(Promise<ConnectionData> promise, IPAddress ip_address,
-                        unique_ptr<mtproto::RawConnection::StatsCallback> stats_callback, bool use_connection_token,
-                        bool was_connected)
+      Callback(Promise<ConnectionData> promise, IPAddress ip_address,
+               unique_ptr<mtproto::RawConnection::StatsCallback> stats_callback, bool use_connection_token,
+               bool was_connected)
           : promise_(std::move(promise))
           , ip_address_(std::move(ip_address))
           , stats_callback_(std::move(stats_callback))
@@ -1166,6 +1162,32 @@ void ConnectionCreator::client_wakeup(uint32 hash) {
 }
 
 void ConnectionCreator::on_dc_options(DcOptions new_dc_options) {
+  auto seed = G()->get_option_integer("my_id");
+  std::stable_sort(new_dc_options.dc_options.begin(), new_dc_options.dc_options.end(),
+                   [seed](const DcOption &lhs, const DcOption &rhs) {
+                     if (lhs.get_dc_id() != rhs.get_dc_id()) {
+                       return lhs.get_dc_id() < rhs.get_dc_id();
+                     }
+                     if (lhs.is_ipv6() != rhs.is_ipv6()) {
+                       return rhs.is_ipv6();
+                     }
+                     if (lhs.is_media_only() != rhs.is_media_only()) {
+                       return rhs.is_media_only();
+                     }
+                     if (lhs.is_obfuscated_tcp_only() != rhs.is_obfuscated_tcp_only()) {
+                       return lhs.is_obfuscated_tcp_only();
+                     }
+                     if (lhs.is_static() != rhs.is_static()) {
+                       return rhs.is_static();
+                     }
+                     if (lhs.is_ipv6()) {
+                       return false;
+                     }
+                     auto lhs_ip_address_hash = Hash<int64>()(lhs.get_ip_address().get_ipv4() + seed);
+                     auto rhs_ip_address_hash = Hash<int64>()(rhs.get_ip_address().get_ipv4() + seed);
+                     return lhs_ip_address_hash < rhs_ip_address_hash;
+                   });
+
   VLOG(connections) << "SAVE " << new_dc_options;
   G()->td_db()->get_binlog_pmc()->set("dc_options", serialize(new_dc_options));
   dc_options_set_.reset();

@@ -1,5 +1,5 @@
 //
-// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2024
+// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2025
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -1199,9 +1199,9 @@ static td_api::object_ptr<td_api::LanguagePackStringValue> copy_language_pack_st
     }
     case td_api::languagePackStringValuePluralized::ID: {
       auto old_value = static_cast<const td_api::languagePackStringValuePluralized *>(value);
-      return make_tl_object<td_api::languagePackStringValuePluralized>(
-          std::move(old_value->zero_value_), std::move(old_value->one_value_), std::move(old_value->two_value_),
-          std::move(old_value->few_value_), std::move(old_value->many_value_), std::move(old_value->other_value_));
+      return make_tl_object<td_api::languagePackStringValuePluralized>(old_value->zero_value_, old_value->one_value_,
+                                                                       old_value->two_value_, old_value->few_value_,
+                                                                       old_value->many_value_, old_value->other_value_);
     }
     case td_api::languagePackStringValueDeleted::ID:
       return make_tl_object<td_api::languagePackStringValueDeleted>();

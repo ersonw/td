@@ -1,5 +1,5 @@
 //
-// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2024
+// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2025
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -175,7 +175,18 @@ static auto chat_administrator_rights(bool can_manage_chat, bool can_change_info
 }
 
 static auto target_chat_chosen(bool allow_users, bool allow_bots, bool allow_groups, bool allow_channels) {
-  return td::td_api::make_object<td::td_api::targetChatChosen>(allow_users, allow_bots, allow_groups, allow_channels);
+  return td::td_api::make_object<td::td_api::targetChatChosen>(
+      td::td_api::make_object<td::td_api::targetChatTypes>(allow_users, allow_bots, allow_groups, allow_channels));
+}
+
+static td::td_api::object_ptr<td::td_api::WebAppOpenMode> web_app_open_mode(bool is_compact, bool is_full_screen) {
+  if (is_compact) {
+    return td::td_api::make_object<td::td_api::webAppOpenModeCompact>();
+  }
+  if (is_full_screen) {
+    return td::td_api::make_object<td::td_api::webAppOpenModeFullScreen>();
+  }
+  return td::td_api::make_object<td::td_api::webAppOpenModeFullSize>();
 }
 
 static auto active_sessions() {
@@ -233,6 +244,10 @@ static auto change_phone_number() {
   return td::td_api::make_object<td::td_api::internalLinkTypeChangePhoneNumber>();
 }
 
+static auto chat_affiliate_program(const td::string &username, const td::string &referral) {
+  return td::td_api::make_object<td::td_api::internalLinkTypeChatAffiliateProgram>(username, referral);
+}
+
 static auto chat_boost(const td::string &url) {
   return td::td_api::make_object<td::td_api::internalLinkTypeChatBoost>(url);
 }
@@ -261,6 +276,10 @@ static auto game(const td::string &bot_username, const td::string &game_short_na
   return td::td_api::make_object<td::td_api::internalLinkTypeGame>(bot_username, game_short_name);
 }
 
+static auto group_call(const td::string &slug) {
+  return td::td_api::make_object<td::td_api::internalLinkTypeGroupCall>("tg:call?slug=" + slug);
+}
+
 static auto instant_view(const td::string &url, const td::string &fallback_url) {
   return td::td_api::make_object<td::td_api::internalLinkTypeInstantView>(url, fallback_url);
 }
@@ -277,8 +296,10 @@ static auto language_settings() {
   return td::td_api::make_object<td::td_api::internalLinkTypeLanguageSettings>();
 }
 
-static auto main_web_app(const td::string &bot_username, const td::string &start_parameter, bool is_compact) {
-  return td::td_api::make_object<td::td_api::internalLinkTypeMainWebApp>(bot_username, start_parameter, is_compact);
+static auto main_web_app(const td::string &bot_username, const td::string &start_parameter, bool is_compact,
+                         bool is_full_screen) {
+  return td::td_api::make_object<td::td_api::internalLinkTypeMainWebApp>(bot_username, start_parameter,
+                                                                         web_app_open_mode(is_compact, is_full_screen));
 }
 
 static auto message(const td::string &url) {
@@ -289,6 +310,10 @@ static auto message_draft(td::string text, bool contains_url) {
   auto formatted_text = td::td_api::make_object<td::td_api::formattedText>();
   formatted_text->text_ = std::move(text);
   return td::td_api::make_object<td::td_api::internalLinkTypeMessageDraft>(std::move(formatted_text), contains_url);
+}
+
+static auto my_stars() {
+  return td::td_api::make_object<td::td_api::internalLinkTypeMyStars>();
 }
 
 static auto passport_data_request(td::int32 bot_user_id, const td::string &scope, const td::string &public_key,
@@ -349,8 +374,8 @@ static auto sticker_set(const td::string &sticker_set_name, bool expect_custom_e
   return td::td_api::make_object<td::td_api::internalLinkTypeStickerSet>(sticker_set_name, expect_custom_emoji);
 }
 
-static auto story(const td::string &sender_username, td::int32 story_id) {
-  return td::td_api::make_object<td::td_api::internalLinkTypeStory>(sender_username, story_id);
+static auto story(const td::string &poster_username, td::int32 story_id) {
+  return td::td_api::make_object<td::td_api::internalLinkTypeStory>(poster_username, story_id);
 }
 
 static auto theme(const td::string &theme_name) {
@@ -369,6 +394,10 @@ static auto unsupported_proxy() {
   return td::td_api::make_object<td::td_api::internalLinkTypeUnsupportedProxy>();
 }
 
+static auto upgraded_gift(const td::string &name) {
+  return td::td_api::make_object<td::td_api::internalLinkTypeUpgradedGift>(name);
+}
+
 static auto user_phone_number(const td::string &phone_number, const td::string &draft_text = td::string(),
                               bool open_profile = false) {
   return td::td_api::make_object<td::td_api::internalLinkTypeUserPhoneNumber>('+' + phone_number, draft_text,
@@ -384,9 +413,9 @@ static auto video_chat(const td::string &chat_username, const td::string &invite
 }
 
 static auto web_app(const td::string &bot_username, const td::string &web_app_short_name,
-                    const td::string &start_parameter, bool is_compact) {
+                    const td::string &start_parameter, bool is_compact, bool is_full_screen) {
   return td::td_api::make_object<td::td_api::internalLinkTypeWebApp>(bot_username, web_app_short_name, start_parameter,
-                                                                     is_compact);
+                                                                     web_app_open_mode(is_compact, is_full_screen));
 }
 
 TEST(Link, parse_internal_link_part1) {
@@ -525,6 +554,20 @@ TEST(Link, parse_internal_link_part1) {
   parse_internal_link("tg:contact?token=", unknown_deep_link("tg://contact?token="));
   parse_internal_link("tg:contact?token=+123", user_token(" 123"));
 
+  parse_internal_link("tg:nft?slug=1", upgraded_gift("1"));
+  parse_internal_link("tg:nft?slug=123456", upgraded_gift("123456"));
+  parse_internal_link("tg:nft?slug=123456&startattach", upgraded_gift("123456"));
+  parse_internal_link("tg:nft?slug=123456&startattach=123", upgraded_gift("123456"));
+  parse_internal_link("tg:nft?slug=123456&attach=", upgraded_gift("123456"));
+  parse_internal_link("tg:nft?slug=123456/789&attach=&startattach", upgraded_gift("123456/789"));
+  parse_internal_link("tg:nft?slug=123456&attach=&startattach=123", upgraded_gift("123456"));
+  parse_internal_link("tg:nft?slug=01234567890123456789012345678912",
+                      upgraded_gift("01234567890123456789012345678912"));
+  parse_internal_link("tg:nft?slug=012345678901234567890123456789123",
+                      upgraded_gift("012345678901234567890123456789123"));
+  parse_internal_link("tg:nft?slug=", unknown_deep_link("tg://nft?slug="));
+  parse_internal_link("tg:nft?slug=+123", upgraded_gift(" 123"));
+
   parse_internal_link("t.me/username/12345?single", message("tg://resolve?domain=username&post=12345&single"));
   parse_internal_link("t.me/username/12345?asdasd", message("tg://resolve?domain=username&post=12345"));
   parse_internal_link("t.me/username/12345", message("tg://resolve?domain=username&post=12345"));
@@ -585,6 +628,8 @@ TEST(Link, parse_internal_link_part1) {
                       message("tg://privatepost?channel=12345&post=456&single&thread=123"));
   parse_internal_link("t.me/c/%312345/%3123?comment=456&t=789&single&thread=123%20%31",
                       message("tg://privatepost?channel=12345&post=123&single&thread=123%201&comment=456&t=789"));
+  parse_internal_link("t.me/c/%312345/%3123?comment=456&t=2h3m101s&single&thread=123%20%31",
+                      message("tg://privatepost?channel=12345&post=123&single&thread=123%201&comment=456&t=2h3m101s"));
 
   parse_internal_link("tg:bg?color=111111#asdasd", background("111111"));
   parse_internal_link("tg:bg?color=11111%31", background("111111"));
@@ -631,7 +676,7 @@ TEST(Link, parse_internal_link_part1) {
   parse_internal_link("t.me/bg/111111-222222%20?rotation=180%20", background("111111-222222%20?rotation=180%20"));
   parse_internal_link("t.me/bg/111111~222222", background("111111~222222"));
   parse_internal_link("t.me/bg/abacaba", background("abacaba"));
-  parse_internal_link("t.me/Bg/abacaba", web_app("Bg", "abacaba", "", false));
+  parse_internal_link("t.me/Bg/abacaba", web_app("Bg", "abacaba", "", false, false));
   parse_internal_link("t.me/bg/111111~222222#asdasd", background("111111~222222"));
   parse_internal_link("t.me/bg/111111~222222?mode=blur", background("111111~222222"));
   parse_internal_link("t.me/bg/111111~222222?mode=blur&text=1", background("111111~222222"));
@@ -849,11 +894,35 @@ TEST(Link, parse_internal_link_part2) {
   parse_internal_link("t.me/addlist/123456a", chat_folder_invite("123456a"));
   parse_internal_link("t.me/addlist/123456a/123123/12/31/a/s//21w/?asdas#test", chat_folder_invite("123456a"));
 
+  parse_internal_link("t.me/call?invite=abcdef", nullptr);
+  parse_internal_link("t.me/call", nullptr);
+  parse_internal_link("t.me/call/", nullptr);
+  parse_internal_link("t.me/call//abcdef", nullptr);
+  parse_internal_link("t.me/call?/abcdef", nullptr);
+  parse_internal_link("t.me/call/?abcdef", nullptr);
+  parse_internal_link("t.me/call/#abcdef", nullptr);
+  parse_internal_link("t.me/call/abacaba", group_call("abacaba"));
+  parse_internal_link("t.me/call/aba%20aba", nullptr);
+  parse_internal_link("t.me/call/aba%30aba", group_call("aba0aba"));
+  parse_internal_link("t.me/call/123456a", group_call("123456a"));
+  parse_internal_link("t.me/call/12345678901", group_call("12345678901"));
+  parse_internal_link("t.me/call/123456", group_call("123456"));
+  parse_internal_link("t.me/call/123456/123123/12/31/a/s//21w/?asdas#test", group_call("123456"));
+  parse_internal_link("t.me/call/12345678901a", group_call("12345678901a"));
+  parse_internal_link("t.me/call/123456a", group_call("123456a"));
+  parse_internal_link("t.me/call/123456a/123123/12/31/a/s//21w/?asdas#test", group_call("123456a"));
+
   parse_internal_link("t.me/contact/startattach/adasd", user_token("startattach"));
   parse_internal_link("t.me/contact/startattach", user_token("startattach"));
   parse_internal_link("t.me/contact/startattach=1", user_token("startattach=1"));
   parse_internal_link("t.me/contact/", nullptr);
   parse_internal_link("t.me/contact/?attach=&startattach", nullptr);
+
+  parse_internal_link("t.me/nft/startattach/adasd", upgraded_gift("startattach/adasd"));
+  parse_internal_link("t.me/nft/startattach", upgraded_gift("startattach"));
+  parse_internal_link("t.me/nft/startattach=1", upgraded_gift("startattach=1"));
+  parse_internal_link("t.me/nft/", nullptr);
+  parse_internal_link("t.me/nft/?attach=&startattach", nullptr);
 
   parse_internal_link("tg:join?invite=abcdef", chat_invite("abcdef"));
   parse_internal_link("tg:join?invite=abc%20def", unknown_deep_link("tg://join?invite=abc%20def"));
@@ -864,6 +933,11 @@ TEST(Link, parse_internal_link_part2) {
   parse_internal_link("tg:addlist?slug=abc%20def", unknown_deep_link("tg://addlist?slug=abc%20def"));
   parse_internal_link("tg://addlist?slug=abc%30def", chat_folder_invite("abc0def"));
   parse_internal_link("tg:addlist?slug=", unknown_deep_link("tg://addlist?slug="));
+
+  parse_internal_link("tg:call?slug=abcdef", group_call("abcdef"));
+  parse_internal_link("tg:call?slug=abc%20def", unknown_deep_link("tg://call?slug=abc%20def"));
+  parse_internal_link("tg://call?slug=abc%30def", group_call("abc0def"));
+  parse_internal_link("tg:call?slug=", unknown_deep_link("tg://call?slug="));
 
   parse_internal_link("t.me/addstickers?set=abcdef", nullptr);
   parse_internal_link("t.me/addstickers", nullptr);
@@ -1072,6 +1146,22 @@ TEST(Link, parse_internal_link_part3) {
   parse_internal_link("t.me//username?start=", nullptr);
   parse_internal_link("https://telegram.dog/tele%63ram?start=t%63st", bot_start("telecram", "tcst"));
 
+  parse_internal_link("tg:resolve?domain=username&start=_tgr_", bot_start("username", "_tgr_"));
+  parse_internal_link("tg:resolve?domain=username&start=_tgr_aSd", chat_affiliate_program("username", "aSd"));
+  parse_internal_link("tg:resolve?domain=username&start=_tgr_a%30Sd", chat_affiliate_program("username", "a0Sd"));
+
+  parse_internal_link("t.me/username/0/a//s/as?start=_tgr_", bot_start("username", "_tgr_"));
+  parse_internal_link("t.me/username/0/a//s/as?start=_tgr_aSd", chat_affiliate_program("username", "aSd"));
+  parse_internal_link("t.me/username/0/a//s/as?start=_tgr_a%30Sd", chat_affiliate_program("username", "a0Sd"));
+
+  parse_internal_link("tg:resolve?domain=username&ref=", public_chat("username"));
+  parse_internal_link("tg:resolve?domain=username&ref=aSd", chat_affiliate_program("username", "aSd"));
+  parse_internal_link("tg:resolve?domain=username&ref=a%30Sd", chat_affiliate_program("username", "a0Sd"));
+
+  parse_internal_link("t.me/username/0/a//s/as?ref=", public_chat("username"));
+  parse_internal_link("t.me/username/0/a//s/as?ref=aSd", chat_affiliate_program("username", "aSd"));
+  parse_internal_link("t.me/username/0/a//s/as?ref=a%30Sd", chat_affiliate_program("username", "a0Sd"));
+
   parse_internal_link("tg:resolve?domain=username&startgroup=aasdasd",
                       bot_start_in_group("username", "aasdasd", nullptr));
   parse_internal_link("TG://resolve?domain=username&startgroup=", bot_start_in_group("username", "", nullptr));
@@ -1198,8 +1288,15 @@ TEST(Link, parse_internal_link_part4) {
   parse_internal_link("t.me/username?story=123", public_chat("username"));
   parse_internal_link("https://telegram.dog/tele%63ram/s/%31%39", story("telecram", 19));
 
+  parse_internal_link("t.me/h", public_chat("h"));
+  parse_internal_link("t.me/h/hh", public_chat("h"));
+  parse_internal_link("t.me/i", nullptr);
+  parse_internal_link("t.me/i/ii", nullptr);
+  parse_internal_link("t.me/j", public_chat("j"));
+  parse_internal_link("t.me/j/jj", public_chat("j"));
+
   parse_internal_link("tg:resolve?domain=username&appname=aasdasd&startapp=123asd",
-                      web_app("username", "aasdasd", "123asd", false));
+                      web_app("username", "aasdasd", "123asd", false, false));
   parse_internal_link("TG://resolve?domain=username&appname=&startapp=123asd", public_chat("username"));
   parse_internal_link("TG://test@resolve?domain=username&appname=asd", nullptr);
   parse_internal_link("tg:resolve:80?domain=username&appname=asd", nullptr);
@@ -1209,9 +1306,11 @@ TEST(Link, parse_internal_link_part4) {
   parse_internal_link("tg:resolve?domain=telegram&&&&&&&appname=%41&startapp=", public_chat("telegram"));
   parse_internal_link("tg:resolve?domain=telegram&&&&&&&appname=%41b&startapp=", public_chat("telegram"));
   parse_internal_link("tg:resolve?domain=telegram&&&&&&&appname=%41bc&startapp=",
-                      web_app("telegram", "Abc", "", false));
+                      web_app("telegram", "Abc", "", false, false));
   parse_internal_link("tg:resolve?domain=telegram&&&&&&&appname=%41bc&startapp=&mode=compact",
-                      web_app("telegram", "Abc", "", true));
+                      web_app("telegram", "Abc", "", true, false));
+  parse_internal_link("tg:resolve?domain=telegram&&&&&&&appname=%41bc&startapp=&mode=fullscreen",
+                      web_app("telegram", "Abc", "", false, true));
 
   parse_internal_link("t.me/username/0/a//s/as?appname=asd", public_chat("username"));
   parse_internal_link("t.me/username/aasdas/2?test=1&appname=asd#12312", public_chat("username"));
@@ -1223,34 +1322,47 @@ TEST(Link, parse_internal_link_part4) {
   parse_internal_link("t.me//username?appname=asd", nullptr);
   parse_internal_link("https://telegram.dog/tele%63ram?appname=t%63st", public_chat("telecram"));
   parse_internal_link("t.me/username/def/asd", public_chat("username"));
-  parse_internal_link("t.me/username/asd#12312&startapp=qwe", web_app("username", "asd", "", false));
-  parse_internal_link("t.me/username/asd?12312&startapp=qwe&mode=compac", web_app("username", "asd", "qwe", false));
-  parse_internal_link("t.me/username/asd?12312&startapp=qwe&mode=compact", web_app("username", "asd", "qwe", true));
-  parse_internal_link("t.me/username/asdasd?startapp=0", web_app("username", "asdasd", "0", false));
-  parse_internal_link("t.me/username/asd", web_app("username", "asd", "", false));
+  parse_internal_link("t.me/username/asd#12312&startapp=qwe", web_app("username", "asd", "", false, false));
+  parse_internal_link("t.me/username/asd?12312&startapp=qwe&mode=compac",
+                      web_app("username", "asd", "qwe", false, false));
+  parse_internal_link("t.me/username/asd?12312&startapp=qwe&mode=compact",
+                      web_app("username", "asd", "qwe", true, false));
+  parse_internal_link("t.me/username/asd?12312&startapp=qwe&mode=fullscreen",
+                      web_app("username", "asd", "qwe", false, true));
+  parse_internal_link("t.me/username/asdasd?startapp=0", web_app("username", "asdasd", "0", false, false));
+  parse_internal_link("t.me/username/asd", web_app("username", "asd", "", false, false));
   parse_internal_link("t.me/username/", public_chat("username"));
-  parse_internal_link("https://telegram.dog/tele%63ram/t%63st", web_app("telecram", "tcst", "", false));
-  parse_internal_link("https://telegram.dog/tele%63ram/t%63st?mode=compact", web_app("telecram", "tcst", "", true));
+  parse_internal_link("https://telegram.dog/tele%63ram/t%63st", web_app("telecram", "tcst", "", false, false));
+  parse_internal_link("https://telegram.dog/tele%63ram/t%63st?mode=compact",
+                      web_app("telecram", "tcst", "", true, false));
+  parse_internal_link("https://telegram.dog/tele%63ram/t%63st?mode=fullscreen",
+                      web_app("telecram", "tcst", "", false, true));
 
-  parse_internal_link("tg:resolve?domain=username&startapp=aasdasd", main_web_app("username", "aasdasd", false));
-  parse_internal_link("TG://resolve?domain=username&startapp=&startapp=123asd", main_web_app("username", "", false));
+  parse_internal_link("tg:resolve?domain=username&startapp=aasdasd", main_web_app("username", "aasdasd", false, false));
+  parse_internal_link("TG://resolve?domain=username&startapp=&startapp=123asd",
+                      main_web_app("username", "", false, false));
   parse_internal_link("TG://test@resolve?domain=username&startapp=asd", nullptr);
   parse_internal_link("tg:resolve:80?domain=username&startapp=asd", nullptr);
   parse_internal_link("tg:http://resolve?domain=username&startapp=asd", nullptr);
   parse_internal_link("tg:https://resolve?domain=username&startapp=asd", nullptr);
   parse_internal_link("tg:resolve?domain=&startapp=asd", unknown_deep_link("tg://resolve?domain=&startapp=asd"));
-  parse_internal_link("tg:resolve?domain=telegram&&&&&&&startapp=%41", main_web_app("telegram", "A", false));
-  parse_internal_link("tg:resolve?domain=telegram&&&&&&&startapp=%41b", main_web_app("telegram", "Ab", false));
-  parse_internal_link("tg:resolve?domain=telegram&&&&&&&startapp=%41bc", main_web_app("telegram", "Abc", false));
+  parse_internal_link("tg:resolve?domain=telegram&&&&&&&startapp=%41", main_web_app("telegram", "A", false, false));
+  parse_internal_link("tg:resolve?domain=telegram&&&&&&&startapp=%41b", main_web_app("telegram", "Ab", false, false));
+  parse_internal_link("tg:resolve?domain=telegram&&&&&&&startapp=%41bc", main_web_app("telegram", "Abc", false, false));
   parse_internal_link("tg:resolve?domain=telegram&&mode=compact&&&&&&startapp=%41bc",
-                      main_web_app("telegram", "Abc", true));
+                      main_web_app("telegram", "Abc", true, false));
+  parse_internal_link("tg:resolve?domain=telegram&&mode=fullscreen&&&&&&startapp=%41bc",
+                      main_web_app("telegram", "Abc", false, true));
 
-  parse_internal_link("t.me/username?startapp=qwe", main_web_app("username", "qwe", false));
-  parse_internal_link("t.me/username?12312&startapp=qwe", main_web_app("username", "qwe", false));
-  parse_internal_link("t.me/username?startapp=0", main_web_app("username", "0", false));
-  parse_internal_link("https://telegram.dog/tele%63ram?startapp=t%63st", main_web_app("telecram", "tcst", false));
+  parse_internal_link("t.me/username?startapp=qwe", main_web_app("username", "qwe", false, false));
+  parse_internal_link("t.me/username?12312&startapp=qwe", main_web_app("username", "qwe", false, false));
+  parse_internal_link("t.me/username?startapp=0", main_web_app("username", "0", false, false));
+  parse_internal_link("https://telegram.dog/tele%63ram?startapp=t%63st",
+                      main_web_app("telecram", "tcst", false, false));
   parse_internal_link("https://telegram.dog/tele%63ram?startapp=t%63st&mode=%63ompact",
-                      main_web_app("telecram", "tcst", true));
+                      main_web_app("telecram", "tcst", true, false));
+  parse_internal_link("https://telegram.dog/tele%63ram?startapp=t%63st&mode=%66ullscreen",
+                      main_web_app("telecram", "tcst", false, true));
   parse_internal_link("https://telegram.dog?startapp=t%63st", nullptr);
 
   parse_internal_link("tg:resolve?domain=username&Game=asd", public_chat("username"));
@@ -1332,6 +1444,14 @@ TEST(Link, parse_internal_link_part4) {
   parse_internal_link("tg://settings/language", language_settings());
   parse_internal_link("tg://settings/privacy", privacy_and_security_settings());
 
+  parse_internal_link("tg://stars", my_stars());
+  parse_internal_link("tg://stars?asdsa?D?SADasD?asD", my_stars());
+  parse_internal_link("tg://stars#test", my_stars());
+  parse_internal_link("tg://stars/#test", my_stars());
+  parse_internal_link("tg://stars/aadsa#test", my_stars());
+  parse_internal_link("tg://stars/theme#test", my_stars());
+  parse_internal_link("tg:stars/theme#test", my_stars());
+
   parse_internal_link("tg://stars_topup", unknown_deep_link("tg://stars_topup"));
   parse_internal_link("tg://stars_topup?balance=", unknown_deep_link("tg://stars_topup?balance="));
   parse_internal_link("tg://stars_topup?balance=test", buy_stars(1, ""));
@@ -1361,6 +1481,7 @@ TEST(Link, parse_internal_link_part4) {
   parse_internal_link("addtheme.t.me", nullptr);
   parse_internal_link("auth.t.me", nullptr);
   parse_internal_link("boost.t.me", nullptr);
+  parse_internal_link("call.t.me", nullptr);
   parse_internal_link("confirmphone.t.me", nullptr);
   parse_internal_link("contact.t.me", nullptr);
   parse_internal_link("giftcode.t.me", nullptr);
@@ -1368,6 +1489,7 @@ TEST(Link, parse_internal_link_part4) {
   parse_internal_link("joinchat.t.me", nullptr);
   parse_internal_link("login.t.me", nullptr);
   parse_internal_link("m.t.me", nullptr);
+  parse_internal_link("nft.t.me", nullptr);
   parse_internal_link("proxy.t.me", nullptr);
   parse_internal_link("setlanguage.t.me", nullptr);
   parse_internal_link("share.t.me", nullptr);

@@ -1,5 +1,5 @@
 //
-// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2024
+// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2025
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -349,7 +349,7 @@ void Transport::write_crypto_impl(int X, const Storer &storer, const AuthKey &au
                     << format::as_hex_dump<4>(Slice(header->data, data_size));
   size_t pad_size = padded_size - (sizeof(HeaderT) + data_size);
   MutableSlice pad(header->data + data_size, pad_size);
-  Random::secure_bytes(pad.ubegin(), pad.size());
+  Random::secure_bytes(pad);
   MutableSlice to_encrypt = MutableSlice(header->encrypt_begin(), pad.uend());
 
   UInt256 aes_key;

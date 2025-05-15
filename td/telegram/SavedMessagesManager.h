@@ -1,5 +1,5 @@
 //
-// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2024
+// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2025
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -74,7 +74,7 @@ class SavedMessagesManager final : public Actor {
   void get_current_state(vector<td_api::object_ptr<td_api::Update>> &updates) const;
 
  private:
-  static constexpr int32 MAX_GET_HISTORY = 100;  // server side limit
+  static constexpr int32 MAX_GET_HISTORY = 100;  // server-side limit
 
   static constexpr int64 MIN_PINNED_TOPIC_ORDER = static_cast<int64>(2147000000) << 32;
 
@@ -165,9 +165,10 @@ class SavedMessagesManager final : public Actor {
 
   bool set_pinned_saved_messages_topics(vector<SavedMessagesTopicId> added_saved_messages_topic_ids);
 
-  bool set_saved_messages_topic_is_pinned(SavedMessagesTopicId saved_messages_topic_id, bool is_pinned);
+  bool set_saved_messages_topic_is_pinned(SavedMessagesTopicId saved_messages_topic_id, bool is_pinned,
+                                          const char *source);
 
-  bool set_saved_messages_topic_is_pinned(SavedMessagesTopic *topic, bool is_pinned);
+  bool set_saved_messages_topic_is_pinned(SavedMessagesTopic *topic, bool is_pinned, const char *source);
 
   int32 get_pinned_saved_messages_topic_limit() const;
 

@@ -1,5 +1,5 @@
 //
-// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2024
+// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2025
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -37,7 +37,7 @@ class SaveDraftMessageQuery final : public Td::ResultHandler {
     auto input_peer = td_->dialog_manager_->get_input_peer(dialog_id, AccessRights::Write);
     if (input_peer == nullptr) {
       LOG(INFO) << "Can't update draft message because have no write access to " << dialog_id;
-      return on_error(Status::Error(400, "Can't save draft message"));
+      return on_error(Status::Error(400, "PEER_ID_INVALID"));
     }
 
     int32 flags = 0;
@@ -45,6 +45,8 @@ class SaveDraftMessageQuery final : public Td::ResultHandler {
     vector<telegram_api::object_ptr<telegram_api::MessageEntity>> input_message_entities;
     telegram_api::object_ptr<telegram_api::InputMedia> media;
     int64 message_effect_id = 0;
+    bool disable_web_page_preview = false;
+    bool invert_media = false;
     if (draft_message != nullptr) {
       CHECK(!draft_message->is_local());
       input_reply_to = draft_message->message_input_reply_to_.get_input_reply_to(td_, MessageId() /*TODO*/);
@@ -52,9 +54,9 @@ class SaveDraftMessageQuery final : public Td::ResultHandler {
         flags |= telegram_api::messages_saveDraft::REPLY_TO_MASK;
       }
       if (draft_message->input_message_text_.disable_web_page_preview) {
-        flags |= telegram_api::messages_saveDraft::NO_WEBPAGE_MASK;
+        disable_web_page_preview = true;
       } else if (draft_message->input_message_text_.show_above_text) {
-        flags |= telegram_api::messages_saveDraft::INVERT_MEDIA_MASK;
+        invert_media = true;
       }
       input_message_entities = get_input_message_entities(
           td_->user_manager_.get(), draft_message->input_message_text_.text.entities, "SaveDraftMessageQuery");
@@ -72,7 +74,7 @@ class SaveDraftMessageQuery final : public Td::ResultHandler {
     }
     send_query(G()->net_query_creator().create(
         telegram_api::messages_saveDraft(
-            flags, false /*ignored*/, false /*ignored*/, std::move(input_reply_to), std::move(input_peer),
+            flags, disable_web_page_preview, invert_media, std::move(input_reply_to), std::move(input_peer),
             draft_message == nullptr ? string() : draft_message->input_message_text_.text.text,
             std::move(input_message_entities), std::move(media), message_effect_id),
         {{dialog_id}}));
@@ -98,7 +100,8 @@ class SaveDraftMessageQuery final : public Td::ResultHandler {
       // with the error "TOPIC_CLOSED", but the draft will be kept locally
       return promise_.set_value(Unit());
     }
-    if (!td_->dialog_manager_->on_get_dialog_error(dialog_id_, status, "SaveDraftMessageQuery")) {
+    if (!td_->dialog_manager_->on_get_dialog_error(dialog_id_, status, "SaveDraftMessageQuery") &&
+        status.message() != "PEER_ID_INVALID") {
       LOG(ERROR) << "Receive error for SaveDraftMessageQuery: " << status;
     }
     promise_.set_error(std::move(status));

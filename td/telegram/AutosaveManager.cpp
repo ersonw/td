@@ -1,5 +1,5 @@
 //
-// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2024
+// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2025
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -68,20 +68,14 @@ class SaveAutoSaveSettingsQuery final : public Td::ResultHandler {
             telegram_api::object_ptr<telegram_api::autoSaveSettings> settings) {
     int32 flags = 0;
     telegram_api::object_ptr<telegram_api::InputPeer> input_peer;
-    if (users) {
-      flags |= telegram_api::account_saveAutoSaveSettings::USERS_MASK;
-    } else if (chats) {
-      flags |= telegram_api::account_saveAutoSaveSettings::CHATS_MASK;
-    } else if (broadcasts) {
-      flags |= telegram_api::account_saveAutoSaveSettings::BROADCASTS_MASK;
-    } else {
+    if (!users && !chats && !broadcasts) {
       flags |= telegram_api::account_saveAutoSaveSettings::PEER_MASK;
       input_peer = td_->dialog_manager_->get_input_peer(dialog_id, AccessRights::Read);
       CHECK(input_peer != nullptr);
     }
     send_query(G()->net_query_creator().create(
-        telegram_api::account_saveAutoSaveSettings(flags, false /*ignored*/, false /*ignored*/, false /*ignored*/,
-                                                   std::move(input_peer), std::move(settings)),
+        telegram_api::account_saveAutoSaveSettings(flags, users, chats, broadcasts, std::move(input_peer),
+                                                   std::move(settings)),
         {{"me"}}));
   }
 
@@ -154,16 +148,10 @@ AutosaveManager::DialogAutosaveSettings::DialogAutosaveSettings(const td_api::sc
 telegram_api::object_ptr<telegram_api::autoSaveSettings>
 AutosaveManager::DialogAutosaveSettings::get_input_auto_save_settings() const {
   int32 flags = 0;
-  if (autosave_photos_) {
-    flags |= telegram_api::autoSaveSettings::PHOTOS_MASK;
-  }
-  if (autosave_videos_) {
-    flags |= telegram_api::autoSaveSettings::VIDEOS_MASK;
-  }
   if (are_inited_) {
     flags |= telegram_api::autoSaveSettings::VIDEO_MAX_SIZE_MASK;
   }
-  return telegram_api::make_object<telegram_api::autoSaveSettings>(flags, false /*ignored*/, false /*ignored*/,
+  return telegram_api::make_object<telegram_api::autoSaveSettings>(flags, autosave_photos_, autosave_videos_,
                                                                    max_video_file_size_);
 }
 
